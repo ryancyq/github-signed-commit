@@ -1,0 +1,10 @@
+{
+  "extends": "@tsconfig/recommended/tsconfig.json",
+  "include": [
+    "src/**/*.ts"                              // Include all TypeScript files in src
+  ],
+  "exclude": [
+    "node_modules",                            // Exclude node_modules
+    "dist"                                     // Exclude output directory
+  ]
+}
