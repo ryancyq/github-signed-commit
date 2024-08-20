@@ -43,10 +43,10 @@ describe('Git CLI', () => {
         }
         return 0
       })
-      const debugMock = jest.spyOn(core, 'debug')
+      const warningMock = jest.spyOn(core, 'warning')
       const changes = await addFileChanges(['*.ts'])
       expect(mockExec).toBeCalled()
-      expect(debugMock).toBeCalledWith(
+      expect(warningMock).toBeCalledWith(
         "fatal: pathspec 'main.ts' did not match any files"
       )
     })

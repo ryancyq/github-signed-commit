@@ -1,4 +1,4 @@
-import { debug } from '@actions/core'
+import { warning } from '@actions/core'
 import { exec } from '@actions/exec'
 import {
   FileChanges,
@@ -17,7 +17,7 @@ export async function addFileChanges(globPatterns: string[]): Promise<void> {
     ignoreReturnCode: false,
     listeners: {
       errline: (error: string) => {
-        debug(error)
+        warning(error)
       },
     },
   })

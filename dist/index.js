@@ -30366,7 +30366,7 @@ function addFileChanges(globPatterns) {
             ignoreReturnCode: false,
             listeners: {
                 errline: (error) => {
-                    (0, core_1.debug)(error);
+                    (0, core_1.warning)(error);
                 },
             },
         });
@@ -30508,7 +30508,7 @@ function getRepository(owner, repo) {
             if (error instanceof graphql_1.GraphqlResponseError) {
                 const { query, variables } = error.request;
                 core.error(error.message);
-                core.debug(
+                core.warning(
                 // eslint-disable-next-line @typescript-eslint/restrict-template-expressions
                 `Request failed, query: ${query}, variables: ${JSON.stringify(variables)}, data: ${error.data}`);
             }
