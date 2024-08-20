@@ -1,17 +1,16 @@
 import { warning } from '@actions/core'
 import { exec } from '@actions/exec'
+import { join } from 'path'
 import {
   FileChanges,
   FileAddition,
   FileDeletion,
 } from '@octokit/graphql-schema'
-import { join } from 'path'
 
-import { getInput } from './input'
+import cwd from './cwd'
 
 export async function addFileChanges(globPatterns: string[]): Promise<void> {
-  const cwd = getInput('workspace', { default: process.env.GITHUB_WORKSPACE })
-  const cwdPaths = globPatterns.map((p) => join(cwd ?? '/', p))
+  const cwdPaths = globPatterns.map((p) => join(cwd, p))
 
   await exec('git', ['add', ...cwdPaths], {
     ignoreReturnCode: false,
