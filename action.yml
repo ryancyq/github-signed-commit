@@ -1,0 +1,10 @@
+name: Signed Commit
+description: GitHub Action to create signed commits
+
+branding:
+  icon: git-commit
+  color: orange
+
+runs:
+  using: node20
+  main: dist/index.js
