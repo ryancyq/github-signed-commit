@@ -1,37 +1,37 @@
-import * as core from "@actions/core";
-import * as main from "../src/main";
-import { describe, jest, beforeEach, it, expect } from "@jest/globals";
+import * as core from '@actions/core'
+import * as main from '../src/main'
+import { describe, jest, beforeEach, it, expect } from '@jest/globals'
 
-const runMock = jest.spyOn(main, "run");
+const runMock = jest.spyOn(main, 'run')
 
-let debugMock: jest.SpiedFunction<typeof core.debug>;
-let errorMock: jest.SpiedFunction<typeof core.error>;
-let setFailedMock: jest.SpiedFunction<typeof core.setFailed>;
-let setOutputMock: jest.SpiedFunction<typeof core.setOutput>;
+let debugMock: jest.SpiedFunction<typeof core.debug>
+let errorMock: jest.SpiedFunction<typeof core.error>
+let setFailedMock: jest.SpiedFunction<typeof core.setFailed>
+let setOutputMock: jest.SpiedFunction<typeof core.setOutput>
 
-jest.mock("@actions/core");
-const getInputMock = core.getInput as jest.MockedFunction<typeof core.getInput>;
+jest.mock('@actions/core')
+const getInputMock = core.getInput as jest.MockedFunction<typeof core.getInput>
 
-describe("action", () => {
+describe('action', () => {
   beforeEach(() => {
-    jest.clearAllMocks();
+    jest.clearAllMocks()
 
-    debugMock = jest.spyOn(core, "debug");
-    errorMock = jest.spyOn(core, "error");
-    setFailedMock = jest.spyOn(core, "setFailed");
-    setOutputMock = jest.spyOn(core, "setOutput");
-  });
+    debugMock = jest.spyOn(core, 'debug')
+    errorMock = jest.spyOn(core, 'error')
+    setFailedMock = jest.spyOn(core, 'setFailed')
+    setOutputMock = jest.spyOn(core, 'setOutput')
+  })
 
-  it("sets a failed status", async () => {
+  it('sets a failed status', async () => {
     getInputMock.mockImplementation(() => {
-      throw new Error("My Error");
-    });
+      throw new Error('My Error')
+    })
 
-    await expect(main.run()).resolves;
-    expect(runMock).toHaveReturned();
+    await expect(main.run()).resolves
+    expect(runMock).toHaveReturned()
 
     // Verify that all of the core library functions were called correctly
-    expect(setFailedMock).toHaveBeenCalledWith("My Error");
-    expect(errorMock).not.toHaveBeenCalled();
-  });
-});
+    expect(setFailedMock).toHaveBeenCalledWith('My Error')
+    expect(errorMock).not.toHaveBeenCalled()
+  })
+})

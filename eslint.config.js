@@ -1,23 +1,23 @@
-import eslint from "@eslint/js";
-import globals from "globals";
-import tseslint from "typescript-eslint";
-import eslintConfigPrettier from "eslint-config-prettier";
+import eslint from '@eslint/js'
+import globals from 'globals'
+import tseslint from 'typescript-eslint'
+import eslintConfigPrettier from 'eslint-config-prettier'
 
 export default tseslint.config(
   {
     ignores: [
-      "**/.*",
-      "**/node_modules/*",
-      "dist/*",
+      '**/.*',
+      '**/node_modules/*',
+      'dist/*',
 
       // Ignore files for PNPM, NPM and YARN
-      "**/pnpm-lock.yaml",
-      "**/package-lock.json",
-      "**/yarn.lock",
+      '**/pnpm-lock.yaml',
+      '**/package-lock.json',
+      '**/yarn.lock',
 
       // Ignore config type check
-      "**/*.config.js",
-      "**/*.config.ts",
+      '**/*.config.js',
+      '**/*.config.ts',
     ],
   },
   eslint.configs.recommended,
@@ -27,7 +27,7 @@ export default tseslint.config(
   eslintConfigPrettier,
   {
     plugins: {
-      "@typescript-eslint": tseslint.plugin,
+      '@typescript-eslint': tseslint.plugin,
     },
     languageOptions: {
       parser: tseslint.parser,
@@ -36,5 +36,5 @@ export default tseslint.config(
         tsconfigRootDir: import.meta.dirname,
       },
     },
-  },
-);
+  }
+)
