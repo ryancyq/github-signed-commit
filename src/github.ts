@@ -25,7 +25,7 @@ export async function getRepository(
           }
         }
       `
-    const { repository } = await client()<{ repository: Repository }>(query, {
+    const { repository } = await client<{ repository: Repository }>(query, {
       owner: owner,
       repo: repo,
     })
@@ -68,7 +68,7 @@ export async function createCommitOnBranch(
       fileChanges,
     },
   }
-  const { createCommitOnBranch } = await client()<{
+  const { createCommitOnBranch } = await client<{
     createCommitOnBranch: CreateCommitOnBranchPayload
   }>(mutation, input)
   return createCommitOnBranch
