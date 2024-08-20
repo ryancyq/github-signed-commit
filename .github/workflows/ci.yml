@@ -42,7 +42,7 @@ jobs:
 
       - name: Test
         id: npm-ci-test
-        run: npm run ci-test
+        run: npm run test
 
   test-action:
     name: GitHub Actions Test
