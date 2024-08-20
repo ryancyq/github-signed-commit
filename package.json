@@ -16,9 +16,12 @@
   },
   "scripts": {
     "start": "node dist/index.js",
+    "bundle": "npm run format:write && npm run build",
     "build": "ncc build src/index.ts -o dist",
-    "lint": "eslint 'src/**/*.ts'",
-    "test": "jest"
+    "lint": "npx eslint 'src/**/*.ts'",
+    "format:write": "npx prettier --write .",
+    "format:check": "npx prettier --check .",
+    "test": "npx jest"
   },
   "homepage": "https://github.com/ryancyq/signed-commit#readme",
   "dependencies": {
