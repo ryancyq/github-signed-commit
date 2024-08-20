@@ -30363,6 +30363,7 @@ function addFileChanges(globPatterns) {
         const cwd = (0, input_1.getInput)('workspace', { default: process.env.GITHUB_WORKSPACE });
         const cwdPaths = globPatterns.map((p) => (0, path_1.join)(cwd !== null && cwd !== void 0 ? cwd : '/', p));
         yield (0, exec_1.exec)('git', ['add', ...cwdPaths], {
+            ignoreReturnCode: false,
             listeners: {
                 errline: (error) => {
                     (0, core_1.debug)(error);
