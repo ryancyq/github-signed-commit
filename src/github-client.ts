@@ -1,9 +1,9 @@
-import * as core from '@actions/core'
+import { getInput } from '@actions/core'
 import { graphql } from '@octokit/graphql'
 import { RequestHeaders } from '@octokit/types'
 
 export default function graphqlClient() {
-  const token = core.getInput('GH_TOKEN', { required: true })
+  const token = getInput('GH_TOKEN', { required: true })
 
   const customHeaders: RequestHeaders = {}
   customHeaders.authorization = `token ${token}`
