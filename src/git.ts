@@ -11,17 +11,19 @@ import { getInput } from './input'
 
 export async function addFileChanges(globPatterns: string[]): Promise<void> {
   const cwd = getInput('workspace', { default: process.env.GITHUB_WORKSPACE })
-  const cwdPaths = globPatterns.map((p) => join(cwd!, p))
+  const cwdPaths = globPatterns.map((p) => join(cwd ?? '/', p))
 
   await exec('git', ['add', ...cwdPaths], {
     listeners: {
-      errline: (error: string) => debug(error),
+      errline: (error: string) => {
+        debug(error)
+      },
     },
   })
 }
 
 export async function getFileChanges(): Promise<FileChanges> {
-  let output: string[] = []
+  const output: string[] = []
   await exec('git', ['status', '-suall'], {
     listeners: {
       stdline: (data: string) => output.push(data),

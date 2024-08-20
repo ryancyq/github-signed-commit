@@ -35,8 +35,8 @@ export async function getRepository(
     if (error instanceof GraphqlResponseError) {
       const { query, variables } = error.request
       core.error(error.message)
-      // eslint-disable-next-line @typescript-eslint/restrict-template-expressions
       core.debug(
+        // eslint-disable-next-line @typescript-eslint/restrict-template-expressions
         `Request failed, query: ${query}, variables: ${JSON.stringify(variables)}, data: ${error.data}`
       )
     }
