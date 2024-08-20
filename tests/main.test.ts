@@ -10,7 +10,9 @@ let setFailedMock: jest.SpiedFunction<typeof core.setFailed>
 let setOutputMock: jest.SpiedFunction<typeof core.setOutput>
 
 jest.mock('@actions/core')
-const getInputMock = core.getInput as jest.MockedFunction<typeof core.getInput>
+const getMultilineInputMock = core.getMultilineInput as jest.MockedFunction<
+  typeof core.getMultilineInput
+>
 
 describe('action', () => {
   beforeEach(() => {
@@ -23,7 +25,7 @@ describe('action', () => {
   })
 
   it('sets a failed status', async () => {
-    getInputMock.mockImplementation(() => {
+    getMultilineInputMock.mockImplementation(() => {
       throw new Error('My Error')
     })
 
