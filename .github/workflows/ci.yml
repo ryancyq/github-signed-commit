@@ -56,9 +56,14 @@ jobs:
       - name: Test Local Action
         id: test-action
         uses: ./
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
-          milliseconds: 2000
+          files: |
+            dist/index.js
+          commit-message: Add dist/index.js
+          ref: refs/heads/test-action
 
       - name: Print Output
         id: output
-        run: echo "${{ steps.test-action.outputs.time }}"
+        run: echo "${{ steps.test-action.outputs.commit-sha }}"
