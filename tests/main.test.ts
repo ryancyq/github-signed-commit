@@ -10,6 +10,7 @@ let setFailedMock: jest.SpiedFunction<typeof core.setFailed>
 let setOutputMock: jest.SpiedFunction<typeof core.setOutput>
 
 jest.mock('@actions/core')
+
 const getMultilineInputMock = core.getMultilineInput as jest.MockedFunction<
   typeof core.getMultilineInput
 >

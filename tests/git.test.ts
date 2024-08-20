@@ -3,8 +3,19 @@ import { describe, jest, beforeEach, afterAll, it, expect } from '@jest/globals'
 import * as core from '@actions/core'
 import { exec } from '@actions/exec'
 import { addFileChanges, getFileChanges } from '../src/git'
+import cwd from '../src/cwd'
 
 jest.mock('@actions/exec')
+jest.mock('../src/cwd', () => {
+  const original = jest.requireActual<typeof import('../src/cwd')>('../src/cwd')
+  debugger
+  return {
+    __esModule: true,
+    ...original,
+    default: '/users/test-workspace',
+  }
+})
+
 const mockExec = exec as jest.MockedFunction<typeof exec>
 
 describe('Git CLI', () => {
@@ -13,23 +24,17 @@ describe('Git CLI', () => {
   })
 
   describe('git add', () => {
-    const OLD_ENV = process.env
-    beforeEach(() => {
-      jest.resetModules()
-      process.env.GITHUB_WORKSPACE = '/users/test'
-    })
-
-    afterAll(() => {
-      process.env = OLD_ENV
-    })
-
     it('should ensure file paths are within curent working directory', async () => {
       mockExec.mockImplementation(async (cmd, args, options) => 0)
       const changes = await addFileChanges(['*.ts', '~/.bashrc'])
       expect(mockExec).toBeCalled()
       expect(mockExec).toBeCalledWith(
         'git',
-        ['add', '/users/test/*.ts', '/users/test/~/.bashrc'],
+        [
+          'add',
+          '/users/test-workspace/*.ts',
+          '/users/test-workspace/~/.bashrc',
+        ],
         expect.objectContaining({ listeners: { errline: expect.anything() } })
       )
     })

@@ -1,11 +1,10 @@
-/**
- * Unit tests for the action's entrypoint, src/index.ts
- */
-
-import * as main from '../src/main'
 import { describe, jest, beforeEach, it, expect } from '@jest/globals'
 
-// Mock the action's entrypoint
+import * as core from '@actions/core'
+import * as main from '../src/main'
+
+jest.mock('@actions/core')
+
 const runMock = jest
   .spyOn(main, 'run')
   .mockImplementation(() => Promise.resolve())
