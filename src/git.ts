@@ -1,6 +1,6 @@
 import { warning } from '@actions/core'
 import { exec } from '@actions/exec'
-import { join } from 'path'
+import { join } from 'node:path'
 import {
   FileChanges,
   FileAddition,

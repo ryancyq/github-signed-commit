@@ -28,7 +28,8 @@
     "@actions/core": "^1.10.0",
     "@actions/exec": "^1.1.0",
     "@actions/github": "^6.0.0",
-    "@octokit/graphql-schema": "^15.25.0"
+    "@octokit/graphql-schema": "^15.25.0",
+    "@types/node": "^22.4.2"
   },
   "devDependencies": {
     "@tsconfig/recommended": "^1.0.7",
