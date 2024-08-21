@@ -67,7 +67,7 @@ describe('GitHub API', () => {
       expect(core.error).toHaveBeenCalledWith(
         'Request failed due to following response errors:\n - GraphQL error'
       )
-      expect(core.warning).toHaveBeenCalledWith(
+      expect(core.debug).toHaveBeenCalledWith(
         expect.stringMatching(
           /Request failed, query: [\s\S]*, variables: [\s\S]*, data: [\s\S]*/
         )
