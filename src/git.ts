@@ -7,9 +7,10 @@ import {
   FileDeletion,
 } from '@octokit/graphql-schema'
 
-import cwd from './cwd'
+import { getCwd } from './cwd'
 
 export async function addFileChanges(globPatterns: string[]): Promise<void> {
+  const cwd = getCwd()
   const cwdPaths = globPatterns.map((p) => join(cwd, p))
 
   await exec('git', ['add', ...cwdPaths], {

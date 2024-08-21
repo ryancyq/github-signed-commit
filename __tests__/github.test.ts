@@ -9,14 +9,14 @@ import {
   FileChanges,
   CommittableBranch,
 } from '@octokit/graphql-schema'
-import client from '../src/github-client'
+import { graphqlClient } from '../src/github-client'
 import { getRepository, createCommitOnBranch } from '../src/github'
 
 jest.mock('@actions/core')
 jest.mock('../src/github-client')
 
 const mockGetInput = core.getInput as jest.MockedFunction<typeof core.getInput>
-const mockClient = client as jest.MockedFunction<typeof client>
+const mockClient = graphqlClient as jest.MockedFunction<typeof graphqlClient>
 
 describe('GitHub API', () => {
   beforeEach(() => {
@@ -26,8 +26,8 @@ describe('GitHub API', () => {
 
   describe('getRepository', () => {
     it('should fetch repository details', async () => {
-      mockClient.mockImplementation(
-        graphql.defaults({
+      mockClient.mockImplementation(() => {
+        return graphql.defaults({
           request: {
             fetch: fetchMock.sandbox().post('https://api.github.com/graphql', {
               data: {
@@ -42,7 +42,7 @@ describe('GitHub API', () => {
             }),
           },
         })
-      )
+      })
 
       const repo = await getRepository('owner', 'repo')
       expect(repo).toHaveProperty('id', 'repo-id')
@@ -50,8 +50,8 @@ describe('GitHub API', () => {
     })
 
     it('should handle GraphqlResponseError', async () => {
-      mockClient.mockImplementation(
-        graphql.defaults({
+      mockClient.mockImplementation(() => {
+        return graphql.defaults({
           request: {
             fetch: fetchMock.sandbox().post('https://api.github.com/graphql', {
               errors: [{ message: 'GraphQL error' }],
@@ -59,7 +59,7 @@ describe('GitHub API', () => {
             }),
           },
         })
-      )
+      })
 
       await expect(getRepository('owner', 'repo')).rejects.toThrow(
         'GraphQL error'
@@ -81,8 +81,8 @@ describe('GitHub API', () => {
         if (name === 'commit-message') return 'fake commit message'
         return ''
       })
-      mockClient.mockImplementation(
-        graphql.defaults({
+      mockClient.mockImplementation(() => {
+        return graphql.defaults({
           request: {
             fetch: fetchMock.sandbox().post('https://api.github.com/graphql', {
               data: {
@@ -97,7 +97,7 @@ describe('GitHub API', () => {
             }),
           },
         })
-      )
+      })
 
       const fileChanges: FileChanges = {}
       const branch: CommittableBranch = {}

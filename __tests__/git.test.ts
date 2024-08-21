@@ -3,12 +3,12 @@ import { describe, jest, beforeEach, afterAll, it, expect } from '@jest/globals'
 import * as core from '@actions/core'
 import { exec } from '@actions/exec'
 import { addFileChanges, getFileChanges } from '../src/git'
-import cwd from '../src/cwd'
+import { getCwd } from '../src/cwd'
 
 jest.mock('@actions/exec')
 jest.mock('../src/cwd', () => ({
   __esModule: true,
-  default: '/users/test-workspace',
+  getCwd: () => '/users/test-workspace',
 }))
 
 const mockExec = exec as jest.MockedFunction<typeof exec>

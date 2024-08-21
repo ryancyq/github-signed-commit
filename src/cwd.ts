@@ -13,6 +13,3 @@ export function getCwd() {
   core.debug(`cwd: ${current}`)
   return current
 }
-
-const cwd = getCwd()
-export default cwd

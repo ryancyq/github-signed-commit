@@ -17,6 +17,3 @@ export function graphqlClient() {
 
   return graphql.defaults({ headers: customHeaders })
 }
-
-const client = graphqlClient()
-export default client

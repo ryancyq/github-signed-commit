@@ -8,7 +8,7 @@ import {
   FileChanges,
 } from '@octokit/graphql-schema'
 
-import client from './github-client'
+import { graphqlClient } from './github-client'
 
 export async function getRepository(
   owner: string,
@@ -25,10 +25,13 @@ export async function getRepository(
           }
         }
       `
-    const { repository } = await client<{ repository: Repository }>(query, {
-      owner: owner,
-      repo: repo,
-    })
+    const { repository } = await graphqlClient()<{ repository: Repository }>(
+      query,
+      {
+        owner: owner,
+        repo: repo,
+      }
+    )
 
     return repository
   } catch (error) {
@@ -68,7 +71,7 @@ export async function createCommitOnBranch(
       fileChanges,
     },
   }
-  const { createCommitOnBranch } = await client<{
+  const { createCommitOnBranch } = await graphqlClient()<{
     createCommitOnBranch: CreateCommitOnBranchPayload
   }>(mutation, input)
   return createCommitOnBranch
