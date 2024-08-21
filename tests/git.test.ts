@@ -6,15 +6,10 @@ import { addFileChanges, getFileChanges } from '../src/git'
 import cwd from '../src/cwd'
 
 jest.mock('@actions/exec')
-jest.mock('../src/cwd', () => {
-  const original = jest.requireActual<typeof import('../src/cwd')>('../src/cwd')
-  debugger
-  return {
-    __esModule: true,
-    ...original,
-    default: '/users/test-workspace',
-  }
-})
+jest.mock('../src/cwd', () => ({
+  __esModule: true,
+  default: '/users/test-workspace',
+}))
 
 const mockExec = exec as jest.MockedFunction<typeof exec>
 
