@@ -5,12 +5,12 @@ import * as main from '../src/main'
 
 jest.mock('@actions/core')
 
-const runMock = jest
-  .spyOn(main, 'run')
-  .mockImplementation(() => Promise.resolve())
-
 describe('index', () => {
+  let runMock: jest.SpiedFunction<typeof main.run>
+
   it('calls run when imported', async () => {
+    runMock = jest.spyOn(main, 'run')
+
     // eslint-disable-next-line @typescript-eslint/no-require-imports
     require('../src/index')
 
