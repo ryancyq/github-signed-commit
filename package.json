@@ -67,9 +67,6 @@
     "transform": {
       "^.+\\.ts$": "ts-jest"
     },
-    "testMatch": [
-      "**/tests/**/*.test.ts"
-    ],
     "coverageDirectory": "coverage",
     "collectCoverageFrom": [
       "src/**/*.ts"
