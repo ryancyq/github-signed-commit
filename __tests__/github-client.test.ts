@@ -1,7 +1,6 @@
 import { describe, jest, beforeEach, it, expect } from '@jest/globals'
 
 import * as core from '@actions/core'
-import client from '../src/github-client'
 import { graphqlClient } from '../src/github-client'
 
 jest.mock('@actions/core')
@@ -27,7 +26,7 @@ describe('GitHub Client', () => {
   })
 
   it('should set user-agent', async () => {
-    expect(client.endpoint.DEFAULTS.headers).toHaveProperty(
+    expect(graphqlClient().endpoint.DEFAULTS.headers).toHaveProperty(
       'user-agent',
       '@ryancyq/signed-commit/3.0.0'
     )
