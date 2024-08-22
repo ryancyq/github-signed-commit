@@ -30352,6 +30352,9 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
         step((generator = generator.apply(thisArg, _arguments || [])).next());
     });
 };
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.Blob = void 0;
 exports.getBlob = getBlob;
@@ -30359,18 +30362,9 @@ const core = __importStar(__nccwpck_require__(2186));
 const fs = __importStar(__nccwpck_require__(7561));
 const node_buffer_1 = __nccwpck_require__(2254);
 const node_path_1 = __nccwpck_require__(9411);
-const node_stream_1 = __nccwpck_require__(4492);
 const promises_1 = __nccwpck_require__(6402);
 const cwd_1 = __nccwpck_require__(7119);
-const base64Transform = new node_stream_1.Transform({
-    transform(chunk, encoding, callback) {
-        let transformed = '';
-        if (node_buffer_1.Buffer.isBuffer(chunk)) {
-            transformed = chunk.toString('base64');
-        }
-        callback(null, transformed);
-    },
-});
+const base64_encoder_1 = __importDefault(__nccwpck_require__(938));
 class Blob {
     constructor(path) {
         this.path = path;
@@ -30382,7 +30376,7 @@ class Blob {
         }
         return fs
             .createReadStream(this.absolutePath, { encoding: 'utf8' })
-            .pipe(base64Transform);
+            .pipe(new base64_encoder_1.default());
     }
     load() {
         return __awaiter(this, void 0, void 0, function* () {
@@ -30741,6 +30735,45 @@ function run() {
         }
     });
 }
+
+
+/***/ }),
+
+/***/ 938:
+/***/ ((__unused_webpack_module, exports, __nccwpck_require__) => {
+
+
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+const node_buffer_1 = __nccwpck_require__(2254);
+const node_stream_1 = __nccwpck_require__(4492);
+class Base64Encoder extends node_stream_1.Transform {
+    _transform(chunk, encoding, // ignored, since it is always buffer
+    callback) {
+        if (this.overflow) {
+            chunk = node_buffer_1.Buffer.concat([this.overflow, chunk]);
+            this.overflow = undefined;
+        }
+        // base 64 requires 6 bits (2^6)
+        // base 256 requires 8 bits (2^8)
+        // each uint8 is 8 bits, so to make sure we are working on the same number of bits
+        // every 3 uint8 chars can transform into 4 base64 chars
+        const overflowSize = chunk.length % 3;
+        if (overflowSize !== 0) {
+            this.overflow = chunk.subarray(chunk.length - overflowSize);
+            chunk = chunk.subarray(0, chunk.length - overflowSize);
+        }
+        const base64String = chunk.toString('base64');
+        this.push(node_buffer_1.Buffer.from(base64String));
+        callback();
+    }
+    _flush(callback) {
+        if (this.overflow) {
+            this.push(node_buffer_1.Buffer.from(this.overflow.toString('base64')));
+        }
+        callback();
+    }
+}
+exports["default"] = Base64Encoder;
 
 
 /***/ }),
