@@ -22,6 +22,15 @@ export async function getRepository(
             id
             defaultBranchRef {
               name
+              target {
+                ... on Commit {
+                  history(first: 1) {
+                    nodes {
+                      oid
+                    }
+                  }
+                }
+              }
             }
           }
         }
