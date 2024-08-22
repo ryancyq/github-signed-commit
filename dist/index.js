@@ -30522,12 +30522,14 @@ function getFileChanges() {
 
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.graphqlClient = graphqlClient;
-const core_1 = __nccwpck_require__(2186);
 const graphql_1 = __nccwpck_require__(8467);
 function graphqlClient() {
-    const token = (0, core_1.getInput)('GH_TOKEN', { required: true });
+    const token = process.env.GH_TOKEN;
+    if (!token) {
+        throw new Error('The ENV variable "GH_TOKEN" is required.');
+    }
     const customHeaders = {};
-    customHeaders.authorization = `token ${token}`;
+    customHeaders.authorization = `bearer ${token}`;
     if (process.env.npm_package_name && process.env.npm_package_version) {
         customHeaders['user-agent'] = [
             process.env.npm_package_name,
@@ -30705,7 +30707,7 @@ function run() {
             if (fileCount <= 0)
                 throw new errors_1.NoChangesError();
             const { owner, repo } = github.context.repo;
-            const repository = yield core.group(`fetching repository info for owner:${owner}, repo: ${repo}`, () => __awaiter(this, void 0, void 0, function* () {
+            const repository = yield core.group(`fetching repository info for owner: ${owner}, repo: ${repo}`, () => __awaiter(this, void 0, void 0, function* () {
                 const startTime = Date.now();
                 const repositoryData = yield (0, graphql_1.getRepository)(owner, repo);
                 const endTime = Date.now();
