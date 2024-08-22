@@ -1,4 +1,3 @@
-import { getInput } from '@actions/core'
 import { graphql } from '@octokit/graphql'
 import { RequestHeaders } from '@octokit/types'
 
