@@ -83,6 +83,7 @@ export async function createCommitOnBranch(
   const input: MutationCreateCommitOnBranchArgs = {
     input: {
       branch,
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
       expectedHeadOid: parentCommit.oid,
       message: {
         headline: commitMessage,

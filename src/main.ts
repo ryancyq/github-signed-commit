@@ -3,7 +3,6 @@ import * as github from '@actions/github'
 
 import { getRepository, createCommitOnBranch } from './github/graphql'
 import { isCommit } from './github/types'
-import { Commit } from '@octokit/graphql-schema'
 import { addFileChanges, getFileChanges } from './git'
 import { getInput } from './utils/input'
 import { FileMissingError, NoChangesError } from './errors'
