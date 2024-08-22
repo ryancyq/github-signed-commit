@@ -30589,7 +30589,7 @@ function getRepository(owner, repo) {
     return __awaiter(this, void 0, void 0, function* () {
         try {
             const query = `
-        query($owner: String!, $repo: String) {
+        query($owner: String!, $repo: String!) {
           repository(owner: $owner, name: $repo) {
             id
             defaultBranchRef {

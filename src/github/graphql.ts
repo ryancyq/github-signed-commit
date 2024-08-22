@@ -17,7 +17,7 @@ export async function getRepository(
 ): Promise<Repository> {
   try {
     const query = `
-        query($owner: String!, $repo: String) {
+        query($owner: String!, $repo: String!) {
           repository(owner: $owner, name: $repo) {
             id
             defaultBranchRef {
