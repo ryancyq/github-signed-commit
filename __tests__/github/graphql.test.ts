@@ -5,11 +5,12 @@ import { describe, jest, beforeEach, it, expect } from '@jest/globals'
 import { RequestOptions } from '@octokit/types'
 import { graphql, GraphqlResponseError } from '@octokit/graphql'
 import {
-  Repository,
-  CreateCommitOnBranchPayload,
-  FileChanges,
+  Commit,
   CommittableBranch,
+  CreateCommitOnBranchPayload,
   FileAddition,
+  FileChanges,
+  Repository,
 } from '@octokit/graphql-schema'
 import * as client from '../../src/github/client'
 import * as blob from '../../src/blob'
@@ -109,9 +110,14 @@ describe('GitHub API', () => {
         })
       })
 
-      const fileChanges: FileChanges = {}
-      const branch: CommittableBranch = {}
-      const result = await createCommitOnBranch(branch, fileChanges)
+      const branch = {} as CommittableBranch
+      const parentCommit = {} as Commit
+      const fileChanges = {} as FileChanges
+      const result = await createCommitOnBranch(
+        branch,
+        parentCommit,
+        fileChanges
+      )
       expect(mockClient).toBeCalled()
       expect(result).toHaveProperty('commit.id', 'commit-id')
     })
@@ -144,6 +150,12 @@ describe('GitHub API', () => {
                       /mutation(.+CreateCommitOnBranchInput)/
                     )
                   )
+
+                  expect(body.variables).toHaveProperty('input.expectedHeadOid')
+                  expect(body.variables.input.expectedHeadOid).toContain(
+                    'MyOid'
+                  )
+
                   expect(body.variables).toHaveProperty(
                     'input.fileChanges.additions'
                   )
@@ -157,8 +169,13 @@ describe('GitHub API', () => {
         })
       })
 
-      const branch: CommittableBranch = {}
-      const result = await createCommitOnBranch(branch, fileChanges)
+      const branch = {} as CommittableBranch
+      const parentCommit = { oid: 'MyOid' } as Commit
+      const result = await createCommitOnBranch(
+        branch,
+        parentCommit,
+        fileChanges
+      )
       expect(mockClient).toBeCalled()
     })
   })
