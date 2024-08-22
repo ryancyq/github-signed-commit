@@ -44,6 +44,8 @@ export async function getRepository(
       }
     )
 
+    core.debug(`Request successful, data: ${JSON.stringify(repository)}`)
+
     return repository
   } catch (error) {
     if (error instanceof GraphqlResponseError) {
@@ -51,7 +53,7 @@ export async function getRepository(
       core.error(error.message)
       core.debug(
         // eslint-disable-next-line @typescript-eslint/restrict-template-expressions
-        `Request failed, query: ${query}, variables: ${JSON.stringify(variables)}, data: ${error.data}`
+        `Request failed, query: ${query}, variables: ${JSON.stringify(variables)}, data: ${JSON.stringify(error.data)}`
       )
     }
     throw error
@@ -94,5 +96,10 @@ export async function createCommitOnBranch(
   const { createCommitOnBranch } = await graphqlClient()<{
     createCommitOnBranch: CreateCommitOnBranchPayload
   }>(mutation, input)
+
+  core.debug(
+    `Request successful, data: ${JSON.stringify(createCommitOnBranch)}`
+  )
+
   return createCommitOnBranch
 }
