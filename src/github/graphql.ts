@@ -9,6 +9,7 @@ import {
 } from '@octokit/graphql-schema'
 
 import { graphqlClient } from './client'
+import { getBlob } from '../blob'
 
 export async function getRepository(
   owner: string,
@@ -60,6 +61,13 @@ export async function createCommitOnBranch(
         }
       }
     }`
+
+  if (fileChanges.additions) {
+    const promises = fileChanges.additions.map((file) =>
+      getBlob(file.path).load()
+    )
+    fileChanges.additions = await Promise.all(promises)
+  }
 
   const input: MutationCreateCommitOnBranchArgs = {
     input: {

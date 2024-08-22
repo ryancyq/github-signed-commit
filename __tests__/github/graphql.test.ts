@@ -2,14 +2,17 @@ import * as core from '@actions/core'
 import fetchMock from 'fetch-mock'
 import { Readable } from 'node:stream'
 import { describe, jest, beforeEach, it, expect } from '@jest/globals'
+import { RequestOptions } from '@octokit/types'
 import { graphql, GraphqlResponseError } from '@octokit/graphql'
 import {
   Repository,
   CreateCommitOnBranchPayload,
   FileChanges,
   CommittableBranch,
+  FileAddition,
 } from '@octokit/graphql-schema'
 import * as client from '../../src/github/client'
+import * as blob from '../../src/blob'
 import { getRepository, createCommitOnBranch } from '../../src/github/graphql'
 
 describe('GitHub API', () => {
@@ -76,6 +79,7 @@ describe('GitHub API', () => {
 
   describe('createCommitOnBranch', () => {
     let mockGetInput: jest.SpiedFunction<typeof core.getInput>
+    let mockGetBlob: jest.SpiedFunction<typeof blob.getBlob>
 
     beforeEach(() => {
       mockGetInput = jest
@@ -83,6 +87,7 @@ describe('GitHub API', () => {
         .mockImplementation((name, options) => {
           return name === 'commit-message' ? 'fake commit message' : ''
         })
+      mockGetBlob = jest.spyOn(blob, 'getBlob')
     })
 
     it('should create a commit on the given branch', async () => {
@@ -112,11 +117,46 @@ describe('GitHub API', () => {
     })
 
     it('should populate file changes content', async () => {
-      const fileChanges: FileChanges = {
-        additions: [
-          { path: 'my_commit.txt', contents: 'initial commit content' },
-        ],
+      const fileAddition: FileAddition = {
+        path: 'my_commit.txt',
+        contents: 'initial commit content',
       }
+      const fileChanges: FileChanges = {
+        additions: [fileAddition],
+      }
+      const mockBlob = new blob.Blob(fileAddition.path)
+      jest
+        .spyOn(mockBlob, 'load')
+        .mockImplementation(async () => Promise.resolve(fileAddition))
+      mockGetBlob.mockImplementation((file: any): any => mockBlob)
+
+      mockClient.mockImplementation(() => {
+        return graphql.defaults({
+          request: {
+            fetch: fetchMock
+              .sandbox()
+              .post(
+                'https://api.github.com/graphql',
+                (_url, options: RequestOptions) => {
+                  const body = JSON.parse(options.body)
+                  expect(body.query).toEqual(
+                    expect.stringMatching(
+                      /mutation(.+CreateCommitOnBranchInput)/
+                    )
+                  )
+                  expect(body.variables).toHaveProperty(
+                    'input.fileChanges.additions'
+                  )
+                  const additions = body.variables.input.fileChanges.additions
+                  expect(additions).toContainEqual(fileAddition)
+
+                  return { data: {} }
+                }
+              ),
+          },
+        })
+      })
+
       const branch: CommittableBranch = {}
       const result = await createCommitOnBranch(branch, fileChanges)
       expect(mockClient).toBeCalled()
