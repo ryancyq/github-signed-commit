@@ -30611,6 +30611,7 @@ function getRepository(owner, repo) {
                 owner: owner,
                 repo: repo,
             });
+            core.debug(`Request successful, data: ${JSON.stringify(repository)}`);
             return repository;
         }
         catch (error) {
@@ -30619,7 +30620,7 @@ function getRepository(owner, repo) {
                 core.error(error.message);
                 core.debug(
                 // eslint-disable-next-line @typescript-eslint/restrict-template-expressions
-                `Request failed, query: ${query}, variables: ${JSON.stringify(variables)}, data: ${error.data}`);
+                `Request failed, query: ${query}, variables: ${JSON.stringify(variables)}, data: ${JSON.stringify(error.data)}`);
             }
             throw error;
         }
@@ -30643,6 +30644,7 @@ function createCommitOnBranch(branch, parentCommit, fileChanges) {
         const input = {
             input: {
                 branch,
+                // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
                 expectedHeadOid: parentCommit.oid,
                 message: {
                     headline: commitMessage,
@@ -30651,6 +30653,7 @@ function createCommitOnBranch(branch, parentCommit, fileChanges) {
             },
         };
         const { createCommitOnBranch } = yield (0, client_1.graphqlClient)()(mutation, input);
+        core.debug(`Request successful, data: ${JSON.stringify(createCommitOnBranch)}`);
         return createCommitOnBranch;
     });
 }
@@ -30664,8 +30667,13 @@ function createCommitOnBranch(branch, parentCommit, fileChanges) {
 
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.isCommit = isCommit;
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 function isCommit(obj) {
-    return (obj && 'oid' in obj && 'tree' in obj && 'message' in obj && 'parents' in obj);
+    return (!!obj &&
+        'oid' in obj &&
+        'tree' in obj &&
+        'message' in obj &&
+        'parents' in obj);
 }
 
 
