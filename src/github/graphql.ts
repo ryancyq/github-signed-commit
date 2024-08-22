@@ -1,11 +1,12 @@
 import * as core from '@actions/core'
 import { GraphqlResponseError } from '@octokit/graphql'
 import {
-  Repository,
-  CreateCommitOnBranchPayload,
-  MutationCreateCommitOnBranchArgs,
+  Commit,
   CommittableBranch,
+  CreateCommitOnBranchPayload,
   FileChanges,
+  MutationCreateCommitOnBranchArgs,
+  Repository,
 } from '@octokit/graphql-schema'
 
 import { graphqlClient } from './client'
@@ -59,6 +60,7 @@ export async function getRepository(
 
 export async function createCommitOnBranch(
   branch: CommittableBranch,
+  parentCommit: Commit,
   fileChanges: FileChanges
 ): Promise<CreateCommitOnBranchPayload> {
   const commitMessage = core.getInput('commit-message', { required: true })
@@ -81,7 +83,7 @@ export async function createCommitOnBranch(
   const input: MutationCreateCommitOnBranchArgs = {
     input: {
       branch,
-      expectedHeadOid: undefined,
+      expectedHeadOid: parentCommit.oid,
       message: {
         headline: commitMessage,
       },

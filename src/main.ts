@@ -2,6 +2,8 @@ import * as core from '@actions/core'
 import * as github from '@actions/github'
 
 import { getRepository, createCommitOnBranch } from './github/graphql'
+import { isCommit } from './github/types'
+import { Commit } from '@octokit/graphql-schema'
 import { addFileChanges, getFileChanges } from './git'
 import { getInput } from './utils/input'
 import { FileMissingError, NoChangesError } from './errors'
@@ -33,11 +35,20 @@ export async function run(): Promise<void> {
     const ref = getInput('ref', { default: repository.defaultBranchRef?.name })
     const commitResponse = await core.group(`committing files`, async () => {
       const startTime = Date.now()
+      const target = repository.defaultBranchRef?.target
+      const parentCommit = isCommit(target)
+        ? target
+        : (() => {
+            throw new Error(
+              `Unable to locate the parent commit of the branch ${ref}`
+            )
+          })()
       const commitData = await createCommitOnBranch(
         {
           repositoryNameWithOwner: repository.nameWithOwner,
           branchName: ref,
         },
+        parentCommit,
         fileChanges
       )
       const endTime = Date.now()
