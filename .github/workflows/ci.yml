@@ -53,6 +53,11 @@ jobs:
         id: checkout
         uses: actions/checkout@v4
 
+      - name: generate dummy content
+        shell: bash
+        run: |
+          touch test.txt && echo 'abc' > test.txt
+
       - name: Test Local Action
         id: test-action
         uses: ./
@@ -60,8 +65,8 @@ jobs:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           files: |
-            dist/index.js
-          commit-message: Add dist/index.js
+            test.txt
+          commit-message: Add Dummy Content
           ref: refs/heads/test-action
 
       - name: Print Output
