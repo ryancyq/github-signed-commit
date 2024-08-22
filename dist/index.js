@@ -30316,6 +30316,109 @@ function wrappy (fn, cb) {
 
 /***/ }),
 
+/***/ 5312:
+/***/ (function(__unused_webpack_module, exports, __nccwpck_require__) {
+
+
+var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    var desc = Object.getOwnPropertyDescriptor(m, k);
+    if (!desc || ("get" in desc ? !m.__esModule : desc.writable || desc.configurable)) {
+      desc = { enumerable: true, get: function() { return m[k]; } };
+    }
+    Object.defineProperty(o, k2, desc);
+}) : (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    o[k2] = m[k];
+}));
+var __setModuleDefault = (this && this.__setModuleDefault) || (Object.create ? (function(o, v) {
+    Object.defineProperty(o, "default", { enumerable: true, value: v });
+}) : function(o, v) {
+    o["default"] = v;
+});
+var __importStar = (this && this.__importStar) || function (mod) {
+    if (mod && mod.__esModule) return mod;
+    var result = {};
+    if (mod != null) for (var k in mod) if (k !== "default" && Object.prototype.hasOwnProperty.call(mod, k)) __createBinding(result, mod, k);
+    __setModuleDefault(result, mod);
+    return result;
+};
+var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
+    function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
+    return new (P || (P = Promise))(function (resolve, reject) {
+        function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
+        function rejected(value) { try { step(generator["throw"](value)); } catch (e) { reject(e); } }
+        function step(result) { result.done ? resolve(result.value) : adopt(result.value).then(fulfilled, rejected); }
+        step((generator = generator.apply(thisArg, _arguments || [])).next());
+    });
+};
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.Blob = void 0;
+exports.getBlob = getBlob;
+const core = __importStar(__nccwpck_require__(2186));
+const fs = __importStar(__nccwpck_require__(7561));
+const node_buffer_1 = __nccwpck_require__(2254);
+const node_path_1 = __nccwpck_require__(9411);
+const node_stream_1 = __nccwpck_require__(4492);
+const promises_1 = __nccwpck_require__(6402);
+const cwd_1 = __nccwpck_require__(7119);
+const base64Transform = new node_stream_1.Transform({
+    transform(chunk, encoding, callback) {
+        let transformed = '';
+        if (node_buffer_1.Buffer.isBuffer(chunk)) {
+            transformed = chunk.toString('base64');
+        }
+        callback(null, transformed);
+    },
+});
+class Blob {
+    constructor(path) {
+        this.path = path;
+        this.absolutePath = (0, node_path_1.join)((0, cwd_1.getCwd)(), path);
+    }
+    get streamable() {
+        if (!fs.existsSync(this.absolutePath)) {
+            throw new Error(`File does not exist, path: ${this.absolutePath}.`);
+        }
+        return fs
+            .createReadStream(this.absolutePath, { encoding: 'utf8' })
+            .pipe(base64Transform);
+    }
+    load() {
+        return __awaiter(this, void 0, void 0, function* () {
+            const chunks = [];
+            const stream = this.streamable;
+            stream.on('data', (chunk) => {
+                if (node_buffer_1.Buffer.isBuffer(chunk))
+                    chunks.push(chunk);
+                else if (typeof chunk === 'string')
+                    chunks.push(node_buffer_1.Buffer.from(chunk));
+                // eslint-disable-next-line @typescript-eslint/restrict-template-expressions
+                core.debug(`received blob: ${chunk}`);
+            });
+            stream.on('error', (err) => {
+                throw new Error(`Read file failed, error: ${err.message}, path: ${this.absolutePath}`);
+            });
+            yield (0, promises_1.finished)(stream);
+            const content = node_buffer_1.Buffer.concat(chunks).toString('utf-8');
+            return { path: this.path, contents: content };
+        });
+    }
+}
+exports.Blob = Blob;
+const createStream = (filePath) => new Blob(filePath);
+function getBlob(filePath) {
+    if (Array.isArray(filePath)) {
+        return filePath.map(createStream);
+    }
+    else if (typeof filePath === 'string') {
+        return createStream(filePath);
+    }
+}
+
+
+/***/ }),
+
 /***/ 6976:
 /***/ ((__unused_webpack_module, exports) => {
 
@@ -30485,6 +30588,7 @@ exports.createCommitOnBranch = createCommitOnBranch;
 const core = __importStar(__nccwpck_require__(2186));
 const graphql_1 = __nccwpck_require__(8467);
 const client_1 = __nccwpck_require__(7047);
+const blob_1 = __nccwpck_require__(5312);
 function getRepository(owner, repo) {
     return __awaiter(this, void 0, void 0, function* () {
         try {
@@ -30527,6 +30631,10 @@ function createCommitOnBranch(branch, fileChanges) {
         }
       }
     }`;
+        if (fileChanges.additions) {
+            const promises = fileChanges.additions.map((file) => (0, blob_1.getBlob)(file.path).load());
+            fileChanges.additions = yield Promise.all(promises);
+        }
         const input = {
             input: {
                 branch,
@@ -30818,10 +30926,24 @@ module.exports = __WEBPACK_EXTERNAL_createRequire(import.meta.url)("net");
 
 /***/ }),
 
+/***/ 2254:
+/***/ ((module) => {
+
+module.exports = __WEBPACK_EXTERNAL_createRequire(import.meta.url)("node:buffer");
+
+/***/ }),
+
 /***/ 5673:
 /***/ ((module) => {
 
 module.exports = __WEBPACK_EXTERNAL_createRequire(import.meta.url)("node:events");
+
+/***/ }),
+
+/***/ 7561:
+/***/ ((module) => {
+
+module.exports = __WEBPACK_EXTERNAL_createRequire(import.meta.url)("node:fs");
 
 /***/ }),
 
@@ -30836,6 +30958,13 @@ module.exports = __WEBPACK_EXTERNAL_createRequire(import.meta.url)("node:path");
 /***/ ((module) => {
 
 module.exports = __WEBPACK_EXTERNAL_createRequire(import.meta.url)("node:stream");
+
+/***/ }),
+
+/***/ 6402:
+/***/ ((module) => {
+
+module.exports = __WEBPACK_EXTERNAL_createRequire(import.meta.url)("node:stream/promises");
 
 /***/ }),
 
