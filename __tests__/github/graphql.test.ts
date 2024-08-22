@@ -9,8 +9,8 @@ import {
   FileChanges,
   CommittableBranch,
 } from '@octokit/graphql-schema'
-import * as client from '../src/github-client'
-import { getRepository, createCommitOnBranch } from '../src/github'
+import * as client from '../../src/github/client'
+import { getRepository, createCommitOnBranch } from '../../src/github/graphql'
 
 describe('GitHub API', () => {
   let mockClient: jest.SpiedFunction<typeof client.graphqlClient>

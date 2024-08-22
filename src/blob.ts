@@ -6,7 +6,7 @@ import { Readable, Transform } from 'node:stream'
 import { finished } from 'node:stream/promises'
 import { FileAddition } from '@octokit/graphql-schema'
 
-import { getCwd } from './cwd'
+import { getCwd } from './utils/cwd'
 
 const base64Transform = new Transform({
   transform(chunk, encoding, callback) {

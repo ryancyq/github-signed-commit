@@ -4,7 +4,7 @@ import { Buffer } from 'node:buffer'
 import { Readable } from 'node:stream'
 import { describe, jest, beforeEach, it, expect } from '@jest/globals'
 import { Blob, getBlob } from '../src/blob'
-import * as cwd from '../src/cwd'
+import * as cwd from '../src/utils/cwd'
 
 describe('Blob', () => {
   let mockCwd: jest.SpiedFunction<typeof cwd.getCwd>

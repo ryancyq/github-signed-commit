@@ -7,7 +7,7 @@ import {
   it,
   jest,
 } from '@jest/globals'
-import { getCwd } from '../src/cwd'
+import { getCwd } from '../../src/utils/cwd'
 
 describe('Current Working Directory', () => {
   beforeEach(() => {

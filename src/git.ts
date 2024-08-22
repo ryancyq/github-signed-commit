@@ -7,7 +7,7 @@ import {
   FileDeletion,
 } from '@octokit/graphql-schema'
 
-import { getCwd } from './cwd'
+import { getCwd } from './utils/cwd'
 
 export async function addFileChanges(globPatterns: string[]): Promise<void> {
   const cwd = getCwd()

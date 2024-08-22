@@ -1,6 +1,6 @@
 import * as core from '@actions/core'
 import { describe, jest, beforeEach, it, expect } from '@jest/globals'
-import { graphqlClient } from '../src/github-client'
+import { graphqlClient } from '../../src/github/client'
 
 describe('GitHub Client', () => {
   let mockGetInput: jest.SpiedFunction<typeof core.getInput>

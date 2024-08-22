@@ -1,9 +1,9 @@
 import * as core from '@actions/core'
 import * as github from '@actions/github'
 
-import { getRepository, createCommitOnBranch } from './github'
+import { getRepository, createCommitOnBranch } from './github/graphql'
 import { addFileChanges, getFileChanges } from './git'
-import { getInput } from './input'
+import { getInput } from './utils/input'
 import { FileMissingError, NoChangesError } from './errors'
 
 export async function run(): Promise<void> {

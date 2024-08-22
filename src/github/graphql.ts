@@ -8,7 +8,7 @@ import {
   FileChanges,
 } from '@octokit/graphql-schema'
 
-import { graphqlClient } from './github-client'
+import { graphqlClient } from './client'
 
 export async function getRepository(
   owner: string,

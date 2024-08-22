@@ -1,7 +1,7 @@
 import * as core from '@actions/core'
 import * as exec from '@actions/exec'
 import { describe, jest, beforeEach, afterAll, it, expect } from '@jest/globals'
-import * as cwd from '../src/cwd'
+import * as cwd from '../src/utils/cwd'
 import { addFileChanges, getFileChanges } from '../src/git'
 
 describe('Git CLI', () => {
