@@ -1,42 +1,51 @@
-import { describe, jest, beforeEach, it, expect } from '@jest/globals'
 import fs from 'node:fs'
 import { join } from 'node:path'
-
-import { Blob, readFileContent } from '../src/blob'
-
-jest.mock('../src/cwd', () => ({ __esModule: true, default: __dirname }))
+import { Buffer } from 'node:buffer'
+import { Readable } from 'node:stream'
+import { describe, jest, beforeEach, it, expect } from '@jest/globals'
+import { Blob, getBlob } from '../src/blob'
+import * as cwd from '../src/cwd'
 
 describe('Blob', () => {
+  let mockCwd: jest.SpiedFunction<typeof cwd.getCwd>
   let blob: Blob
 
   beforeEach(() => {
-    blob = readFileContent({ path: 'fixtures/blob.txt', contents: '' })
+    mockCwd = jest.spyOn(cwd, 'getCwd').mockImplementation(() => __dirname)
+    blob = new Blob('/my_path.txt')
   })
 
   it('path', () => {
-    expect(blob.path).toBe('fixtures/blob.txt')
+    expect(blob.path).toBe('/my_path.txt')
+    expect(blob.absolutePath).toBe(join(__dirname, '/my_path.txt'))
   })
 
   it('stream', async () => {
-    const originalFile = join(__dirname, blob.path)
-    const originalContent = fs.readFileSync(originalFile).toString()
-
-    expect(originalContent).toEqual('Hi, this is Blob.')
+    blob = new Blob('/my_stream.txt')
+    jest
+      .spyOn(blob, 'streamable', 'get')
+      .mockReturnValue(Readable.from('Hello World'))
 
     const chunks: Buffer[] = []
-    for await (const chunk of blob.stream) {
+    for await (const chunk of blob.streamable) {
       chunks.push(Buffer.isBuffer(chunk) ? chunk : Buffer.from(chunk))
     }
     const streamedContent = Buffer.concat(chunks).toString('utf8')
+    expect(streamedContent).toEqual('Hello World')
+  })
 
-    expect(streamedContent).toEqual(
-      Buffer.from(originalContent).toString('base64')
-    )
+  it('getBlob', async () => {
+    blob = getBlob('fixtures/blob.json')
+
+    expect(blob.path).toBe('fixtures/blob.json')
+    expect(blob.absolutePath).toBe(join(__dirname, 'fixtures/blob.json'))
   })
 
   it('load', async () => {
-    expect((await blob.load()).contents).toEqual(
-      fs.readFileSync(join(__dirname, 'fixtures', 'blob.base64.txt')).toString()
+    blob = getBlob('fixtures/blob.txt')
+    const fileAddition = await blob.load()
+    expect(fileAddition.contents).toEqual(
+      fs.readFileSync(join(__dirname, 'fixtures/blob.base64.txt')).toString()
     )
   })
 })
