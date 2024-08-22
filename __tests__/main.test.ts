@@ -2,18 +2,13 @@ import * as core from '@actions/core'
 import * as main from '../src/main'
 import { describe, jest, beforeEach, it, expect } from '@jest/globals'
 
-jest.mock('@actions/core')
-
-const getMultilineInputMock = core.getMultilineInput as jest.MockedFunction<
-  typeof core.getMultilineInput
->
-
 describe('action', () => {
   let runMock: jest.SpiedFunction<typeof main.run>
   let debugMock: jest.SpiedFunction<typeof core.debug>
   let errorMock: jest.SpiedFunction<typeof core.error>
   let setFailedMock: jest.SpiedFunction<typeof core.setFailed>
   let setOutputMock: jest.SpiedFunction<typeof core.setOutput>
+  let mockGetMultilineInput: jest.SpiedFunction<typeof core.getMultilineInput>
 
   beforeEach(() => {
     jest.clearAllMocks()
@@ -23,10 +18,11 @@ describe('action', () => {
     errorMock = jest.spyOn(core, 'error')
     setFailedMock = jest.spyOn(core, 'setFailed')
     setOutputMock = jest.spyOn(core, 'setOutput')
+    mockGetMultilineInput = jest.spyOn(core, 'getMultilineInput')
   })
 
   it('sets a failed status', async () => {
-    getMultilineInputMock.mockImplementation(() => {
+    mockGetMultilineInput.mockImplementation(() => {
       throw new Error('My Error')
     })
 

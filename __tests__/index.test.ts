@@ -1,9 +1,6 @@
-import { describe, jest, beforeEach, it, expect } from '@jest/globals'
-
 import * as core from '@actions/core'
 import * as main from '../src/main'
-
-jest.mock('@actions/core')
+import { describe, jest, beforeEach, it, expect } from '@jest/globals'
 
 describe('index', () => {
   let runMock: jest.SpiedFunction<typeof main.run>

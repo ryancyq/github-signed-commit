@@ -1,11 +1,13 @@
-import { describe, jest, beforeEach, afterAll, it, expect } from '@jest/globals'
-
 import * as core from '@actions/core'
+import {
+  afterEach,
+  beforeEach,
+  describe,
+  expect,
+  it,
+  jest,
+} from '@jest/globals'
 import { getCwd } from '../src/cwd'
-
-jest.mock('@actions/core')
-
-const mockGetInput = core.getInput as jest.MockedFunction<typeof core.getInput>
 
 describe('Current Working Directory', () => {
   beforeEach(() => {
@@ -13,17 +15,23 @@ describe('Current Working Directory', () => {
   })
 
   describe('getCwd', () => {
-    const OLD_ENV = process.env
+    let mockGetInput: jest.SpiedFunction<typeof core.getInput>
+    let replacedEnv: jest.Replaced<typeof process.env> | undefined
+
     beforeEach(() => {
       jest.resetModules()
-      process.env.GITHUB_WORKSPACE = '/users/test'
+      mockGetInput = jest.spyOn(core, 'getInput')
     })
 
-    afterAll(() => {
-      process.env = OLD_ENV
+    afterEach(() => {
+      replacedEnv?.restore()
     })
 
     it('should read from GITHUB_WORKSPACE by default', async () => {
+      replacedEnv = jest.replaceProperty(process, 'env', {
+        GITHUB_WORKSPACE: '/users/test',
+      })
+
       expect(getCwd()).toBe('/users/test')
       expect(mockGetInput).toBeCalled()
     })

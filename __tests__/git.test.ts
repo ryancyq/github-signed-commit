@@ -1,26 +1,25 @@
-import { describe, jest, beforeEach, afterAll, it, expect } from '@jest/globals'
-
 import * as core from '@actions/core'
-import { exec } from '@actions/exec'
+import * as exec from '@actions/exec'
+import { describe, jest, beforeEach, afterAll, it, expect } from '@jest/globals'
+import * as cwd from '../src/cwd'
 import { addFileChanges, getFileChanges } from '../src/git'
-import { getCwd } from '../src/cwd'
-
-jest.mock('@actions/exec')
-jest.mock('../src/cwd', () => ({
-  __esModule: true,
-  getCwd: () => '/users/test-workspace',
-}))
-
-const mockExec = exec as jest.MockedFunction<typeof exec>
 
 describe('Git CLI', () => {
+  let mockExec: jest.SpiedFunction<typeof exec.exec>
+  let mockCwd: jest.SpiedFunction<typeof cwd.getCwd>
+
   beforeEach(() => {
     jest.clearAllMocks()
+    mockExec = jest.spyOn(exec, 'exec')
+    mockCwd = jest
+      .spyOn(cwd, 'getCwd')
+      .mockImplementation(() => '/users/test-workspace')
   })
 
   describe('git add', () => {
     it('should ensure file paths are within curent working directory', async () => {
       mockExec.mockImplementation(async (cmd, args, options) => 0)
+
       const changes = await addFileChanges(['*.ts', '~/.bashrc'])
       expect(mockExec).toBeCalled()
       expect(mockExec).toBeCalledWith(
@@ -43,6 +42,7 @@ describe('Git CLI', () => {
         }
         return 0
       })
+
       const warningMock = jest.spyOn(core, 'warning')
       const changes = await addFileChanges(['*.ts'])
       expect(mockExec).toBeCalled()

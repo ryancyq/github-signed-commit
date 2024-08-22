@@ -1,19 +1,17 @@
-import { describe, jest, beforeEach, it, expect } from '@jest/globals'
-
 import * as core from '@actions/core'
+import { describe, jest, beforeEach, it, expect } from '@jest/globals'
 import { graphqlClient } from '../src/github-client'
 
-jest.mock('@actions/core')
-
-const mockGetInput = core.getInput as jest.MockedFunction<typeof core.getInput>
-
 describe('GitHub Client', () => {
+  let mockGetInput: jest.SpiedFunction<typeof core.getInput>
+
   beforeEach(() => {
     jest.clearAllMocks()
-    mockGetInput.mockImplementation((name, options) => {
-      if (name === 'GH_TOKEN') return 'fake-token'
-      return ''
-    })
+    mockGetInput = jest
+      .spyOn(core, 'getInput')
+      .mockImplementation((name, options) => {
+        return name === 'GH_TOKEN' ? 'fake-token' : ''
+      })
   })
 
   it('should read GH_TOKEN from input', async () => {
