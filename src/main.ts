@@ -20,7 +20,7 @@ export async function run(): Promise<void> {
 
     const { owner, repo } = github.context.repo
     const repository = await core.group(
-      `fetching repository info for owner:${owner}, repo: ${repo}`,
+      `fetching repository info for owner: ${owner}, repo: ${repo}`,
       async () => {
         const startTime = Date.now()
         const repositoryData = await getRepository(owner, repo)
