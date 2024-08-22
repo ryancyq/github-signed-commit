@@ -14,10 +14,10 @@ describe('action', () => {
     jest.clearAllMocks()
 
     runMock = jest.spyOn(main, 'run')
-    debugMock = jest.spyOn(core, 'debug')
-    errorMock = jest.spyOn(core, 'error')
-    setFailedMock = jest.spyOn(core, 'setFailed')
-    setOutputMock = jest.spyOn(core, 'setOutput')
+    debugMock = jest.spyOn(core, 'debug').mockReturnThis()
+    errorMock = jest.spyOn(core, 'error').mockReturnThis()
+    setFailedMock = jest.spyOn(core, 'setFailed').mockReturnThis()
+    setOutputMock = jest.spyOn(core, 'setOutput').mockReturnThis()
     mockGetMultilineInput = jest.spyOn(core, 'getMultilineInput')
   })
 

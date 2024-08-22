@@ -6,7 +6,7 @@ describe('index', () => {
   let runMock: jest.SpiedFunction<typeof main.run>
 
   it('calls run when imported', async () => {
-    runMock = jest.spyOn(main, 'run')
+    runMock = jest.spyOn(main, 'run').mockReturnThis()
 
     // eslint-disable-next-line @typescript-eslint/no-require-imports
     require('../src/index')

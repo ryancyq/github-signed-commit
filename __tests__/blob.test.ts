@@ -1,3 +1,4 @@
+import * as core from '@actions/core'
 import fs from 'node:fs'
 import { join } from 'node:path'
 import { Buffer } from 'node:buffer'
@@ -11,6 +12,7 @@ describe('Blob', () => {
   let blob: Blob
 
   beforeEach(() => {
+    jest.spyOn(core, 'debug').mockReturnThis()
     mockCwd = jest.spyOn(cwd, 'getCwd').mockImplementation(() => __dirname)
     blob = new Blob('/my_path.txt')
   })

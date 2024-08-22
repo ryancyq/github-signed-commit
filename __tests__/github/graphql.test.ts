@@ -60,8 +60,8 @@ describe('GitHub API', () => {
           },
         })
       })
-      const mockError = jest.spyOn(core, 'error')
-      const mockDebug = jest.spyOn(core, 'debug')
+      const mockError = jest.spyOn(core, 'error').mockReturnThis()
+      const mockDebug = jest.spyOn(core, 'debug').mockReturnThis()
 
       await expect(getRepository('owner', 'repo')).rejects.toThrow(
         'GraphQL error'

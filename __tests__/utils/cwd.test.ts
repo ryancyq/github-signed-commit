@@ -12,6 +12,7 @@ import { getCwd } from '../../src/utils/cwd'
 describe('Current Working Directory', () => {
   beforeEach(() => {
     jest.clearAllMocks()
+    jest.spyOn(core, 'debug').mockReturnThis()
   })
 
   describe('getCwd', () => {
