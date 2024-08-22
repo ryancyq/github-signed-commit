@@ -30316,6 +30316,53 @@ function wrappy (fn, cb) {
 
 /***/ }),
 
+/***/ 8211:
+/***/ (function(__unused_webpack_module, exports, __nccwpck_require__) {
+
+
+var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    var desc = Object.getOwnPropertyDescriptor(m, k);
+    if (!desc || ("get" in desc ? !m.__esModule : desc.writable || desc.configurable)) {
+      desc = { enumerable: true, get: function() { return m[k]; } };
+    }
+    Object.defineProperty(o, k2, desc);
+}) : (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    o[k2] = m[k];
+}));
+var __setModuleDefault = (this && this.__setModuleDefault) || (Object.create ? (function(o, v) {
+    Object.defineProperty(o, "default", { enumerable: true, value: v });
+}) : function(o, v) {
+    o["default"] = v;
+});
+var __importStar = (this && this.__importStar) || function (mod) {
+    if (mod && mod.__esModule) return mod;
+    var result = {};
+    if (mod != null) for (var k in mod) if (k !== "default" && Object.prototype.hasOwnProperty.call(mod, k)) __createBinding(result, mod, k);
+    __setModuleDefault(result, mod);
+    return result;
+};
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.getCwd = getCwd;
+const core = __importStar(__nccwpck_require__(2186));
+const input_1 = __nccwpck_require__(6747);
+function getCwd() {
+    const workspace = (0, input_1.getInput)('workspace', {
+        default: process.env.GITHUB_WORKSPACE,
+    });
+    if (workspace) {
+        core.debug(`cwd: ${workspace}`);
+        return workspace;
+    }
+    const current = process.cwd();
+    core.debug(`cwd: ${current}`);
+    return current;
+}
+
+
+/***/ }),
+
 /***/ 6976:
 /***/ ((__unused_webpack_module, exports) => {
 
@@ -30356,13 +30403,14 @@ exports.addFileChanges = addFileChanges;
 exports.getFileChanges = getFileChanges;
 const core_1 = __nccwpck_require__(2186);
 const exec_1 = __nccwpck_require__(1514);
-const path_1 = __nccwpck_require__(1017);
-const input_1 = __nccwpck_require__(6747);
+const node_path_1 = __nccwpck_require__(9411);
+const cwd_1 = __nccwpck_require__(8211);
 function addFileChanges(globPatterns) {
     return __awaiter(this, void 0, void 0, function* () {
-        const cwd = (0, input_1.getInput)('workspace', { default: process.env.GITHUB_WORKSPACE });
-        const cwdPaths = globPatterns.map((p) => (0, path_1.join)(cwd !== null && cwd !== void 0 ? cwd : '/', p));
+        const cwd = (0, cwd_1.getCwd)();
+        const cwdPaths = globPatterns.map((p) => (0, node_path_1.join)(cwd, p));
         yield (0, exec_1.exec)('git', ['add', ...cwdPaths], {
+            silent: true,
             ignoreReturnCode: false,
             listeners: {
                 errline: (error) => {
@@ -30423,7 +30471,7 @@ function getFileChanges() {
 
 
 Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports["default"] = graphqlClient;
+exports.graphqlClient = graphqlClient;
 const core_1 = __nccwpck_require__(2186);
 const graphql_1 = __nccwpck_require__(8467);
 function graphqlClient() {
@@ -30431,8 +30479,10 @@ function graphqlClient() {
     const customHeaders = {};
     customHeaders.authorization = `token ${token}`;
     if (process.env.npm_package_name && process.env.npm_package_version) {
-        customHeaders['user-agent'] =
-            `${process.env.npm_package_name}/${process.env.npm_package_version}`;
+        customHeaders['user-agent'] = [
+            process.env.npm_package_name,
+            process.env.npm_package_version,
+        ].join('/');
     }
     return graphql_1.graphql.defaults({ headers: customHeaders });
 }
@@ -30476,15 +30526,12 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
         step((generator = generator.apply(thisArg, _arguments || [])).next());
     });
 };
-var __importDefault = (this && this.__importDefault) || function (mod) {
-    return (mod && mod.__esModule) ? mod : { "default": mod };
-};
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.getRepository = getRepository;
 exports.createCommitOnBranch = createCommitOnBranch;
 const core = __importStar(__nccwpck_require__(2186));
 const graphql_1 = __nccwpck_require__(8467);
-const github_client_1 = __importDefault(__nccwpck_require__(5307));
+const github_client_1 = __nccwpck_require__(5307);
 function getRepository(owner, repo) {
     return __awaiter(this, void 0, void 0, function* () {
         try {
@@ -30498,7 +30545,7 @@ function getRepository(owner, repo) {
           }
         }
       `;
-            const { repository } = yield (0, github_client_1.default)()(query, {
+            const { repository } = yield (0, github_client_1.graphqlClient)()(query, {
                 owner: owner,
                 repo: repo,
             });
@@ -30508,7 +30555,7 @@ function getRepository(owner, repo) {
             if (error instanceof graphql_1.GraphqlResponseError) {
                 const { query, variables } = error.request;
                 core.error(error.message);
-                core.warning(
+                core.debug(
                 // eslint-disable-next-line @typescript-eslint/restrict-template-expressions
                 `Request failed, query: ${query}, variables: ${JSON.stringify(variables)}, data: ${error.data}`);
             }
@@ -30537,7 +30584,7 @@ function createCommitOnBranch(branch, fileChanges) {
                 fileChanges,
             },
         };
-        const { createCommitOnBranch } = yield (0, github_client_1.default)()(mutation, input);
+        const { createCommitOnBranch } = yield (0, github_client_1.graphqlClient)()(mutation, input);
         return createCommitOnBranch;
     });
 }
@@ -30578,10 +30625,10 @@ const core = __importStar(__nccwpck_require__(2186));
 function getInput(name, options = {}) {
     const value = core.getInput(name, options);
     if (!value && options.default) {
-        core.debug(`${name}: ${options.default}`);
+        core.debug(`input: ${name}=${options.default}`);
         return options.default;
     }
-    core.debug(`${name}: ${value}`);
+    core.debug(`input: ${name}=${value}`);
     return value;
 }
 
@@ -30775,6 +30822,13 @@ module.exports = __WEBPACK_EXTERNAL_createRequire(import.meta.url)("net");
 /***/ ((module) => {
 
 module.exports = __WEBPACK_EXTERNAL_createRequire(import.meta.url)("node:events");
+
+/***/ }),
+
+/***/ 9411:
+/***/ ((module) => {
+
+module.exports = __WEBPACK_EXTERNAL_createRequire(import.meta.url)("node:path");
 
 /***/ }),
 
