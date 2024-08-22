@@ -2,23 +2,12 @@ import * as core from '@actions/core'
 import * as fs from 'node:fs'
 import { Buffer } from 'node:buffer'
 import { join } from 'node:path'
-import { Readable, Transform } from 'node:stream'
+import { Readable } from 'node:stream'
 import { finished } from 'node:stream/promises'
 import { FileAddition } from '@octokit/graphql-schema'
 
 import { getCwd } from './utils/cwd'
-
-const base64Transform = new Transform({
-  transform(chunk, encoding, callback) {
-    let transformed = ''
-
-    if (Buffer.isBuffer(chunk)) {
-      transformed = chunk.toString('base64')
-    }
-
-    callback(null, transformed)
-  },
-})
+import Base64Encoder from './stream/base64-encoder'
 
 export class Blob {
   path: string
@@ -36,7 +25,7 @@ export class Blob {
 
     return fs
       .createReadStream(this.absolutePath, { encoding: 'utf8' })
-      .pipe(base64Transform)
+      .pipe(new Base64Encoder())
   }
 
   async load(): Promise<FileAddition> {
