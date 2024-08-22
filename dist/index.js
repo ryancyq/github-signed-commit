@@ -30594,6 +30594,15 @@ function getRepository(owner, repo) {
             id
             defaultBranchRef {
               name
+              target {
+                ... on Commit {
+                  history(first: 1) {
+                    nodes {
+                      oid
+                    }
+                  }
+                }
+              }
             }
           }
         }
@@ -30616,7 +30625,7 @@ function getRepository(owner, repo) {
         }
     });
 }
-function createCommitOnBranch(branch, fileChanges) {
+function createCommitOnBranch(branch, parentCommit, fileChanges) {
     return __awaiter(this, void 0, void 0, function* () {
         const commitMessage = core.getInput('commit-message', { required: true });
         const mutation = `
@@ -30634,7 +30643,7 @@ function createCommitOnBranch(branch, fileChanges) {
         const input = {
             input: {
                 branch,
-                expectedHeadOid: undefined,
+                expectedHeadOid: parentCommit.oid,
                 message: {
                     headline: commitMessage,
                 },
@@ -30644,6 +30653,19 @@ function createCommitOnBranch(branch, fileChanges) {
         const { createCommitOnBranch } = yield (0, client_1.graphqlClient)()(mutation, input);
         return createCommitOnBranch;
     });
+}
+
+
+/***/ }),
+
+/***/ 8768:
+/***/ ((__unused_webpack_module, exports) => {
+
+
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.isCommit = isCommit;
+function isCommit(obj) {
+    return (obj && 'oid' in obj && 'tree' in obj && 'message' in obj && 'parents' in obj);
 }
 
 
@@ -30690,6 +30712,7 @@ exports.run = run;
 const core = __importStar(__nccwpck_require__(2186));
 const github = __importStar(__nccwpck_require__(5438));
 const graphql_1 = __nccwpck_require__(20);
+const types_1 = __nccwpck_require__(8768);
 const git_1 = __nccwpck_require__(6350);
 const input_1 = __nccwpck_require__(5073);
 const errors_1 = __nccwpck_require__(6976);
@@ -30716,11 +30739,18 @@ function run() {
             }));
             const ref = (0, input_1.getInput)('ref', { default: (_e = repository.defaultBranchRef) === null || _e === void 0 ? void 0 : _e.name });
             const commitResponse = yield core.group(`committing files`, () => __awaiter(this, void 0, void 0, function* () {
+                var _a;
                 const startTime = Date.now();
+                const target = (_a = repository.defaultBranchRef) === null || _a === void 0 ? void 0 : _a.target;
+                const parentCommit = (0, types_1.isCommit)(target)
+                    ? target
+                    : (() => {
+                        throw new Error(`Unable to locate the parent commit of the branch ${ref}`);
+                    })();
                 const commitData = yield (0, graphql_1.createCommitOnBranch)({
                     repositoryNameWithOwner: repository.nameWithOwner,
                     branchName: ref,
-                }, fileChanges);
+                }, parentCommit, fileChanges);
                 const endTime = Date.now();
                 core.debug(`time taken: ${(endTime - startTime).toString()} ms`);
                 return commitData;
@@ -30858,11 +30888,15 @@ Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.getInput = getInput;
 const core = __importStar(__nccwpck_require__(2186));
 function getInput(name, options = {}) {
-    const value = core.getInput(name, options);
+    var _a;
+    const required = (_a = options.required) !== null && _a !== void 0 ? _a : false;
+    const value = core.getInput(name, Object.assign(options, { required: false }));
     if (!value && options.default) {
         core.debug(`input: ${name}=${options.default}`);
         return options.default;
     }
+    if (!value && required)
+        throw new Error(`Input required and not supplied: ${name}`);
     core.debug(`input: ${name}=${value}`);
     return value;
 }
