@@ -30418,19 +30418,25 @@ function getBlob(filePath) {
 
 
 Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.FileMissingError = exports.NoChangesError = void 0;
-class NoChangesError extends Error {
+exports.InputRefNotFound = exports.InputFilesRequired = exports.NoFileChanges = void 0;
+class NoFileChanges extends Error {
     constructor() {
-        super('No changes');
+        super('No files changes');
     }
 }
-exports.NoChangesError = NoChangesError;
-class FileMissingError extends Error {
+exports.NoFileChanges = NoFileChanges;
+class InputFilesRequired extends Error {
     constructor() {
-        super('No files');
+        super('Input <files> is required');
     }
 }
-exports.FileMissingError = FileMissingError;
+exports.InputFilesRequired = InputFilesRequired;
+class InputRefNotFound extends Error {
+    constructor(ref) {
+        super(`Input <ref> ${ref} not found`);
+    }
+}
+exports.InputRefNotFound = InputRefNotFound;
 
 
 /***/ }),
@@ -30758,13 +30764,13 @@ function run() {
         try {
             const filePaths = core.getMultilineInput('files', { required: true });
             if (filePaths.length <= 0)
-                throw new errors_1.FileMissingError();
+                throw new errors_1.InputFilesRequired();
             yield (0, git_1.addFileChanges)(filePaths);
             const fileChanges = yield (0, git_1.getFileChanges)();
             const fileCount = ((_b = (_a = fileChanges.additions) === null || _a === void 0 ? void 0 : _a.length) !== null && _b !== void 0 ? _b : 0) +
                 ((_d = (_c = fileChanges.deletions) === null || _c === void 0 ? void 0 : _c.length) !== null && _d !== void 0 ? _d : 0);
             if (fileCount <= 0)
-                throw new errors_1.NoChangesError();
+                throw new errors_1.NoFileChanges();
             const { owner, repo } = github.context.repo;
             const ref = (0, input_1.getInput)('ref');
             const repository = yield core.group(`fetching repository info for owner: ${owner}, repo: ${repo}, ref: ${ref}`, () => __awaiter(this, void 0, void 0, function* () {
@@ -30775,7 +30781,7 @@ function run() {
                 return repositoryData;
             }));
             if (ref && !repository.ref)
-                throw new Error(`Ref ${ref} not found`);
+                throw new errors_1.InputRefNotFound(ref);
             const targetRef = (_e = repository.ref) !== null && _e !== void 0 ? _e : repository.defaultBranchRef;
             const commitResponse = yield core.group(`committing files`, () => __awaiter(this, void 0, void 0, function* () {
                 var _a;
@@ -30784,7 +30790,8 @@ function run() {
                 const parentCommit = (0, types_1.isCommit)(target)
                     ? target
                     : (() => {
-                        throw new Error(`Unable to locate the parent commit of the branch ${targetRef === null || targetRef === void 0 ? void 0 : targetRef.name}`);
+                        var _a;
+                        throw new Error(`Unable to locate the parent commit of the <branch> ${(_a = targetRef === null || targetRef === void 0 ? void 0 : targetRef.name) !== null && _a !== void 0 ? _a : ref}`);
                     })();
                 const commitData = yield (0, graphql_1.createCommitOnBranch)({
                     repositoryNameWithOwner: repository.nameWithOwner,
@@ -30797,11 +30804,14 @@ function run() {
             core.setOutput('commit-sha', (_f = commitResponse.commit) === null || _f === void 0 ? void 0 : _f.id);
         }
         catch (error) {
-            if (error instanceof errors_1.NoChangesError) {
-                core.info('No changes found');
+            if (error instanceof errors_1.NoFileChanges) {
+                core.notice('No changes found');
             }
             else if (error instanceof Error) {
                 core.setFailed(error.message);
+            }
+            else {
+                throw error;
             }
         }
     });
