@@ -5,7 +5,11 @@ import { getRepository, createCommitOnBranch } from './github/graphql'
 import { isCommit } from './github/types'
 import { addFileChanges, getFileChanges } from './git'
 import { getInput } from './utils/input'
-import { NoFileChanges, InputFilesRequired, InputRefNotFound } from './errors'
+import {
+  NoFileChanges,
+  InputFilesRequired,
+  InputBranchNotFound,
+} from './errors'
 
 export async function run(): Promise<void> {
   try {
@@ -20,19 +24,19 @@ export async function run(): Promise<void> {
     if (fileCount <= 0) throw new NoFileChanges()
 
     const { owner, repo } = github.context.repo
-    const ref = getInput('ref')
+    const branchName = getInput('branch-name')
     const repository = await core.group(
-      `fetching repository info for owner: ${owner}, repo: ${repo}, ref: ${ref}`,
+      `fetching repository info for owner: ${owner}, repo: ${repo}, branch: ${branchName}`,
       async () => {
         const startTime = Date.now()
-        const repositoryData = await getRepository(owner, repo, ref)
+        const repositoryData = await getRepository(owner, repo, branchName)
         const endTime = Date.now()
         core.debug(`time taken: ${(endTime - startTime).toString()} ms`)
         return repositoryData
       }
     )
 
-    if (ref && !repository.ref) throw new InputRefNotFound(ref)
+    if (branchName && !repository.ref) throw new InputBranchNotFound(branchName)
 
     const targetRef = repository.ref ?? repository.defaultBranchRef
     const commitResponse = await core.group(`committing files`, async () => {
@@ -42,14 +46,14 @@ export async function run(): Promise<void> {
         ? target
         : (() => {
             throw new Error(
-              `Unable to locate the parent commit of the branch "${targetRef?.name ?? ref}"`
+              `Unable to locate the parent commit of the branch "${targetRef?.name ?? branchName}"`
             )
           })()
 
       const commitData = await createCommitOnBranch(
         {
           repositoryNameWithOwner: repository.nameWithOwner,
-          branchName: ref,
+          branchName: branchName,
         },
         parentCommit,
         fileChanges

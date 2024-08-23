@@ -30418,7 +30418,7 @@ function getBlob(filePath) {
 
 
 Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.InputRefNotFound = exports.InputFilesRequired = exports.NoFileChanges = void 0;
+exports.InputBranchNotFound = exports.InputFilesRequired = exports.NoFileChanges = void 0;
 class NoFileChanges extends Error {
     constructor() {
         super('No files changes');
@@ -30431,12 +30431,12 @@ class InputFilesRequired extends Error {
     }
 }
 exports.InputFilesRequired = InputFilesRequired;
-class InputRefNotFound extends Error {
-    constructor(ref) {
-        super(`Input <ref> "${ref}" not found`);
+class InputBranchNotFound extends Error {
+    constructor(branchName) {
+        super(`Input <branch-name> "${branchName}" not found`);
     }
 }
-exports.InputRefNotFound = InputRefNotFound;
+exports.InputBranchNotFound = InputBranchNotFound;
 
 
 /***/ }),
@@ -30599,14 +30599,14 @@ function logError(queryName, error) {
     core.error(error.message);
     core.debug(`Request[${queryName}] failed, query: ${query}, variables: ${JSON.stringify(variables)}, data: ${JSON.stringify(error.data)}`);
 }
-function getRepository(owner, repo, ref) {
+function getRepository(owner, repo, branch) {
     return __awaiter(this, void 0, void 0, function* () {
         const query = `
-    query($owner: String!, $repo: String!, $branch: String!) {
+    query($owner: String!, $repo: String!, $ref: String!) {
       repository(owner: $owner, name: $repo) {
         id
         nameWithOwner
-        ref(qualifiedName: $branch) {
+        ref(qualifiedName: $ref) {
           name
           target {
             ... on Commit {
@@ -30640,7 +30640,7 @@ function getRepository(owner, repo, ref) {
         const variables = {
             owner: owner,
             repo: repo,
-            branch: `refs/heads/${ref}`,
+            ref: `refs/heads/${branch}`,
         };
         try {
             const { repository } = yield (0, client_1.graphqlClient)()(query, variables);
@@ -30769,16 +30769,16 @@ function run() {
             if (fileCount <= 0)
                 throw new errors_1.NoFileChanges();
             const { owner, repo } = github.context.repo;
-            const ref = (0, input_1.getInput)('ref');
-            const repository = yield core.group(`fetching repository info for owner: ${owner}, repo: ${repo}, ref: ${ref}`, () => __awaiter(this, void 0, void 0, function* () {
+            const branchName = (0, input_1.getInput)('branch-name');
+            const repository = yield core.group(`fetching repository info for owner: ${owner}, repo: ${repo}, branch: ${branchName}`, () => __awaiter(this, void 0, void 0, function* () {
                 const startTime = Date.now();
-                const repositoryData = yield (0, graphql_1.getRepository)(owner, repo, ref);
+                const repositoryData = yield (0, graphql_1.getRepository)(owner, repo, branchName);
                 const endTime = Date.now();
                 core.debug(`time taken: ${(endTime - startTime).toString()} ms`);
                 return repositoryData;
             }));
-            if (ref && !repository.ref)
-                throw new errors_1.InputRefNotFound(ref);
+            if (branchName && !repository.ref)
+                throw new errors_1.InputBranchNotFound(branchName);
             const targetRef = (_e = repository.ref) !== null && _e !== void 0 ? _e : repository.defaultBranchRef;
             const commitResponse = yield core.group(`committing files`, () => __awaiter(this, void 0, void 0, function* () {
                 var _a;
@@ -30788,11 +30788,11 @@ function run() {
                     ? target
                     : (() => {
                         var _a;
-                        throw new Error(`Unable to locate the parent commit of the branch "${(_a = targetRef === null || targetRef === void 0 ? void 0 : targetRef.name) !== null && _a !== void 0 ? _a : ref}"`);
+                        throw new Error(`Unable to locate the parent commit of the branch "${(_a = targetRef === null || targetRef === void 0 ? void 0 : targetRef.name) !== null && _a !== void 0 ? _a : branchName}"`);
                     })();
                 const commitData = yield (0, graphql_1.createCommitOnBranch)({
                     repositoryNameWithOwner: repository.nameWithOwner,
-                    branchName: ref,
+                    branchName: branchName,
                 }, parentCommit, fileChanges);
                 const endTime = Date.now();
                 core.debug(`time taken: ${(endTime - startTime).toString()} ms`);

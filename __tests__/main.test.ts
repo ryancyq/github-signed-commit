@@ -53,7 +53,7 @@ describe('action', () => {
     expect(noticeMock).toHaveBeenCalledWith('No changes found')
   })
 
-  it('requires ref input to exists', async () => {
+  it('requires branch-name input to exists', async () => {
     jest.spyOn(core, 'getInput').mockReturnValue('new-branch')
     jest.spyOn(core, 'getMultilineInput').mockReturnValue(['/test.txt'])
     jest.spyOn(git, 'addFileChanges').mockReturnValue(Promise.resolve())
@@ -81,7 +81,7 @@ describe('action', () => {
     expect(githubContextMock).toHaveBeenCalled()
     expect(getRepositoryMock).toHaveBeenCalled()
     expect(setFailedMock).toHaveBeenCalledWith(
-      'Input <ref> "new-branch" not found'
+      'Input <branch-name> "new-branch" not found'
     )
   })
 

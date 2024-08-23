@@ -34,13 +34,13 @@ describe('GitHub API', () => {
                 (_url, options: RequestOptions) => {
                   const body = JSON.parse(options.body)
                   expect(body.query).toEqual(
-                    expect.stringMatching(/query(.+\$owner.+\$repo.+\$branch)/)
+                    expect.stringMatching(/query(.+\$owner.+\$repo.+\$ref)/)
                   )
 
                   expect(body.variables).toHaveProperty('owner', 'owner')
                   expect(body.variables).toHaveProperty('repo', 'repo')
                   expect(body.variables).toHaveProperty(
-                    'branch',
+                    'ref',
                     'refs/heads/custom-branch'
                   )
 

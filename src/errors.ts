@@ -10,8 +10,8 @@ export class InputFilesRequired extends Error {
   }
 }
 
-export class InputRefNotFound extends Error {
-  constructor(ref: string) {
-    super(`Input <ref> "${ref}" not found`)
+export class InputBranchNotFound extends Error {
+  constructor(branchName: string) {
+    super(`Input <branch-name> "${branchName}" not found`)
   }
 }

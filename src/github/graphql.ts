@@ -34,14 +34,14 @@ function logError(queryName: string, error: GraphqlResponseError<unknown>) {
 export async function getRepository(
   owner: string,
   repo: string,
-  ref: string
+  branch: string
 ): Promise<RepositoryWithCommitHistory> {
   const query = `
-    query($owner: String!, $repo: String!, $branch: String!) {
+    query($owner: String!, $repo: String!, $ref: String!) {
       repository(owner: $owner, name: $repo) {
         id
         nameWithOwner
-        ref(qualifiedName: $branch) {
+        ref(qualifiedName: $ref) {
           name
           target {
             ... on Commit {
@@ -76,7 +76,7 @@ export async function getRepository(
   const variables = {
     owner: owner,
     repo: repo,
-    branch: `refs/heads/${ref}`,
+    ref: `refs/heads/${branch}`,
   }
   try {
     const { repository } = await graphqlClient()<{
