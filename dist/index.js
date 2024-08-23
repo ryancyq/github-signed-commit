@@ -30479,7 +30479,7 @@ function addFileChanges(globPatterns) {
 function getFileChanges() {
     return __awaiter(this, void 0, void 0, function* () {
         const output = [];
-        yield (0, exec_1.exec)('git', ['status', '-suall'], {
+        yield (0, exec_1.exec)('git', ['status', '-suall', '--porcelain'], {
             listeners: {
                 stdline: (data) => output.push(data),
             },

@@ -26,7 +26,7 @@ export async function addFileChanges(globPatterns: string[]): Promise<void> {
 
 export async function getFileChanges(): Promise<FileChanges> {
   const output: string[] = []
-  await exec('git', ['status', '-suall'], {
+  await exec('git', ['status', '-suall', '--porcelain'], {
     listeners: {
       stdline: (data: string) => output.push(data),
     },
