@@ -30603,6 +30603,7 @@ function getRepository(owner, repo) {
     query($owner: String!, $repo: String!) {
       repository(owner: $owner, name: $repo) {
         id
+        nameWithOwner
         defaultBranchRef {
           name
           target {

@@ -34,6 +34,7 @@ describe('GitHub API', () => {
               data: {
                 repository: {
                   id: 'repo-id',
+                  nameWithOwner: 'my-user/repo-id',
                   defaultBranchRef: {
                     name: 'main',
                     target: {
@@ -62,6 +63,7 @@ describe('GitHub API', () => {
       const repo = await getRepository('owner', 'repo')
       expect(mockClient).toBeCalled()
       expect(repo).toHaveProperty('id', 'repo-id')
+      expect(repo).toHaveProperty('nameWithOwner', 'my-user/repo-id')
       expect(repo).toHaveProperty('defaultBranchRef.name', 'main')
       expect(repo).toHaveProperty(
         'defaultBranchRef.target.history.nodes',
@@ -216,6 +218,14 @@ describe('GitHub API', () => {
                     )
                   )
 
+                  expect(body.variables).toHaveProperty(
+                    'input.branch.repositoryNameWithOwner',
+                    'my-user/my-repo'
+                  )
+                  expect(body.variables).toHaveProperty(
+                    'input.branch.branchName',
+                    'my-branch'
+                  )
                   expect(body.variables).toHaveProperty('input.expectedHeadOid')
                   expect(body.variables.input.expectedHeadOid).toContain(
                     'MyOid'
@@ -234,7 +244,10 @@ describe('GitHub API', () => {
         })
       })
 
-      const branch = {} as CommittableBranch
+      const branch = {
+        repositoryNameWithOwner: 'my-user/my-repo',
+        branchName: 'my-branch',
+      } as CommittableBranch
       const parentCommit = { oid: 'MyOid' } as Commit
       const result = await createCommitOnBranch(
         branch,
