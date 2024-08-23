@@ -63,7 +63,7 @@ export async function run(): Promise<void> {
       return commitData
     })
 
-    core.setOutput('commit-sha', commitResponse.commit?.id)
+    core.setOutput('commit-sha', commitResponse.commit?.oid)
   } catch (error) {
     if (error instanceof NoFileChanges) {
       core.notice('No changes found')

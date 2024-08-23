@@ -30798,7 +30798,7 @@ function run() {
                 core.debug(`time taken: ${(endTime - startTime).toString()} ms`);
                 return commitData;
             }));
-            core.setOutput('commit-sha', (_f = commitResponse.commit) === null || _f === void 0 ? void 0 : _f.id);
+            core.setOutput('commit-sha', (_f = commitResponse.commit) === null || _f === void 0 ? void 0 : _f.oid);
         }
         catch (error) {
             if (error instanceof errors_1.NoFileChanges) {

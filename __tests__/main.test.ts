@@ -121,7 +121,7 @@ describe('action', () => {
       .spyOn(graphql, 'createCommitOnBranch')
       .mockReturnValue(
         Promise.resolve({
-          commit: { id: 'my-commit-sha' },
+          commit: { oid: 'my-commit-sha' },
         } as CreateCommitOnBranchPayload)
       )
 
