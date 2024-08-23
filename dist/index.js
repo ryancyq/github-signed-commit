@@ -30591,17 +30591,13 @@ const core = __importStar(__nccwpck_require__(2186));
 const graphql_1 = __nccwpck_require__(8467);
 const client_1 = __nccwpck_require__(7047);
 const blob_1 = __nccwpck_require__(5312);
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-function logSuccess(queryName, data) {
-    core.debug(`Request[${queryName}] successful, data: ${JSON.stringify(data)}`);
+function logSuccess(queryName, query, variables, data) {
+    core.debug(`Request[${queryName}] successful, query: ${query}, variables: ${JSON.stringify(variables)}, data: ${JSON.stringify(data)}`);
 }
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
 function logError(queryName, error) {
     const { query, variables } = error.request;
     core.error(error.message);
-    core.debug(
-    // eslint-disable-next-line @typescript-eslint/restrict-template-expressions
-    `Request[${queryName}] failed, query: ${query}, variables: ${JSON.stringify(variables)}, data: ${JSON.stringify(error.data)}`);
+    core.debug(`Request[${queryName}] failed, query: ${query}, variables: ${JSON.stringify(variables)}, data: ${JSON.stringify(error.data)}`);
 }
 function getRepository(owner, repo, ref) {
     return __awaiter(this, void 0, void 0, function* () {
@@ -30641,13 +30637,14 @@ function getRepository(owner, repo, ref) {
       }
     }
   `;
+        const variables = {
+            owner: owner,
+            repo: repo,
+            branch: `refs/heads/${ref}`,
+        };
         try {
-            const { repository } = yield (0, client_1.graphqlClient)()(query, {
-                owner: owner,
-                repo: repo,
-                branch: `refs/heads/${ref}`,
-            });
-            logSuccess('repository', repository);
+            const { repository } = yield (0, client_1.graphqlClient)()(query, variables);
+            logSuccess('repository', query, variables, repository);
             return repository;
         }
         catch (error) {
@@ -30685,7 +30682,7 @@ function createCommitOnBranch(branch, parentCommit, fileChanges) {
         };
         try {
             const { createCommitOnBranch } = yield (0, client_1.graphqlClient)()(mutation, input);
-            logSuccess('createCommitOnBranch', createCommitOnBranch);
+            logSuccess('createCommitOnBranch', mutation, input, createCommitOnBranch);
             return createCommitOnBranch;
         }
         catch (error) {

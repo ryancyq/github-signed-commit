@@ -12,18 +12,22 @@ import { graphqlClient } from './client'
 import { getBlob } from '../blob'
 import { RepositoryWithCommitHistory } from '../github/types'
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-function logSuccess(queryName: string, data: any) {
-  core.debug(`Request[${queryName}] successful, data: ${JSON.stringify(data)}`)
+function logSuccess(
+  queryName: string,
+  query: string,
+  variables: unknown,
+  data: unknown
+) {
+  core.debug(
+    `Request[${queryName}] successful, query: ${query}, variables: ${JSON.stringify(variables)}, data: ${JSON.stringify(data)}`
+  )
 }
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-function logError(queryName: string, error: GraphqlResponseError<any>) {
+function logError(queryName: string, error: GraphqlResponseError<unknown>) {
   const { query, variables } = error.request
   core.error(error.message)
   core.debug(
-    // eslint-disable-next-line @typescript-eslint/restrict-template-expressions
-    `Request[${queryName}] failed, query: ${query}, variables: ${JSON.stringify(variables)}, data: ${JSON.stringify(error.data)}`
+    `Request[${queryName}] failed, query: ${query as string}, variables: ${JSON.stringify(variables)}, data: ${JSON.stringify(error.data)}`
   )
 }
 
@@ -69,16 +73,17 @@ export async function getRepository(
     }
   `
 
+  const variables = {
+    owner: owner,
+    repo: repo,
+    branch: `refs/heads/${ref}`,
+  }
   try {
     const { repository } = await graphqlClient()<{
       repository: RepositoryWithCommitHistory
-    }>(query, {
-      owner: owner,
-      repo: repo,
-      branch: `refs/heads/${ref}`,
-    })
+    }>(query, variables)
 
-    logSuccess('repository', repository)
+    logSuccess('repository', query, variables, repository)
 
     return repository
   } catch (error) {
@@ -126,7 +131,7 @@ export async function createCommitOnBranch(
       createCommitOnBranch: CreateCommitOnBranchPayload
     }>(mutation, input)
 
-    logSuccess('createCommitOnBranch', createCommitOnBranch)
+    logSuccess('createCommitOnBranch', mutation, input, createCommitOnBranch)
 
     return createCommitOnBranch
   } catch (error) {

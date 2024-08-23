@@ -119,7 +119,9 @@ describe('GitHub API', () => {
         ])
       )
       expect(debugMock).toHaveBeenCalledWith(
-        expect.stringMatching(/Request\[repository\] successful, data: [\s\S]*/)
+        expect.stringMatching(
+          /Request\[repository\] successful, query: [\s\S]*, variables: [\s\S]*, data: [\s\S]*/
+        )
       )
     })
 
@@ -186,7 +188,7 @@ describe('GitHub API', () => {
       expect(clientMock).toBeCalled()
       expect(debugMock).toHaveBeenCalledWith(
         expect.stringMatching(
-          /Request\[createCommitOnBranch\] successful, data:[\s\S]*/
+          /Request\[createCommitOnBranch\] successful, query: [\s\S]*, variables: [\s\S]*, data: [\s\S]*/
         )
       )
     })
