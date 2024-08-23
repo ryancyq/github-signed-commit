@@ -5,6 +5,30 @@ branding:
   icon: git-commit
   color: orange
 
+inputs:
+  files:
+    description: |
+      Multi-line string of file paths to be committed, relative to the current workspace.
+    required: true
+  workspace:
+    description: |
+      Directory containing files to be committed. Default: GitHub workspace directory (root of repository).
+    required: false
+    default: ''
+  commit-message:
+    description: |
+      Commit message for the file changes.
+    required: true
+  branch-name:
+    description: |
+      Branch to commit to; it must already exist. Default: Repository's default branch.
+    required: false
+    default: ''
+
+outputs:
+  commit-sha:
+    description: SHA of created commit
+
 runs:
   using: node20
   main: dist/index.js
