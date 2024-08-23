@@ -30433,7 +30433,7 @@ class InputFilesRequired extends Error {
 exports.InputFilesRequired = InputFilesRequired;
 class InputRefNotFound extends Error {
     constructor(ref) {
-        super(`Input <ref> ${ref} not found`);
+        super(`Input <ref> "${ref}"" not found`);
     }
 }
 exports.InputRefNotFound = InputRefNotFound;
@@ -30791,7 +30791,7 @@ function run() {
                     ? target
                     : (() => {
                         var _a;
-                        throw new Error(`Unable to locate the parent commit of the <branch> ${(_a = targetRef === null || targetRef === void 0 ? void 0 : targetRef.name) !== null && _a !== void 0 ? _a : ref}`);
+                        throw new Error(`Unable to locate the parent commit of the branch "${(_a = targetRef === null || targetRef === void 0 ? void 0 : targetRef.name) !== null && _a !== void 0 ? _a : ref}"`);
                     })();
                 const commitData = yield (0, graphql_1.createCommitOnBranch)({
                     repositoryNameWithOwner: repository.nameWithOwner,
