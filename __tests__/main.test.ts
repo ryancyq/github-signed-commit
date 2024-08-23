@@ -81,7 +81,7 @@ describe('action', () => {
     expect(githubContextMock).toHaveBeenCalled()
     expect(getRepositoryMock).toHaveBeenCalled()
     expect(setFailedMock).toHaveBeenCalledWith(
-      'Input <ref> new-branch not found'
+      'Input <ref> "new-branch" not found'
     )
   })
 
