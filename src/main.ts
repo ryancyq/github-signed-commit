@@ -42,7 +42,7 @@ export async function run(): Promise<void> {
         ? target
         : (() => {
             throw new Error(
-              `Unable to locate the parent commit of the <branch> ${targetRef?.name ?? ref}`
+              `Unable to locate the parent commit of the branch "${targetRef?.name ?? ref}"`
             )
           })()
 

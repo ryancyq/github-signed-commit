@@ -12,6 +12,6 @@ export class InputFilesRequired extends Error {
 
 export class InputRefNotFound extends Error {
   constructor(ref: string) {
-    super(`Input <ref> ${ref} not found`)
+    super(`Input <ref> "${ref}"" not found`)
   }
 }
