@@ -90,7 +90,7 @@ describe('GitHub API', () => {
           },
         })
       )
-      const debugMock = jest.spyOn(core, 'debug').mockReturnThis()
+      const debugMock = jest.spyOn(core, 'debug').mockReturnValue()
 
       const repo = await getRepository('owner', 'repo', 'custom-branch')
       expect(clientMock).toBeCalled()
@@ -134,8 +134,8 @@ describe('GitHub API', () => {
           },
         })
       )
-      const errorMock = jest.spyOn(core, 'error').mockReturnThis()
-      const debugMock = jest.spyOn(core, 'debug').mockReturnThis()
+      const errorMock = jest.spyOn(core, 'error').mockReturnValue()
+      const debugMock = jest.spyOn(core, 'debug').mockReturnValue()
 
       await expect(getRepository('owner', 'repo', 'branch')).rejects.toThrow(
         'GraphQL error'
@@ -174,7 +174,7 @@ describe('GitHub API', () => {
           },
         })
       )
-      const debugMock = jest.spyOn(core, 'debug').mockReturnThis()
+      const debugMock = jest.spyOn(core, 'debug').mockReturnValue()
 
       const branch = {} as CommittableBranch
       const parentCommit = {} as Commit
@@ -201,8 +201,8 @@ describe('GitHub API', () => {
           },
         })
       )
-      const errorMock = jest.spyOn(core, 'error').mockReturnThis()
-      const debugMock = jest.spyOn(core, 'debug').mockReturnThis()
+      const errorMock = jest.spyOn(core, 'error').mockReturnValue()
+      const debugMock = jest.spyOn(core, 'debug').mockReturnValue()
 
       const branch = {} as CommittableBranch
       const parentCommit = {} as Commit

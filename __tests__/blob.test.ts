@@ -9,7 +9,7 @@ import * as cwd from '../src/utils/cwd'
 
 describe('Blob', () => {
   beforeEach(() => {
-    jest.spyOn(core, 'debug').mockReturnThis()
+    jest.spyOn(core, 'debug').mockReturnValue()
     jest.spyOn(cwd, 'getCwd').mockReturnValue(__dirname)
   })
 

@@ -41,7 +41,7 @@ describe('Git CLI', () => {
           return 0
         })
 
-      const warningMock = jest.spyOn(core, 'warning').mockReturnThis()
+      const warningMock = jest.spyOn(core, 'warning').mockReturnValue()
       await addFileChanges(['*.ts'])
       expect(execMock).toBeCalled()
       expect(warningMock).toBeCalledWith(
