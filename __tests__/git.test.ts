@@ -5,24 +5,20 @@ import * as cwd from '../src/utils/cwd'
 import { addFileChanges, getFileChanges } from '../src/git'
 
 describe('Git CLI', () => {
-  let mockExec: jest.SpiedFunction<typeof exec.exec>
-  let mockCwd: jest.SpiedFunction<typeof cwd.getCwd>
-
   beforeEach(() => {
     jest.clearAllMocks()
-    mockExec = jest.spyOn(exec, 'exec')
-    mockCwd = jest
-      .spyOn(cwd, 'getCwd')
-      .mockImplementation(() => '/users/test-workspace')
+    jest.spyOn(cwd, 'getCwd').mockReturnValue('/users/test-workspace')
   })
 
   describe('git add', () => {
     it('should ensure file paths are within curent working directory', async () => {
-      mockExec.mockImplementation(async (cmd, args, options) => 0)
+      const execMock = jest
+        .spyOn(exec, 'exec')
+        .mockReturnValue(Promise.resolve(0))
 
       const changes = await addFileChanges(['*.ts', '~/.bashrc'])
-      expect(mockExec).toBeCalled()
-      expect(mockExec).toBeCalledWith(
+      expect(execMock).toBeCalled()
+      expect(execMock).toBeCalledWith(
         'git',
         [
           'add',
@@ -34,18 +30,20 @@ describe('Git CLI', () => {
     })
 
     it('should log error', async () => {
-      mockExec.mockImplementation(async (cmd, args, options) => {
-        const io = options?.listeners?.errline
-        if (io) {
-          io.call(this, "fatal: pathspec 'main.ts' did not match any files")
-          return 1
-        }
-        return 0
-      })
+      const execMock = jest
+        .spyOn(exec, 'exec')
+        .mockImplementation(async (cmd, args, options) => {
+          const io = options?.listeners?.errline
+          if (io) {
+            io.call(this, "fatal: pathspec 'main.ts' did not match any files")
+            return 1
+          }
+          return 0
+        })
 
       const warningMock = jest.spyOn(core, 'warning').mockReturnThis()
       const changes = await addFileChanges(['*.ts'])
-      expect(mockExec).toBeCalled()
+      expect(execMock).toBeCalled()
       expect(warningMock).toBeCalledWith(
         "fatal: pathspec 'main.ts' did not match any files"
       )
@@ -64,19 +62,21 @@ describe('Git CLI', () => {
       'A  tests/run.test.ts',
     ]
 
-    beforeEach(() => {
-      mockExec.mockImplementation(async (cmd, args, options) => {
-        const io = options?.listeners?.stdline
-        if (io) {
-          gitStatus.forEach((o) => io.call(this, o))
-        }
-        return 0
-      })
-    })
+    beforeEach(() => {})
 
     it('should parse ouput into file changes', async () => {
+      const execMock = jest
+        .spyOn(exec, 'exec')
+        .mockImplementation(async (cmd, args, options) => {
+          const io = options?.listeners?.stdline
+          if (io) {
+            gitStatus.forEach((o) => io.call(this, o))
+          }
+          return 0
+        })
+
       const changes = await getFileChanges()
-      expect(mockExec).toBeCalled()
+      expect(execMock).toBeCalled()
       expect(changes).toBeDefined()
       expect(changes.additions).toBeDefined()
       expect(changes.additions).toHaveLength(5)

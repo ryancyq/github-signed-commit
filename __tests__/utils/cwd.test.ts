@@ -16,13 +16,7 @@ describe('Current Working Directory', () => {
   })
 
   describe('getCwd', () => {
-    let mockGetInput: jest.SpiedFunction<typeof core.getInput>
     let replacedEnv: jest.Replaced<typeof process.env> | undefined
-
-    beforeEach(() => {
-      jest.resetModules()
-      mockGetInput = jest.spyOn(core, 'getInput')
-    })
 
     afterEach(() => {
       replacedEnv?.restore()
@@ -34,17 +28,18 @@ describe('Current Working Directory', () => {
       })
 
       expect(getCwd()).toBe('/users/test')
-      expect(mockGetInput).toBeCalled()
     })
 
     it('should read from workspace input if any', async () => {
-      mockGetInput.mockImplementation((name, options) => {
-        if (name === 'workspace') return '/users/my-workspace'
-        return ''
-      })
+      const getInputMock = jest
+        .spyOn(core, 'getInput')
+        .mockImplementation((name, options) => {
+          if (name === 'workspace') return '/users/my-workspace'
+          return ''
+        })
 
       expect(getCwd()).toBe('/users/my-workspace')
-      expect(mockGetInput).toBeCalled()
+      expect(getInputMock).toBeCalled()
     })
   })
 })
