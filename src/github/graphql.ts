@@ -12,32 +12,48 @@ import { graphqlClient } from './client'
 import { getBlob } from '../blob'
 import { RepositoryWithCommitHistory } from '../github/types'
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+function logSuccess(queryName: string, data: any) {
+  core.debug(`Request[${queryName}] successful, data: ${JSON.stringify(data)}`)
+}
+
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+function logError(queryName: string, error: GraphqlResponseError<any>) {
+  const { query, variables } = error.request
+  core.error(error.message)
+  core.debug(
+    // eslint-disable-next-line @typescript-eslint/restrict-template-expressions
+    `Request[${queryName}] failed, query: ${query}, variables: ${JSON.stringify(variables)}, data: ${JSON.stringify(error.data)}`
+  )
+}
+
 export async function getRepository(
   owner: string,
   repo: string
 ): Promise<RepositoryWithCommitHistory> {
-  try {
-    const query = `
-        query($owner: String!, $repo: String!) {
-          repository(owner: $owner, name: $repo) {
-            id
-            defaultBranchRef {
-              name
-              target {
-                ... on Commit {
-                  history(first: 1) {
-                    nodes {
-                      oid
-                      message
-                      committedDate
-                    }
-                  }
+  const query = `
+    query($owner: String!, $repo: String!) {
+      repository(owner: $owner, name: $repo) {
+        id
+        defaultBranchRef {
+          name
+          target {
+            ... on Commit {
+              history(first: 1) {
+                nodes {
+                  oid
+                  message
+                  committedDate
                 }
               }
             }
           }
         }
-      `
+      }
+    }
+  `
+
+  try {
     const { repository } = await graphqlClient()<{
       repository: RepositoryWithCommitHistory
     }>(query, {
@@ -45,18 +61,11 @@ export async function getRepository(
       repo: repo,
     })
 
-    core.debug(`Request successful, data: ${JSON.stringify(repository)}`)
+    logSuccess('repository', repository)
 
     return repository
   } catch (error) {
-    if (error instanceof GraphqlResponseError) {
-      const { query, variables } = error.request
-      core.error(error.message)
-      core.debug(
-        // eslint-disable-next-line @typescript-eslint/restrict-template-expressions
-        `Request failed, query: ${query}, variables: ${JSON.stringify(variables)}, data: ${JSON.stringify(error.data)}`
-      )
-    }
+    if (error instanceof GraphqlResponseError) logError('repository', error)
     throw error
   }
 }
@@ -94,13 +103,18 @@ export async function createCommitOnBranch(
       fileChanges,
     },
   }
-  const { createCommitOnBranch } = await graphqlClient()<{
-    createCommitOnBranch: CreateCommitOnBranchPayload
-  }>(mutation, input)
 
-  core.debug(
-    `Request successful, data: ${JSON.stringify(createCommitOnBranch)}`
-  )
+  try {
+    const { createCommitOnBranch } = await graphqlClient()<{
+      createCommitOnBranch: CreateCommitOnBranchPayload
+    }>(mutation, input)
 
-  return createCommitOnBranch
+    logSuccess('createCommitOnBranch', createCommitOnBranch)
+
+    return createCommitOnBranch
+  } catch (error) {
+    if (error instanceof GraphqlResponseError)
+      logError('createCommitOnBranch', error)
+    throw error
+  }
 }

@@ -43,10 +43,12 @@ describe('GitHub API', () => {
                             oid: 'my-oid',
                             message: 'my message',
                             committedDate: '2024-08-19T04:53:47Z',
+                            __typename: 'Commit',
                           },
                         ],
                       },
                     },
+                    __typename: 'Ref',
                   },
                   __typename: 'Repository',
                 },
@@ -55,8 +57,10 @@ describe('GitHub API', () => {
           },
         })
       })
+      const mockDebug = jest.spyOn(core, 'debug').mockReturnThis()
 
       const repo = await getRepository('owner', 'repo')
+      expect(mockClient).toBeCalled()
       expect(repo).toHaveProperty('id', 'repo-id')
       expect(repo).toHaveProperty('defaultBranchRef.name', 'main')
       expect(repo).toHaveProperty(
@@ -68,6 +72,9 @@ describe('GitHub API', () => {
             committedDate: '2024-08-19T04:53:47Z',
           }),
         ])
+      )
+      expect(mockDebug).toHaveBeenCalledWith(
+        expect.stringMatching(/Request\[repository\] successful, data: [\s\S]*/)
       )
     })
 
@@ -88,12 +95,13 @@ describe('GitHub API', () => {
       await expect(getRepository('owner', 'repo')).rejects.toThrow(
         'GraphQL error'
       )
+      expect(mockClient).toBeCalled()
       expect(mockError).toHaveBeenCalledWith(
         'Request failed due to following response errors:\n - GraphQL error'
       )
       expect(mockDebug).toHaveBeenCalledWith(
         expect.stringMatching(
-          /Request failed, query: [\s\S]*, variables: [\s\S]*/
+          /Request\[repository\] failed, query: [\s\S]*, variables: [\s\S]*, data: [\s\S]*/
         )
       )
     })
@@ -130,6 +138,7 @@ describe('GitHub API', () => {
           },
         })
       })
+      const mockDebug = jest.spyOn(core, 'debug').mockReturnThis()
 
       const branch = {} as CommittableBranch
       const parentCommit = {} as Commit
@@ -141,8 +150,43 @@ describe('GitHub API', () => {
       )
       expect(mockClient).toBeCalled()
       expect(result).toHaveProperty('commit.id', 'commit-id')
+      expect(mockDebug).toHaveBeenCalledWith(
+        expect.stringMatching(
+          /Request\[createCommitOnBranch\] successful, data:[\s\S]*/
+        )
+      )
     })
+    it('should handle GraphqlResponseError', async () => {
+      mockClient.mockImplementation(() => {
+        return graphql.defaults({
+          request: {
+            fetch: fetchMock.sandbox().post('https://api.github.com/graphql', {
+              errors: [{ message: 'GraphQL error' }],
+              data: null,
+            }),
+          },
+        })
+      })
+      const mockError = jest.spyOn(core, 'error').mockReturnThis()
+      const mockDebug = jest.spyOn(core, 'debug').mockReturnThis()
 
+      const branch = {} as CommittableBranch
+      const parentCommit = {} as Commit
+      const fileChanges = {} as FileChanges
+      await expect(
+        createCommitOnBranch(branch, parentCommit, fileChanges)
+      ).rejects.toThrow('GraphQL error')
+
+      expect(mockClient).toBeCalled()
+      expect(mockError).toHaveBeenCalledWith(
+        'Request failed due to following response errors:\n - GraphQL error'
+      )
+      expect(mockDebug).toHaveBeenCalledWith(
+        expect.stringMatching(
+          /Request\[createCommitOnBranch\] failed, query: [\s\S]*, variables: [\s\S]*, data: [\s\S]*/
+        )
+      )
+    })
     it('should populate file changes content', async () => {
       const fileAddition: FileAddition = {
         path: 'my_commit.txt',
