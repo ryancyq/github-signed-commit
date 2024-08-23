@@ -5,19 +5,19 @@ import { getRepository, createCommitOnBranch } from './github/graphql'
 import { isCommit } from './github/types'
 import { addFileChanges, getFileChanges } from './git'
 import { getInput } from './utils/input'
-import { FileMissingError, NoChangesError } from './errors'
+import { NoFileChanges, InputFilesRequired, InputRefNotFound } from './errors'
 
 export async function run(): Promise<void> {
   try {
     const filePaths = core.getMultilineInput('files', { required: true })
-    if (filePaths.length <= 0) throw new FileMissingError()
+    if (filePaths.length <= 0) throw new InputFilesRequired()
 
     await addFileChanges(filePaths)
     const fileChanges = await getFileChanges()
     const fileCount =
       (fileChanges.additions?.length ?? 0) +
       (fileChanges.deletions?.length ?? 0)
-    if (fileCount <= 0) throw new NoChangesError()
+    if (fileCount <= 0) throw new NoFileChanges()
 
     const { owner, repo } = github.context.repo
     const ref = getInput('ref')
@@ -32,7 +32,7 @@ export async function run(): Promise<void> {
       }
     )
 
-    if (ref && !repository.ref) throw new Error(`Ref ${ref} not found`)
+    if (ref && !repository.ref) throw new InputRefNotFound(ref)
 
     const targetRef = repository.ref ?? repository.defaultBranchRef
     const commitResponse = await core.group(`committing files`, async () => {
@@ -42,9 +42,10 @@ export async function run(): Promise<void> {
         ? target
         : (() => {
             throw new Error(
-              `Unable to locate the parent commit of the branch ${targetRef?.name}`
+              `Unable to locate the parent commit of the <branch> ${targetRef?.name ?? ref}`
             )
           })()
+
       const commitData = await createCommitOnBranch(
         {
           repositoryNameWithOwner: repository.nameWithOwner,
@@ -60,10 +61,12 @@ export async function run(): Promise<void> {
 
     core.setOutput('commit-sha', commitResponse.commit?.id)
   } catch (error) {
-    if (error instanceof NoChangesError) {
-      core.info('No changes found')
+    if (error instanceof NoFileChanges) {
+      core.notice('No changes found')
     } else if (error instanceof Error) {
       core.setFailed(error.message)
+    } else {
+      throw error
     }
   }
 }
