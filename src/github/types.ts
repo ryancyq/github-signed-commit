@@ -19,7 +19,8 @@ export type RefWithCommitHistory = Omit<Ref, 'target'> & {
 
 export type RepositoryWithCommitHistory = Omit<
   Repository,
-  'defaultBranchRef'
+  'defaultBranchRef' | 'ref'
 > & {
+  ref: Maybe<RefWithCommitHistory>
   defaultBranchRef: Maybe<RefWithCommitHistory>
 }

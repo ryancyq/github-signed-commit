@@ -20,26 +20,29 @@ export async function run(): Promise<void> {
     if (fileCount <= 0) throw new NoChangesError()
 
     const { owner, repo } = github.context.repo
+    const ref = getInput('ref')
     const repository = await core.group(
-      `fetching repository info for owner: ${owner}, repo: ${repo}`,
+      `fetching repository info for owner: ${owner}, repo: ${repo}, ref: ${ref}`,
       async () => {
         const startTime = Date.now()
-        const repositoryData = await getRepository(owner, repo)
+        const repositoryData = await getRepository(owner, repo, ref)
         const endTime = Date.now()
         core.debug(`time taken: ${(endTime - startTime).toString()} ms`)
         return repositoryData
       }
     )
 
-    const ref = getInput('ref', { default: repository.defaultBranchRef?.name })
+    if (ref && !repository.ref) throw new Error(`Ref ${ref} not found`)
+
+    const targetRef = repository.ref ?? repository.defaultBranchRef
     const commitResponse = await core.group(`committing files`, async () => {
       const startTime = Date.now()
-      const target = repository.defaultBranchRef?.target.history.nodes?.[0]
+      const target = targetRef?.target.history.nodes?.[0]
       const parentCommit = isCommit(target)
         ? target
         : (() => {
             throw new Error(
-              `Unable to locate the parent commit of the branch ${ref}`
+              `Unable to locate the parent commit of the branch ${targetRef?.name}`
             )
           })()
       const commitData = await createCommitOnBranch(

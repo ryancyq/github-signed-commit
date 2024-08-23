@@ -30597,13 +30597,27 @@ function logError(queryName, error) {
     // eslint-disable-next-line @typescript-eslint/restrict-template-expressions
     `Request[${queryName}] failed, query: ${query}, variables: ${JSON.stringify(variables)}, data: ${JSON.stringify(error.data)}`);
 }
-function getRepository(owner, repo) {
+function getRepository(owner, repo, ref) {
     return __awaiter(this, void 0, void 0, function* () {
         const query = `
-    query($owner: String!, $repo: String!) {
+    query($owner: String!, $repo: String!, $branch: String!) {
       repository(owner: $owner, name: $repo) {
         id
         nameWithOwner
+        ref(qualifiedName: $branch) {
+          name
+          target {
+            ... on Commit {
+              history(first: 1) {
+                nodes {
+                  oid
+                  message
+                  committedDate
+                }
+              }
+            }
+          }
+        }
         defaultBranchRef {
           name
           target {
@@ -30625,6 +30639,7 @@ function getRepository(owner, repo) {
             const { repository } = yield (0, client_1.graphqlClient)()(query, {
                 owner: owner,
                 repo: repo,
+                branch: `refs/heads/${ref}`,
             });
             logSuccess('repository', repository);
             return repository;
@@ -30751,22 +30766,25 @@ function run() {
             if (fileCount <= 0)
                 throw new errors_1.NoChangesError();
             const { owner, repo } = github.context.repo;
-            const repository = yield core.group(`fetching repository info for owner: ${owner}, repo: ${repo}`, () => __awaiter(this, void 0, void 0, function* () {
+            const ref = (0, input_1.getInput)('ref');
+            const repository = yield core.group(`fetching repository info for owner: ${owner}, repo: ${repo}, ref: ${ref}`, () => __awaiter(this, void 0, void 0, function* () {
                 const startTime = Date.now();
-                const repositoryData = yield (0, graphql_1.getRepository)(owner, repo);
+                const repositoryData = yield (0, graphql_1.getRepository)(owner, repo, ref);
                 const endTime = Date.now();
                 core.debug(`time taken: ${(endTime - startTime).toString()} ms`);
                 return repositoryData;
             }));
-            const ref = (0, input_1.getInput)('ref', { default: (_e = repository.defaultBranchRef) === null || _e === void 0 ? void 0 : _e.name });
+            if (ref && !repository.ref)
+                throw new Error(`Ref ${ref} not found`);
+            const targetRef = (_e = repository.ref) !== null && _e !== void 0 ? _e : repository.defaultBranchRef;
             const commitResponse = yield core.group(`committing files`, () => __awaiter(this, void 0, void 0, function* () {
-                var _a, _b;
+                var _a;
                 const startTime = Date.now();
-                const target = (_b = (_a = repository.defaultBranchRef) === null || _a === void 0 ? void 0 : _a.target.history.nodes) === null || _b === void 0 ? void 0 : _b[0];
+                const target = (_a = targetRef === null || targetRef === void 0 ? void 0 : targetRef.target.history.nodes) === null || _a === void 0 ? void 0 : _a[0];
                 const parentCommit = (0, types_1.isCommit)(target)
                     ? target
                     : (() => {
-                        throw new Error(`Unable to locate the parent commit of the branch ${ref}`);
+                        throw new Error(`Unable to locate the parent commit of the branch ${targetRef === null || targetRef === void 0 ? void 0 : targetRef.name}`);
                     })();
                 const commitData = yield (0, graphql_1.createCommitOnBranch)({
                     repositoryNameWithOwner: repository.nameWithOwner,

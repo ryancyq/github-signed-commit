@@ -30,40 +30,86 @@ describe('GitHub API', () => {
       mockClient.mockImplementation(() => {
         return graphql.defaults({
           request: {
-            fetch: fetchMock.sandbox().post('https://api.github.com/graphql', {
-              data: {
-                repository: {
-                  id: 'repo-id',
-                  nameWithOwner: 'my-user/repo-id',
-                  defaultBranchRef: {
-                    name: 'main',
-                    target: {
-                      history: {
-                        nodes: [
-                          {
-                            oid: 'my-oid',
-                            message: 'my message',
-                            committedDate: '2024-08-19T04:53:47Z',
-                            __typename: 'Commit',
+            fetch: fetchMock
+              .sandbox()
+              .post(
+                'https://api.github.com/graphql',
+                (_url, options: RequestOptions) => {
+                  const body = JSON.parse(options.body)
+                  expect(body.query).toEqual(
+                    expect.stringMatching(/query(.+\$owner.+\$repo.+\$branch)/)
+                  )
+
+                  expect(body.variables).toHaveProperty('owner', 'owner')
+                  expect(body.variables).toHaveProperty('repo', 'repo')
+                  expect(body.variables).toHaveProperty(
+                    'branch',
+                    'refs/heads/custom-branch'
+                  )
+
+                  return {
+                    data: {
+                      repository: {
+                        id: 'repo-id',
+                        nameWithOwner: 'my-user/repo-id',
+                        ref: {
+                          name: 'custom-branch',
+                          target: {
+                            history: {
+                              nodes: [
+                                {
+                                  oid: 'another-oid',
+                                  message: 'another message',
+                                  committedDate: '2024-08-19T04:53:47Z',
+                                  __typename: 'Commit',
+                                },
+                              ],
+                            },
                           },
-                        ],
+                          __typename: 'Ref',
+                        },
+                        defaultBranchRef: {
+                          name: 'main',
+                          target: {
+                            history: {
+                              nodes: [
+                                {
+                                  oid: 'my-oid',
+                                  message: 'my message',
+                                  committedDate: '2024-08-19T04:53:47Z',
+                                  __typename: 'Commit',
+                                },
+                              ],
+                            },
+                          },
+                          __typename: 'Ref',
+                        },
+                        __typename: 'Repository',
                       },
                     },
-                    __typename: 'Ref',
-                  },
-                  __typename: 'Repository',
-                },
-              },
-            }),
+                  }
+                }
+              ),
           },
         })
       })
       const mockDebug = jest.spyOn(core, 'debug').mockReturnThis()
 
-      const repo = await getRepository('owner', 'repo')
+      const repo = await getRepository('owner', 'repo', 'custom-branch')
       expect(mockClient).toBeCalled()
       expect(repo).toHaveProperty('id', 'repo-id')
       expect(repo).toHaveProperty('nameWithOwner', 'my-user/repo-id')
+      expect(repo).toHaveProperty('ref.name', 'custom-branch')
+      expect(repo).toHaveProperty(
+        'ref.target.history.nodes',
+        expect.arrayContaining([
+          expect.objectContaining({
+            oid: 'another-oid',
+            message: 'another message',
+            committedDate: '2024-08-19T04:53:47Z',
+          }),
+        ])
+      )
       expect(repo).toHaveProperty('defaultBranchRef.name', 'main')
       expect(repo).toHaveProperty(
         'defaultBranchRef.target.history.nodes',
@@ -94,7 +140,7 @@ describe('GitHub API', () => {
       const mockError = jest.spyOn(core, 'error').mockReturnThis()
       const mockDebug = jest.spyOn(core, 'debug').mockReturnThis()
 
-      await expect(getRepository('owner', 'repo')).rejects.toThrow(
+      await expect(getRepository('owner', 'repo', 'branch')).rejects.toThrow(
         'GraphQL error'
       )
       expect(mockClient).toBeCalled()

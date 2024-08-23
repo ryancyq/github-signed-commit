@@ -29,13 +29,28 @@ function logError(queryName: string, error: GraphqlResponseError<any>) {
 
 export async function getRepository(
   owner: string,
-  repo: string
+  repo: string,
+  ref: string
 ): Promise<RepositoryWithCommitHistory> {
   const query = `
-    query($owner: String!, $repo: String!) {
+    query($owner: String!, $repo: String!, $branch: String!) {
       repository(owner: $owner, name: $repo) {
         id
         nameWithOwner
+        ref(qualifiedName: $branch) {
+          name
+          target {
+            ... on Commit {
+              history(first: 1) {
+                nodes {
+                  oid
+                  message
+                  committedDate
+                }
+              }
+            }
+          }
+        }
         defaultBranchRef {
           name
           target {
@@ -60,6 +75,7 @@ export async function getRepository(
     }>(query, {
       owner: owner,
       repo: repo,
+      branch: `refs/heads/${ref}`,
     })
 
     logSuccess('repository', repository)
