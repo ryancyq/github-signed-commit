@@ -36,6 +36,17 @@ describe('GitHub API', () => {
                   id: 'repo-id',
                   defaultBranchRef: {
                     name: 'main',
+                    target: {
+                      history: {
+                        nodes: [
+                          {
+                            oid: 'my-oid',
+                            message: 'my message',
+                            committedDate: '2024-08-19T04:53:47Z',
+                          },
+                        ],
+                      },
+                    },
                   },
                   __typename: 'Repository',
                 },
@@ -48,6 +59,16 @@ describe('GitHub API', () => {
       const repo = await getRepository('owner', 'repo')
       expect(repo).toHaveProperty('id', 'repo-id')
       expect(repo).toHaveProperty('defaultBranchRef.name', 'main')
+      expect(repo).toHaveProperty(
+        'defaultBranchRef.target.history.nodes',
+        expect.arrayContaining([
+          expect.objectContaining({
+            oid: 'my-oid',
+            message: 'my message',
+            committedDate: '2024-08-19T04:53:47Z',
+          }),
+        ])
+      )
     })
 
     it('should handle GraphqlResponseError', async () => {

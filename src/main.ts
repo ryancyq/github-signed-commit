@@ -34,7 +34,7 @@ export async function run(): Promise<void> {
     const ref = getInput('ref', { default: repository.defaultBranchRef?.name })
     const commitResponse = await core.group(`committing files`, async () => {
       const startTime = Date.now()
-      const target = repository.defaultBranchRef?.target
+      const target = repository.defaultBranchRef?.target.history.nodes?.[0]
       const parentCommit = isCommit(target)
         ? target
         : (() => {

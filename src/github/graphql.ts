@@ -6,16 +6,16 @@ import {
   CreateCommitOnBranchPayload,
   FileChanges,
   MutationCreateCommitOnBranchArgs,
-  Repository,
 } from '@octokit/graphql-schema'
 
 import { graphqlClient } from './client'
 import { getBlob } from '../blob'
+import { RepositoryWithCommitHistory } from '../github/types'
 
 export async function getRepository(
   owner: string,
   repo: string
-): Promise<Repository> {
+): Promise<RepositoryWithCommitHistory> {
   try {
     const query = `
         query($owner: String!, $repo: String!) {
@@ -28,6 +28,8 @@ export async function getRepository(
                   history(first: 1) {
                     nodes {
                       oid
+                      message
+                      committedDate
                     }
                   }
                 }
@@ -36,13 +38,12 @@ export async function getRepository(
           }
         }
       `
-    const { repository } = await graphqlClient()<{ repository: Repository }>(
-      query,
-      {
-        owner: owner,
-        repo: repo,
-      }
-    )
+    const { repository } = await graphqlClient()<{
+      repository: RepositoryWithCommitHistory
+    }>(query, {
+      owner: owner,
+      repo: repo,
+    })
 
     core.debug(`Request successful, data: ${JSON.stringify(repository)}`)
 
