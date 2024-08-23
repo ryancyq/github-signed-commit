@@ -16,7 +16,7 @@ describe('Git CLI', () => {
         .spyOn(exec, 'exec')
         .mockReturnValue(Promise.resolve(0))
 
-      const changes = await addFileChanges(['*.ts', '~/.bashrc'])
+      await addFileChanges(['*.ts', '~/.bashrc'])
       expect(execMock).toBeCalled()
       expect(execMock).toBeCalledWith(
         'git',
@@ -42,7 +42,7 @@ describe('Git CLI', () => {
         })
 
       const warningMock = jest.spyOn(core, 'warning').mockReturnThis()
-      const changes = await addFileChanges(['*.ts'])
+      await addFileChanges(['*.ts'])
       expect(execMock).toBeCalled()
       expect(warningMock).toBeCalledWith(
         "fatal: pathspec 'main.ts' did not match any files"

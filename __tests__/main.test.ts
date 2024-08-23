@@ -1,35 +1,29 @@
 import * as core from '@actions/core'
-import * as main from '../src/main'
+import * as github from '@actions/github'
 import { describe, jest, beforeEach, it, expect } from '@jest/globals'
+import * as main from '../src/main'
+import * as git from '../src/git'
+import * as graphql from '../src/github/graphql'
+import { RepositoryWithCommitHistory } from '../src/github/types'
 
 describe('action', () => {
-  let runMock: jest.SpiedFunction<typeof main.run>
-  let debugMock: jest.SpiedFunction<typeof core.debug>
-  let errorMock: jest.SpiedFunction<typeof core.error>
-  let setFailedMock: jest.SpiedFunction<typeof core.setFailed>
-  let setOutputMock: jest.SpiedFunction<typeof core.setOutput>
-  let mockGetMultilineInput: jest.SpiedFunction<typeof core.getMultilineInput>
-
   beforeEach(() => {
     jest.clearAllMocks()
-
-    runMock = jest.spyOn(main, 'run')
-    debugMock = jest.spyOn(core, 'debug').mockReturnThis()
-    errorMock = jest.spyOn(core, 'error').mockReturnThis()
-    setFailedMock = jest.spyOn(core, 'setFailed').mockReturnThis()
-    setOutputMock = jest.spyOn(core, 'setOutput').mockReturnThis()
-    mockGetMultilineInput = jest.spyOn(core, 'getMultilineInput')
   })
 
   it('sets a failed status', async () => {
-    mockGetMultilineInput.mockImplementation(() => {
-      throw new Error('My Error')
-    })
+    const runMock = jest.spyOn(main, 'run')
+    const getInputMock = jest
+      .spyOn(core, 'getMultilineInput')
+      .mockImplementation(() => {
+        throw new Error('My Error')
+      })
+    const errorMock = jest.spyOn(core, 'error').mockReturnValue()
+    const setFailedMock = jest.spyOn(core, 'setFailed').mockReturnValue()
 
-    await expect(main.run()).resolves
+    await main.run()
+
     expect(runMock).toHaveReturned()
-
-    // Verify that all of the core library functions were called correctly
     expect(setFailedMock).toHaveBeenCalledWith('My Error')
     expect(errorMock).not.toHaveBeenCalled()
   })

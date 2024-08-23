@@ -179,13 +179,11 @@ describe('GitHub API', () => {
       const branch = {} as CommittableBranch
       const parentCommit = {} as Commit
       const fileChanges = {} as FileChanges
-      const result = await createCommitOnBranch(
-        branch,
-        parentCommit,
-        fileChanges
-      )
+      await expect(
+        createCommitOnBranch(branch, parentCommit, fileChanges)
+      ).resolves.toHaveProperty('commit.id', 'commit-id')
+
       expect(clientMock).toBeCalled()
-      expect(result).toHaveProperty('commit.id', 'commit-id')
       expect(debugMock).toHaveBeenCalledWith(
         expect.stringMatching(
           /Request\[createCommitOnBranch\] successful, data:[\s\S]*/
