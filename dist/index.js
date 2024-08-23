@@ -30585,43 +30585,52 @@ const core = __importStar(__nccwpck_require__(2186));
 const graphql_1 = __nccwpck_require__(8467);
 const client_1 = __nccwpck_require__(7047);
 const blob_1 = __nccwpck_require__(5312);
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+function logSuccess(queryName, data) {
+    core.debug(`Request[${queryName}] successful, data: ${JSON.stringify(data)}`);
+}
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+function logError(queryName, error) {
+    const { query, variables } = error.request;
+    core.error(error.message);
+    core.debug(
+    // eslint-disable-next-line @typescript-eslint/restrict-template-expressions
+    `Request[${queryName}] failed, query: ${query}, variables: ${JSON.stringify(variables)}, data: ${JSON.stringify(error.data)}`);
+}
 function getRepository(owner, repo) {
     return __awaiter(this, void 0, void 0, function* () {
-        try {
-            const query = `
-        query($owner: String!, $repo: String!) {
-          repository(owner: $owner, name: $repo) {
-            id
-            defaultBranchRef {
-              name
-              target {
-                ... on Commit {
-                  history(first: 1) {
-                    nodes {
-                      oid
-                    }
-                  }
+        const query = `
+    query($owner: String!, $repo: String!) {
+      repository(owner: $owner, name: $repo) {
+        id
+        defaultBranchRef {
+          name
+          target {
+            ... on Commit {
+              history(first: 1) {
+                nodes {
+                  oid
+                  message
+                  committedDate
                 }
               }
             }
           }
         }
-      `;
+      }
+    }
+  `;
+        try {
             const { repository } = yield (0, client_1.graphqlClient)()(query, {
                 owner: owner,
                 repo: repo,
             });
-            core.debug(`Request successful, data: ${JSON.stringify(repository)}`);
+            logSuccess('repository', repository);
             return repository;
         }
         catch (error) {
-            if (error instanceof graphql_1.GraphqlResponseError) {
-                const { query, variables } = error.request;
-                core.error(error.message);
-                core.debug(
-                // eslint-disable-next-line @typescript-eslint/restrict-template-expressions
-                `Request failed, query: ${query}, variables: ${JSON.stringify(variables)}, data: ${JSON.stringify(error.data)}`);
-            }
+            if (error instanceof graphql_1.GraphqlResponseError)
+                logError('repository', error);
             throw error;
         }
     });
@@ -30652,9 +30661,16 @@ function createCommitOnBranch(branch, parentCommit, fileChanges) {
                 fileChanges,
             },
         };
-        const { createCommitOnBranch } = yield (0, client_1.graphqlClient)()(mutation, input);
-        core.debug(`Request successful, data: ${JSON.stringify(createCommitOnBranch)}`);
-        return createCommitOnBranch;
+        try {
+            const { createCommitOnBranch } = yield (0, client_1.graphqlClient)()(mutation, input);
+            logSuccess('createCommitOnBranch', createCommitOnBranch);
+            return createCommitOnBranch;
+        }
+        catch (error) {
+            if (error instanceof graphql_1.GraphqlResponseError)
+                logError('createCommitOnBranch', error);
+            throw error;
+        }
     });
 }
 
@@ -30669,11 +30685,7 @@ Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.isCommit = isCommit;
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 function isCommit(obj) {
-    return (!!obj &&
-        'oid' in obj &&
-        'tree' in obj &&
-        'message' in obj &&
-        'parents' in obj);
+    return !!obj && 'oid' in obj && 'message' in obj && 'committedDate' in obj;
 }
 
 
@@ -30747,9 +30759,9 @@ function run() {
             }));
             const ref = (0, input_1.getInput)('ref', { default: (_e = repository.defaultBranchRef) === null || _e === void 0 ? void 0 : _e.name });
             const commitResponse = yield core.group(`committing files`, () => __awaiter(this, void 0, void 0, function* () {
-                var _a;
+                var _a, _b;
                 const startTime = Date.now();
-                const target = (_a = repository.defaultBranchRef) === null || _a === void 0 ? void 0 : _a.target;
+                const target = (_b = (_a = repository.defaultBranchRef) === null || _a === void 0 ? void 0 : _a.target.history.nodes) === null || _b === void 0 ? void 0 : _b[0];
                 const parentCommit = (0, types_1.isCommit)(target)
                     ? target
                     : (() => {
