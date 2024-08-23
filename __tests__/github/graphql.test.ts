@@ -166,7 +166,7 @@ describe('GitHub API', () => {
               data: {
                 createCommitOnBranch: {
                   commit: {
-                    id: 'commit-id',
+                    oid: 'commit-id',
                     __typename: 'Commit',
                   },
                   __typename: 'CreateCommitOnBranchPayload',
@@ -183,7 +183,7 @@ describe('GitHub API', () => {
       const fileChanges = {} as FileChanges
       await expect(
         createCommitOnBranch(branch, parentCommit, fileChanges)
-      ).resolves.toHaveProperty('commit.id', 'commit-id')
+      ).resolves.toHaveProperty('commit.oid', 'commit-id')
 
       expect(clientMock).toBeCalled()
       expect(debugMock).toHaveBeenCalledWith(

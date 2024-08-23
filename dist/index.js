@@ -30661,7 +30661,7 @@ function createCommitOnBranch(branch, parentCommit, fileChanges) {
       mutation($input: CreateCommitOnBranchInput!) {
       createCommitOnBranch(input: $input) {
         commit {
-          id
+          oid
         }
       }
     }`;

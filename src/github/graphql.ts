@@ -102,7 +102,7 @@ export async function createCommitOnBranch(
       mutation($input: CreateCommitOnBranchInput!) {
       createCommitOnBranch(input: $input) {
         commit {
-          id
+          oid
         }
       }
     }`
