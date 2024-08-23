@@ -21,7 +21,8 @@
     "lint": "npx eslint 'src/**/*.ts'",
     "format:write": "npx prettier --write .",
     "format:check": "npx prettier --check .",
-    "test": "npx jest"
+    "test": "npx jest",
+    "ci-test": "npx jest --runInBand"
   },
   "homepage": "https://github.com/ryancyq/signed-commit#readme",
   "dependencies": {
