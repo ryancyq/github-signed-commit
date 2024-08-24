@@ -232,9 +232,7 @@ describe('GitHub API', () => {
         additions: [fileAddition],
       }
       const blobMock = new blob.Blob(fileAddition.path)
-      jest
-        .spyOn(blobMock, 'load')
-        .mockReturnValue(Promise.resolve(fileAddition))
+      jest.spyOn(blobMock, 'load').mockResolvedValue(fileAddition)
       jest
         .spyOn(blob, 'getBlob')
         .mockImplementation((file: any): any => blobMock)
