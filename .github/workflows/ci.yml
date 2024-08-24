@@ -103,12 +103,6 @@ jobs:
         id: checkout
         uses: actions/checkout@v4
 
-      - name: Checkout test action branch
-        shell: bash
-        run: |
-          git checkout -b $BRANCH
-          git push --set-upstream origin $BRANCH
-
       - name: generate dummy content
         shell: bash
         run: |
@@ -156,12 +150,6 @@ jobs:
       - name: Checkout
         id: checkout
         uses: actions/checkout@v4
-
-      - name: Checkout test action branch
-        shell: bash
-        run: |
-          git checkout -b $BRANCH
-          git push --set-upstream origin $BRANCH
 
       - name: generate dummy content
         shell: bash
@@ -211,12 +199,6 @@ jobs:
       - name: Checkout
         id: checkout
         uses: actions/checkout@v4
-
-      - name: Checkout test action branch
-        shell: bash
-        run: |
-          git checkout -b $BRANCH
-          git push --set-upstream origin $BRANCH
 
       - name: generate dummy content
         shell: bash
