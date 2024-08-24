@@ -30858,10 +30858,10 @@ function run() {
             if (repository.ref) {
                 const remoteParentCommit = (_h = (_g = repository.ref.target.history) === null || _g === void 0 ? void 0 : _g.nodes) === null || _h === void 0 ? void 0 : _h[0];
                 if ((0, types_1.isCommit)(remoteParentCommit) &&
-                    remoteParentCommit.oid != currentSha) {
-                    throw new Error(
+                    remoteParentCommit.oid !== currentSha) {
                     // eslint-disable-next-line @typescript-eslint/restrict-template-expressions
-                    `Parent Commit mismatched, sha:${currentSha}, remote-sha:${remoteParentCommit.oid}`);
+                    const errorMsg = `Commit mismatched, sha:${currentSha}, remote-sha:${remoteParentCommit.oid}`;
+                    throw new Error(errorMsg);
                 }
             }
             else {

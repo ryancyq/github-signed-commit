@@ -69,12 +69,11 @@ export async function run(): Promise<void> {
       const remoteParentCommit = repository.ref.target.history?.nodes?.[0]
       if (
         isCommit(remoteParentCommit) &&
-        remoteParentCommit.oid != currentSha
+        remoteParentCommit.oid !== currentSha
       ) {
-        throw new Error(
-          // eslint-disable-next-line @typescript-eslint/restrict-template-expressions
-          `Parent Commit mismatched, sha:${currentSha}, remote-sha:${remoteParentCommit.oid}`
-        )
+        // eslint-disable-next-line @typescript-eslint/restrict-template-expressions
+        const errorMsg = `Commit mismatched, sha:${currentSha}, remote-sha:${remoteParentCommit.oid}`
+        throw new Error(errorMsg)
       }
     } else {
       await pushCurrentBranch()
