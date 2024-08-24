@@ -176,7 +176,9 @@ describe('action', () => {
           },
         },
       } as RepositoryWithCommitHistory)
-
+    const pushBranchMock = jest
+      .spyOn(git, 'pushCurrentBranch')
+      .mockResolvedValue()
     const createCommitMock = jest
       .spyOn(graphql, 'createCommitOnBranch')
       .mockResolvedValue({
@@ -192,6 +194,8 @@ describe('action', () => {
 
     await main.run()
 
+    expect(getRepositoryMock).toHaveBeenCalled()
+    expect(pushBranchMock).not.toHaveBeenCalled()
     expect(createCommitMock).toHaveBeenCalled()
     expect(setOutputMock).toHaveBeenCalledWith('commit-sha', 'my-commit-sha')
   })
