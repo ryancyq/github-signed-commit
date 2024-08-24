@@ -30445,6 +30445,29 @@ exports.InputBranchNotFound = InputBranchNotFound;
 /***/ (function(__unused_webpack_module, exports, __nccwpck_require__) {
 
 
+var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    var desc = Object.getOwnPropertyDescriptor(m, k);
+    if (!desc || ("get" in desc ? !m.__esModule : desc.writable || desc.configurable)) {
+      desc = { enumerable: true, get: function() { return m[k]; } };
+    }
+    Object.defineProperty(o, k2, desc);
+}) : (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    o[k2] = m[k];
+}));
+var __setModuleDefault = (this && this.__setModuleDefault) || (Object.create ? (function(o, v) {
+    Object.defineProperty(o, "default", { enumerable: true, value: v });
+}) : function(o, v) {
+    o["default"] = v;
+});
+var __importStar = (this && this.__importStar) || function (mod) {
+    if (mod && mod.__esModule) return mod;
+    var result = {};
+    if (mod != null) for (var k in mod) if (k !== "default" && Object.prototype.hasOwnProperty.call(mod, k)) __createBinding(result, mod, k);
+    __setModuleDefault(result, mod);
+    return result;
+};
 var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
     function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
     return new (P || (P = Promise))(function (resolve, reject) {
@@ -30455,22 +30478,40 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
     });
 };
 Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.switchBranch = switchBranch;
 exports.addFileChanges = addFileChanges;
 exports.getFileChanges = getFileChanges;
-const core_1 = __nccwpck_require__(2186);
+const core = __importStar(__nccwpck_require__(2186));
 const exec_1 = __nccwpck_require__(1514);
 const node_path_1 = __nccwpck_require__(9411);
 const cwd_1 = __nccwpck_require__(7119);
+function switchBranch(branch) {
+    return __awaiter(this, void 0, void 0, function* () {
+        yield (0, exec_1.exec)('git', ['fetch', 'origin', '--no-tags'], {
+            listeners: {
+                errline: (error) => {
+                    core.debug(error);
+                },
+            },
+        });
+        yield (0, exec_1.exec)('git', ['checkout', branch], {
+            listeners: {
+                errline: (error) => {
+                    core.error(error);
+                },
+            },
+        });
+    });
+}
 function addFileChanges(globPatterns) {
     return __awaiter(this, void 0, void 0, function* () {
         const cwd = (0, cwd_1.getCwd)();
         const cwdPaths = globPatterns.map((p) => (0, node_path_1.join)(cwd, p));
         yield (0, exec_1.exec)('git', ['add', ...cwdPaths], {
-            silent: true,
-            ignoreReturnCode: false,
+            ignoreReturnCode: true,
             listeners: {
                 errline: (error) => {
-                    (0, core_1.warning)(error);
+                    core.warning(error);
                 },
             },
         });
@@ -30481,7 +30522,12 @@ function getFileChanges() {
         const output = [];
         yield (0, exec_1.exec)('git', ['status', '-suall', '--porcelain'], {
             listeners: {
-                stdline: (data) => output.push(data),
+                stdline: (data) => {
+                    output.push(data);
+                },
+                errline: (error) => {
+                    core.error(error);
+                },
             },
         });
         const additions = [];
@@ -30759,6 +30805,16 @@ function run() {
     return __awaiter(this, void 0, void 0, function* () {
         var _a, _b, _c, _d, _e, _f;
         try {
+            const { owner, repo } = github.context.repo;
+            const { ref } = github.context;
+            const currentBranch = ref.replace(/refs\/heads\//g, '');
+            const targetBranch = (0, input_1.getInput)('branch-name');
+            const branchName = targetBranch && currentBranch != targetBranch
+                ? targetBranch
+                : currentBranch;
+            if (branchName !== currentBranch) {
+                yield (0, git_1.switchBranch)(branchName);
+            }
             const filePaths = core.getMultilineInput('files', { required: true });
             if (filePaths.length <= 0)
                 throw new errors_1.InputFilesRequired();
@@ -30768,8 +30824,6 @@ function run() {
                 ((_d = (_c = fileChanges.deletions) === null || _c === void 0 ? void 0 : _c.length) !== null && _d !== void 0 ? _d : 0);
             if (fileCount <= 0)
                 throw new errors_1.NoFileChanges();
-            const { owner, repo } = github.context.repo;
-            const branchName = (0, input_1.getInput)('branch-name');
             const repository = yield core.group(`fetching repository info for owner: ${owner}, repo: ${repo}, branch: ${branchName}`, () => __awaiter(this, void 0, void 0, function* () {
                 const startTime = Date.now();
                 const repositoryData = yield (0, graphql_1.getRepository)(owner, repo, branchName);
@@ -30777,8 +30831,8 @@ function run() {
                 core.debug(`time taken: ${(endTime - startTime).toString()} ms`);
                 return repositoryData;
             }));
-            if (branchName && !repository.ref)
-                throw new errors_1.InputBranchNotFound(branchName);
+            if (targetBranch && !repository.ref)
+                throw new errors_1.InputBranchNotFound(targetBranch);
             const targetRef = (_e = repository.ref) !== null && _e !== void 0 ? _e : repository.defaultBranchRef;
             const commitResponse = yield core.group(`committing files`, () => __awaiter(this, void 0, void 0, function* () {
                 var _a;
