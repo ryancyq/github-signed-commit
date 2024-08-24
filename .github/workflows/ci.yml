@@ -96,7 +96,6 @@ jobs:
     needs: test-action-basic
     env:
       BRANCH: test-action-branch
-      CUSTOM_BRANCH: test-action-custom-branch
     continue-on-error: true
 
     steps:
@@ -124,7 +123,7 @@ jobs:
           files: |
             test.txt
           commit-message: Add Dummy Content
-          branch-name: ${{ env.CUSTOM_BRANCH }}
+          branch-name: ${{ env.BRANCH }}
           branch-push-force: true
 
       - name: Print Action Output
@@ -141,13 +140,6 @@ jobs:
             git push -d origin refs/heads/$BRANCH
           else
             echo "test branch $BRANCH does not exist"
-          fi
-          custom_branch=$(git ls-remote --heads origin refs/heads/$CUSTOM_BRANCH)
-          if [[ -n $custom_branch ]]; then
-            echo "custom branch $CUSTOM_BRANCH existed"
-            git push -d origin refs/heads/$BRANCH
-          else
-            echo "custom branch $CUSTOM_BRANCH does not exist"
           fi
 
   test-action-workspace:
