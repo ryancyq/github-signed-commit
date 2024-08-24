@@ -30840,6 +30840,7 @@ function run() {
                 : currentBranch;
             if (branchName !== currentBranch) {
                 yield (0, git_1.switchBranch)(branchName);
+                yield (0, git_1.pushCurrentBranch)();
             }
             const filePaths = core.getMultilineInput('files', { required: true });
             if (filePaths.length <= 0)
@@ -30866,8 +30867,8 @@ function run() {
                     throw new Error(errorMsg);
                 }
             }
-            else {
-                yield (0, git_1.pushCurrentBranch)();
+            else if (branchName !== currentBranch) {
+                throw new errors_1.InputBranchNotFound(targetBranch);
             }
             const commitResponse = yield core.group(`committing files`, () => __awaiter(this, void 0, void 0, function* () {
                 const startTime = Date.now();

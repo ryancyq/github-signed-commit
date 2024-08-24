@@ -11,7 +11,11 @@ import {
   switchBranch,
 } from './git'
 import { getInput } from './utils/input'
-import { NoFileChanges, InputFilesRequired } from './errors'
+import {
+  NoFileChanges,
+  InputFilesRequired,
+  InputBranchNotFound,
+} from './errors'
 
 export async function run(): Promise<void> {
   try {
@@ -42,6 +46,7 @@ export async function run(): Promise<void> {
 
     if (branchName !== currentBranch) {
       await switchBranch(branchName)
+      await pushCurrentBranch()
     }
 
     const filePaths = core.getMultilineInput('files', { required: true })
@@ -75,8 +80,8 @@ export async function run(): Promise<void> {
         const errorMsg = `Commit mismatched, sha:${currentSha}, remote-sha:${remoteParentCommit.oid}`
         throw new Error(errorMsg)
       }
-    } else {
-      await pushCurrentBranch()
+    } else if (branchName !== currentBranch) {
+      throw new InputBranchNotFound(targetBranch)
     }
 
     const commitResponse = await core.group(`committing files`, async () => {
