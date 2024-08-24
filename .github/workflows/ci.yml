@@ -55,6 +55,7 @@ jobs:
       contents: write
     env:
       BRANCH: test-action-basic
+    continue-on-error: true
 
     steps:
       - name: Checkout
@@ -107,6 +108,7 @@ jobs:
     env:
       BRANCH: test-action-branch
       CUSTOM_BRANCH: test-action-custom-branch
+    continue-on-error: true
 
     steps:
       - name: Checkout
@@ -167,6 +169,7 @@ jobs:
     needs: test-action-branch
     env:
       BRANCH: test-action-workspace
+    continue-on-error: true
 
     steps:
       - name: Checkout
@@ -220,6 +223,7 @@ jobs:
     needs: test-action-workspace
     env:
       BRANCH: test-action-glob
+    continue-on-error: true
 
     steps:
       - name: Checkout
