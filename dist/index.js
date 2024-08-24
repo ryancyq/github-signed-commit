@@ -30479,7 +30479,7 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
 };
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.switchBranch = switchBranch;
-exports.pushBranch = pushBranch;
+exports.pushCurrentBranch = pushCurrentBranch;
 exports.addFileChanges = addFileChanges;
 exports.getFileChanges = getFileChanges;
 const core = __importStar(__nccwpck_require__(2186));
@@ -30488,7 +30488,7 @@ const node_path_1 = __nccwpck_require__(9411);
 const cwd_1 = __nccwpck_require__(7119);
 function switchBranch(branch) {
     return __awaiter(this, void 0, void 0, function* () {
-        yield (0, exec_1.exec)('git', ['checkout', branch], {
+        yield (0, exec_1.exec)('git', ['checkout', '-b', '--', branch], {
             listeners: {
                 errline: (error) => {
                     core.error(error);
@@ -30497,9 +30497,9 @@ function switchBranch(branch) {
         });
     });
 }
-function pushBranch(branch) {
+function pushCurrentBranch() {
     return __awaiter(this, void 0, void 0, function* () {
-        const pushArgs = ['push', '--set-upstream', 'origin', branch, '--porcelain'];
+        const pushArgs = ['push', '--porcelain', '--set-upstream', 'origin', 'HEAD'];
         if (core.getBooleanInput('branch-push-force')) {
             pushArgs.splice(1, 0, '--force');
         }
@@ -30858,7 +30858,7 @@ function run() {
                 }
             }
             else {
-                yield (0, git_1.pushBranch)(branchName);
+                yield (0, git_1.pushCurrentBranch)();
             }
             const commitResponse = yield core.group(`committing files`, () => __awaiter(this, void 0, void 0, function* () {
                 const startTime = Date.now();
