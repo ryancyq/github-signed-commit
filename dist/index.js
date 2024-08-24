@@ -30479,6 +30479,7 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
 };
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.switchBranch = switchBranch;
+exports.pushBranch = pushBranch;
 exports.addFileChanges = addFileChanges;
 exports.getFileChanges = getFileChanges;
 const core = __importStar(__nccwpck_require__(2186));
@@ -30487,14 +30488,22 @@ const node_path_1 = __nccwpck_require__(9411);
 const cwd_1 = __nccwpck_require__(7119);
 function switchBranch(branch) {
     return __awaiter(this, void 0, void 0, function* () {
-        yield (0, exec_1.exec)('git', ['fetch', 'origin', '--no-tags'], {
+        yield (0, exec_1.exec)('git', ['checkout', branch], {
             listeners: {
                 errline: (error) => {
-                    core.debug(error);
+                    core.error(error);
                 },
             },
         });
-        yield (0, exec_1.exec)('git', ['checkout', branch], {
+    });
+}
+function pushBranch(branch) {
+    return __awaiter(this, void 0, void 0, function* () {
+        const pushArgs = ['push', '--set-upstream', 'origin', branch, '--porcelain'];
+        if (core.getBooleanInput('branch-push-force')) {
+            pushArgs.splice(1, 0, '--force');
+        }
+        yield (0, exec_1.exec)('git', pushArgs, {
             listeners: {
                 errline: (error) => {
                     core.error(error);
@@ -30507,7 +30516,7 @@ function addFileChanges(globPatterns) {
     return __awaiter(this, void 0, void 0, function* () {
         const cwd = (0, cwd_1.getCwd)();
         const cwdPaths = globPatterns.map((p) => (0, node_path_1.join)(cwd, p));
-        yield (0, exec_1.exec)('git', ['add', ...cwdPaths], {
+        yield (0, exec_1.exec)('git', ['add', '--', ...cwdPaths], {
             ignoreReturnCode: true,
             listeners: {
                 errline: (error) => {
@@ -30803,10 +30812,10 @@ const input_1 = __nccwpck_require__(5073);
 const errors_1 = __nccwpck_require__(6976);
 function run() {
     return __awaiter(this, void 0, void 0, function* () {
-        var _a, _b, _c, _d, _e, _f;
+        var _a, _b, _c, _d, _e, _f, _g;
         try {
             const { owner, repo } = github.context.repo;
-            const { ref } = github.context;
+            const { sha, ref } = github.context;
             const currentBranch = ref.replace(/refs\/heads\//g, '');
             const targetBranch = (0, input_1.getInput)('branch-name');
             const branchName = targetBranch && currentBranch != targetBranch
@@ -30831,28 +30840,28 @@ function run() {
                 core.debug(`time taken: ${(endTime - startTime).toString()} ms`);
                 return repositoryData;
             }));
-            if (targetBranch && !repository.ref)
-                throw new errors_1.InputBranchNotFound(targetBranch);
-            const targetRef = (_e = repository.ref) !== null && _e !== void 0 ? _e : repository.defaultBranchRef;
+            if (repository.ref) {
+                const remoteParentCommit = (_f = (_e = repository.ref.target.history) === null || _e === void 0 ? void 0 : _e.nodes) === null || _f === void 0 ? void 0 : _f[0];
+                if ((0, types_1.isCommit)(remoteParentCommit) && remoteParentCommit.oid != sha) {
+                    throw new Error(
+                    // eslint-disable-next-line @typescript-eslint/restrict-template-expressions
+                    `Parent Commit mismatched, sha:${sha}, remote-sha:${remoteParentCommit.oid}`);
+                }
+            }
+            else {
+                yield (0, git_1.pushBranch)(branchName);
+            }
             const commitResponse = yield core.group(`committing files`, () => __awaiter(this, void 0, void 0, function* () {
-                var _a;
                 const startTime = Date.now();
-                const target = (_a = targetRef === null || targetRef === void 0 ? void 0 : targetRef.target.history.nodes) === null || _a === void 0 ? void 0 : _a[0];
-                const parentCommit = (0, types_1.isCommit)(target)
-                    ? target
-                    : (() => {
-                        var _a;
-                        throw new Error(`Unable to locate the parent commit of the branch "${(_a = targetRef === null || targetRef === void 0 ? void 0 : targetRef.name) !== null && _a !== void 0 ? _a : branchName}"`);
-                    })();
                 const commitData = yield (0, graphql_1.createCommitOnBranch)({
                     repositoryNameWithOwner: repository.nameWithOwner,
                     branchName: branchName,
-                }, parentCommit, fileChanges);
+                }, { oid: sha }, fileChanges);
                 const endTime = Date.now();
                 core.debug(`time taken: ${(endTime - startTime).toString()} ms`);
                 return commitData;
             }));
-            core.setOutput('commit-sha', (_f = commitResponse.commit) === null || _f === void 0 ? void 0 : _f.oid);
+            core.setOutput('commit-sha', (_g = commitResponse.commit) === null || _g === void 0 ? void 0 : _g.oid);
         }
         catch (error) {
             if (error instanceof errors_1.NoFileChanges) {
