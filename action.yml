@@ -21,7 +21,7 @@ inputs:
     required: true
   branch-name:
     description: |
-      Branch to commit to; it must already exist. Default: Repository's default branch.
+      Branch to commit, it must already exist in the remote. Default: Workflow triggered branch.
     required: false
     default: ''
 

@@ -47,7 +47,7 @@ Note: The `GH_TOKEN` environment variable is **required** for GitHub API request
 | `files` | **YES** | Multi-line string of file paths to be committed, relative to the current workspace.|
 | `workspace` | **NO** | Directory containing files to be committed. **Default:** GitHub workspace directory (root of the repository). |
 | `commit-message` | **YES** | Commit message for the file changes. |
-| `branch-name` | **NO** | Branch to commit to; it must already exist. **Default:** Repository's default branch |
+| `branch-name` | **NO** | Branch to commit, it must already exist in the remote. **Default:** Workflow triggered branch |
 
 ## Outputs
 | Output | Description |

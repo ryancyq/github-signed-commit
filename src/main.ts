@@ -3,7 +3,7 @@ import * as github from '@actions/github'
 
 import { getRepository, createCommitOnBranch } from './github/graphql'
 import { isCommit } from './github/types'
-import { addFileChanges, getFileChanges } from './git'
+import { addFileChanges, getFileChanges, switchBranch } from './git'
 import { getInput } from './utils/input'
 import {
   NoFileChanges,
@@ -13,6 +13,19 @@ import {
 
 export async function run(): Promise<void> {
   try {
+    const { owner, repo } = github.context.repo
+    const { ref } = github.context
+    const currentBranch = ref.replace(/refs\/heads\//g, '')
+    const targetBranch = getInput('branch-name')
+    const branchName =
+      targetBranch && currentBranch != targetBranch
+        ? targetBranch
+        : currentBranch
+
+    if (branchName !== currentBranch) {
+      await switchBranch(branchName)
+    }
+
     const filePaths = core.getMultilineInput('files', { required: true })
     if (filePaths.length <= 0) throw new InputFilesRequired()
 
@@ -23,8 +36,6 @@ export async function run(): Promise<void> {
       (fileChanges.deletions?.length ?? 0)
     if (fileCount <= 0) throw new NoFileChanges()
 
-    const { owner, repo } = github.context.repo
-    const branchName = getInput('branch-name')
     const repository = await core.group(
       `fetching repository info for owner: ${owner}, repo: ${repo}, branch: ${branchName}`,
       async () => {
@@ -36,7 +47,8 @@ export async function run(): Promise<void> {
       }
     )
 
-    if (branchName && !repository.ref) throw new InputBranchNotFound(branchName)
+    if (targetBranch && !repository.ref)
+      throw new InputBranchNotFound(targetBranch)
 
     const targetRef = repository.ref ?? repository.defaultBranchRef
     const commitResponse = await core.group(`committing files`, async () => {

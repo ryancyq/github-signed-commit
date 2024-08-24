@@ -1,4 +1,4 @@
-import { warning } from '@actions/core'
+import * as core from '@actions/core'
 import { exec } from '@actions/exec'
 import { join } from 'node:path'
 import {
@@ -9,16 +9,33 @@ import {
 
 import { getCwd } from './utils/cwd'
 
+export async function switchBranch(branch: string) {
+  await exec('git', ['fetch', 'origin', '--no-tags'], {
+    listeners: {
+      errline: (error: string) => {
+        core.debug(error)
+      },
+    },
+  })
+
+  await exec('git', ['checkout', branch], {
+    listeners: {
+      errline: (error: string) => {
+        core.error(error)
+      },
+    },
+  })
+}
+
 export async function addFileChanges(globPatterns: string[]): Promise<void> {
   const cwd = getCwd()
   const cwdPaths = globPatterns.map((p) => join(cwd, p))
 
   await exec('git', ['add', ...cwdPaths], {
-    silent: true,
-    ignoreReturnCode: false,
+    ignoreReturnCode: true,
     listeners: {
       errline: (error: string) => {
-        warning(error)
+        core.warning(error)
       },
     },
   })
@@ -28,7 +45,12 @@ export async function getFileChanges(): Promise<FileChanges> {
   const output: string[] = []
   await exec('git', ['status', '-suall', '--porcelain'], {
     listeners: {
-      stdline: (data: string) => output.push(data),
+      stdline: (data: string) => {
+        output.push(data)
+      },
+      errline: (error: string) => {
+        core.error(error)
+      },
     },
   })
 
