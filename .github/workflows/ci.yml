@@ -186,6 +186,7 @@ jobs:
           files: |
             test.txt
           commit-message: Add Dummy Content
+          branch-name: ${{ env.BRANCH }}
           workspace: dummy
 
       - name: Print Action Output
@@ -240,6 +241,7 @@ jobs:
           files: |
             test*.txt
           commit-message: Add Dummy Content
+          branch-name: ${{ env.BRANCH }}
 
       - name: Print Action Output
         id: output
