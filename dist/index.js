@@ -30492,7 +30492,10 @@ function switchBranch(branch) {
             ignoreReturnCode: true,
             listeners: {
                 errline: (error) => {
-                    core.error(error);
+                    if (/^(fatal|error):/.test(error))
+                        core.error(error);
+                    else
+                        core.warning(error);
                 },
             },
         });
@@ -30508,7 +30511,10 @@ function pushCurrentBranch() {
             ignoreReturnCode: true,
             listeners: {
                 errline: (error) => {
-                    core.error(error);
+                    if (/^(fatal|error):/.test(error))
+                        core.error(error);
+                    else
+                        core.warning(error);
                 },
             },
         });
@@ -30522,7 +30528,10 @@ function addFileChanges(globPatterns) {
             ignoreReturnCode: true,
             listeners: {
                 errline: (error) => {
-                    core.warning(error);
+                    if (/^(fatal|error):/.test(error))
+                        core.error(error);
+                    else
+                        core.warning(error);
                 },
             },
         });
@@ -30537,7 +30546,10 @@ function getFileChanges() {
                     output.push(data);
                 },
                 errline: (error) => {
-                    core.error(error);
+                    if (/^(fatal|error):/.test(error))
+                        core.error(error);
+                    else
+                        core.warning(error);
                 },
             },
         });

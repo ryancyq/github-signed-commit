@@ -14,7 +14,8 @@ export async function switchBranch(branch: string) {
     ignoreReturnCode: true,
     listeners: {
       errline: (error: string) => {
-        core.error(error)
+        if (/^(fatal|error):/.test(error)) core.error(error)
+        else core.warning(error)
       },
     },
   })
@@ -30,7 +31,8 @@ export async function pushCurrentBranch() {
     ignoreReturnCode: true,
     listeners: {
       errline: (error: string) => {
-        core.error(error)
+        if (/^(fatal|error):/.test(error)) core.error(error)
+        else core.warning(error)
       },
     },
   })
@@ -44,7 +46,8 @@ export async function addFileChanges(globPatterns: string[]): Promise<void> {
     ignoreReturnCode: true,
     listeners: {
       errline: (error: string) => {
-        core.warning(error)
+        if (/^(fatal|error):/.test(error)) core.error(error)
+        else core.warning(error)
       },
     },
   })
@@ -58,7 +61,8 @@ export async function getFileChanges(): Promise<FileChanges> {
         output.push(data)
       },
       errline: (error: string) => {
-        core.error(error)
+        if (/^(fatal|error):/.test(error)) core.error(error)
+        else core.warning(error)
       },
     },
   })
