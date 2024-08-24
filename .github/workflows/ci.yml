@@ -62,17 +62,6 @@ jobs:
         id: checkout
         uses: actions/checkout@v4
 
-      - name: Checkout test action branch
-        shell: bash
-        run: |
-          git checkout -b $BRANCH
-          git push --set-upstream origin $BRANCH
-
-      - name: generate dummy content
-        shell: bash
-        run: |
-          touch test.txt && echo 'abc' > test.txt
-
       - name: Test Action
         id: test-action
         uses: ./
