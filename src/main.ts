@@ -24,15 +24,15 @@ export async function run(): Promise<void> {
       // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-member-access
       currentBranch = github.context.payload.pull_request?.head?.ref || ''
     }
+    if (!currentBranch)
+      throw new Error(`Unsupported event: ${eventName}, ref: ${ref}`)
+
     let currentSha = sha
     if (github.context.payload.after) {
       // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
       currentSha = github.context.payload.after
       core.debug(`sha:${sha}, payload.after:${currentSha}`)
     }
-
-    if (!currentBranch)
-      throw new Error(`Unsupported event: ${eventName}, ref: ${ref}`)
 
     const targetBranch = getInput('branch-name')
     const branchName =

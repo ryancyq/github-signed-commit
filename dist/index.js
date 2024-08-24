@@ -30824,14 +30824,14 @@ function run() {
                 // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-member-access
                 currentBranch = ((_b = (_a = github.context.payload.pull_request) === null || _a === void 0 ? void 0 : _a.head) === null || _b === void 0 ? void 0 : _b.ref) || '';
             }
+            if (!currentBranch)
+                throw new Error(`Unsupported event: ${eventName}, ref: ${ref}`);
             let currentSha = sha;
             if (github.context.payload.after) {
                 // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
                 currentSha = github.context.payload.after;
                 core.debug(`sha:${sha}, payload.after:${currentSha}`);
             }
-            if (!currentBranch)
-                throw new Error(`Unsupported event: ${eventName}, ref: ${ref}`);
             const targetBranch = (0, input_1.getInput)('branch-name');
             const branchName = targetBranch && currentBranch != targetBranch
                 ? targetBranch
