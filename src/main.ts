@@ -4,7 +4,12 @@ import * as github from '@actions/github'
 import { Commit } from '@octokit/graphql-schema'
 import { getRepository, createCommitOnBranch } from './github/graphql'
 import { isCommit } from './github/types'
-import { addFileChanges, getFileChanges, pushBranch, switchBranch } from './git'
+import {
+  addFileChanges,
+  getFileChanges,
+  pushCurrentBranch,
+  switchBranch,
+} from './git'
 import { getInput } from './utils/input'
 import { NoFileChanges, InputFilesRequired } from './errors'
 
@@ -63,7 +68,7 @@ export async function run(): Promise<void> {
         )
       }
     } else {
-      await pushBranch(branchName)
+      await pushCurrentBranch()
     }
 
     const commitResponse = await core.group(`committing files`, async () => {

@@ -19,8 +19,8 @@ export async function switchBranch(branch: string) {
   })
 }
 
-export async function pushBranch(branch: string) {
-  const pushArgs = ['push', '--set-upstream', 'origin', branch, '--porcelain']
+export async function pushCurrentBranch() {
+  const pushArgs = ['push', '--porcelain', '--set-upstream', 'origin', 'HEAD']
   if (core.getBooleanInput('branch-push-force')) {
     pushArgs.splice(1, 0, '--force')
   }

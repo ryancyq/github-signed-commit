@@ -96,7 +96,9 @@ describe('action', () => {
     const getRepositoryMock = jest
       .spyOn(graphql, 'getRepository')
       .mockResolvedValue({ ref: { target: {} } } as RepositoryWithCommitHistory)
-    const pushBranchMock = jest.spyOn(git, 'pushBranch').mockResolvedValue()
+    const pushBranchMock = jest
+      .spyOn(git, 'pushCurrentBranch')
+      .mockResolvedValue()
     const createCommitMock = jest
       .spyOn(graphql, 'createCommitOnBranch')
       .mockResolvedValue({} as CreateCommitOnBranchPayload)
@@ -127,7 +129,9 @@ describe('action', () => {
     const getRepositoryMock = jest
       .spyOn(graphql, 'getRepository')
       .mockResolvedValue({} as RepositoryWithCommitHistory)
-    const pushBranchMock = jest.spyOn(git, 'pushBranch').mockResolvedValue()
+    const pushBranchMock = jest
+      .spyOn(git, 'pushCurrentBranch')
+      .mockResolvedValue()
     const createCommitMock = jest
       .spyOn(graphql, 'createCommitOnBranch')
       .mockResolvedValue({} as CreateCommitOnBranchPayload)

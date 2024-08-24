@@ -6,7 +6,7 @@ import {
   addFileChanges,
   getFileChanges,
   switchBranch,
-  pushBranch,
+  pushCurrentBranch,
 } from '../src/git'
 
 describe('Git CLI', () => {
@@ -55,11 +55,11 @@ describe('Git CLI', () => {
         .spyOn(core, 'getBooleanInput')
         .mockReturnValue(false)
 
-      await pushBranch('new-branch')
+      await pushCurrentBranch()
       expect(execMock).toHaveBeenCalled()
       expect(execMock).toHaveBeenCalledWith(
         'git',
-        ['push', '--set-upstream', 'origin', 'new-branch', '--porcelain'],
+        ['push', '--porcelain', '--set-upstream', 'origin', 'HEAD'],
         expect.objectContaining({ listeners: { errline: expect.anything() } })
       )
     })
@@ -68,18 +68,11 @@ describe('Git CLI', () => {
       const execMock = jest.spyOn(exec, 'exec').mockResolvedValue(0)
       const getInput = jest.spyOn(core, 'getBooleanInput').mockReturnValue(true)
 
-      await pushBranch('new-branch-forced')
+      await pushCurrentBranch()
       expect(execMock).toHaveBeenCalled()
       expect(execMock).toHaveBeenCalledWith(
         'git',
-        [
-          'push',
-          '--force',
-          '--set-upstream',
-          'origin',
-          'new-branch-forced',
-          '--porcelain',
-        ],
+        ['push', '--force', '--porcelain', '--set-upstream', 'origin', 'HEAD'],
         expect.objectContaining({ listeners: { errline: expect.anything() } })
       )
       expect(getInput).toHaveBeenCalledWith('branch-push-force')
@@ -99,7 +92,7 @@ describe('Git CLI', () => {
 
       const errorMock = jest.spyOn(core, 'error').mockReturnValue()
 
-      await pushBranch('new-branch')
+      await pushCurrentBranch()
       expect(execMock).toHaveBeenCalled()
       expect(errorMock).toHaveBeenCalledWith("fatal: 'new-branch' is rejected")
     })
