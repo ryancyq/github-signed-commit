@@ -1,20 +1,17 @@
 import * as core from '@actions/core'
 import * as github from '@actions/github'
 
+import { Commit } from '@octokit/graphql-schema'
 import { getRepository, createCommitOnBranch } from './github/graphql'
 import { isCommit } from './github/types'
-import { addFileChanges, getFileChanges, switchBranch } from './git'
+import { addFileChanges, getFileChanges, pushBranch, switchBranch } from './git'
 import { getInput } from './utils/input'
-import {
-  NoFileChanges,
-  InputFilesRequired,
-  InputBranchNotFound,
-} from './errors'
+import { NoFileChanges, InputFilesRequired } from './errors'
 
 export async function run(): Promise<void> {
   try {
     const { owner, repo } = github.context.repo
-    const { ref } = github.context
+    const { sha, ref } = github.context
     const currentBranch = ref.replace(/refs\/heads\//g, '')
     const targetBranch = getInput('branch-name')
     const branchName =
@@ -47,27 +44,26 @@ export async function run(): Promise<void> {
       }
     )
 
-    if (targetBranch && !repository.ref)
-      throw new InputBranchNotFound(targetBranch)
+    if (repository.ref) {
+      const remoteParentCommit = repository.ref.target.history?.nodes?.[0]
+      if (isCommit(remoteParentCommit) && remoteParentCommit.oid != sha) {
+        throw new Error(
+          // eslint-disable-next-line @typescript-eslint/restrict-template-expressions
+          `Parent Commit mismatched, sha:${sha}, remote-sha:${remoteParentCommit.oid}`
+        )
+      }
+    } else {
+      await pushBranch(branchName)
+    }
 
-    const targetRef = repository.ref ?? repository.defaultBranchRef
     const commitResponse = await core.group(`committing files`, async () => {
       const startTime = Date.now()
-      const target = targetRef?.target.history.nodes?.[0]
-      const parentCommit = isCommit(target)
-        ? target
-        : (() => {
-            throw new Error(
-              `Unable to locate the parent commit of the branch "${targetRef?.name ?? branchName}"`
-            )
-          })()
-
       const commitData = await createCommitOnBranch(
         {
           repositoryNameWithOwner: repository.nameWithOwner,
           branchName: branchName,
         },
-        parentCommit,
+        { oid: sha } as Commit,
         fileChanges
       )
       const endTime = Date.now()

@@ -26,6 +26,11 @@ In general, the only difference is that the input `ref` is replaced by `branch-n
 In your workflow, to commit your files, configure a step as follows:
 
 ```yaml
+jobs:
+  <job-id>:
+    permissions:
+      contents: write # grant secrets.GITHUB_TOKEN permission to push file changes
+  
     - name: Commit file
       uses: ryancyq/signed-commit@v3
       env:
@@ -35,8 +40,7 @@ In your workflow, to commit your files, configure a step as follows:
           path/to/myfile1
           path/to/myfile2
           path/to/myfile3
-        commit-message: Committing ./myfile
-        branch-name: my-branch
+        commit-message: Committing files
 ```
 
 Note: The `GH_TOKEN` environment variable is **required** for GitHub API request authentication.
@@ -45,14 +49,15 @@ Note: The `GH_TOKEN` environment variable is **required** for GitHub API request
 | Input | Required | Description |
 | :--- | :---: | :---  |
 | `files` | **YES** | Multi-line string of file paths to be committed, relative to the current workspace.|
-| `workspace` | **NO** | Directory containing files to be committed. **Default:** GitHub workspace directory (root of the repository). |
+| `workspace` | **NO** | Directory containing files to be committed. **DEFAULT:** GitHub workspace directory (root of the repository). |
 | `commit-message` | **YES** | Commit message for the file changes. |
-| `branch-name` | **NO** | Branch to commit, it must already exist in the remote. **Default:** Workflow triggered branch |
+| `branch-name` | **NO** | Branch to commit, it must already exist in the remote. **DEFAULT:** Workflow triggered branch |
+| `branch-push-force` | **NO** | `--force` flag when running `git push <branch-name>`. |
 
 ## Outputs
 | Output | Description |
 | :--- | :--- |
-| `commit-sha` | SHA of the signed commit |
+| `commit-sha` | Full SHA of the signed commit |
 
 [ci_badge]: https://github.com/ryancyq/signed-commit/actions/workflows/ci.yml/badge.svg
 [ci_workflows]: https://github.com/ryancyq/signed-commit/actions/workflows/ci.yml

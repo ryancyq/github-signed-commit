@@ -10,15 +10,22 @@ import {
 import { getCwd } from './utils/cwd'
 
 export async function switchBranch(branch: string) {
-  await exec('git', ['fetch', 'origin', '--no-tags'], {
+  await exec('git', ['checkout', branch], {
     listeners: {
       errline: (error: string) => {
-        core.debug(error)
+        core.error(error)
       },
     },
   })
+}
 
-  await exec('git', ['checkout', branch], {
+export async function pushBranch(branch: string) {
+  const pushArgs = ['push', '--set-upstream', 'origin', branch, '--porcelain']
+  if (core.getBooleanInput('branch-push-force')) {
+    pushArgs.splice(1, 0, '--force')
+  }
+
+  await exec('git', pushArgs, {
     listeners: {
       errline: (error: string) => {
         core.error(error)

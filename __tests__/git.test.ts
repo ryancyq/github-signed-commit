@@ -2,7 +2,12 @@ import * as core from '@actions/core'
 import * as exec from '@actions/exec'
 import { describe, jest, beforeEach, afterAll, it, expect } from '@jest/globals'
 import * as cwd from '../src/utils/cwd'
-import { addFileChanges, getFileChanges, switchBranch } from '../src/git'
+import {
+  addFileChanges,
+  getFileChanges,
+  switchBranch,
+  pushBranch,
+} from '../src/git'
 
 describe('Git CLI', () => {
   beforeEach(() => {
@@ -11,19 +16,12 @@ describe('Git CLI', () => {
   })
 
   describe('git checkout', () => {
-    it('should git fetch + git checkout', async () => {
+    it('should create new branch', async () => {
       const execMock = jest.spyOn(exec, 'exec').mockResolvedValue(0)
 
       await switchBranch('new-branch')
-      expect(execMock).toHaveBeenCalledTimes(2)
-      expect(execMock).toHaveBeenNthCalledWith(
-        1,
-        'git',
-        ['fetch', 'origin', '--no-tags'],
-        expect.objectContaining({ listeners: { errline: expect.anything() } })
-      )
-      expect(execMock).toHaveBeenNthCalledWith(
-        2,
+      expect(execMock).toHaveBeenCalled()
+      expect(execMock).toHaveBeenCalledWith(
         'git',
         ['checkout', 'new-branch'],
         expect.objectContaining({ listeners: { errline: expect.anything() } })
@@ -42,11 +40,68 @@ describe('Git CLI', () => {
           return 0
         })
 
-      const warningMock = jest.spyOn(core, 'error').mockReturnValue()
+      const errorMock = jest.spyOn(core, 'error').mockReturnValue()
 
       await switchBranch('new-branch')
       expect(execMock).toHaveBeenCalled()
-      expect(warningMock).toHaveBeenCalledWith("fatal: 'new-branch' is invalid")
+      expect(errorMock).toHaveBeenCalledWith("fatal: 'new-branch' is invalid")
+    })
+  })
+
+  describe('git push', () => {
+    it('should push new branch', async () => {
+      const execMock = jest.spyOn(exec, 'exec').mockResolvedValue(0)
+      const getInput = jest
+        .spyOn(core, 'getBooleanInput')
+        .mockReturnValue(false)
+
+      await pushBranch('new-branch')
+      expect(execMock).toHaveBeenCalled()
+      expect(execMock).toHaveBeenCalledWith(
+        'git',
+        ['push', '--set-upstream', 'origin', 'new-branch', '--porcelain'],
+        expect.objectContaining({ listeners: { errline: expect.anything() } })
+      )
+    })
+
+    it('should force push new branch', async () => {
+      const execMock = jest.spyOn(exec, 'exec').mockResolvedValue(0)
+      const getInput = jest.spyOn(core, 'getBooleanInput').mockReturnValue(true)
+
+      await pushBranch('new-branch-forced')
+      expect(execMock).toHaveBeenCalled()
+      expect(execMock).toHaveBeenCalledWith(
+        'git',
+        [
+          'push',
+          '--force',
+          '--set-upstream',
+          'origin',
+          'new-branch-forced',
+          '--porcelain',
+        ],
+        expect.objectContaining({ listeners: { errline: expect.anything() } })
+      )
+      expect(getInput).toHaveBeenCalledWith('branch-push-force')
+    })
+
+    it('should log error', async () => {
+      const execMock = jest
+        .spyOn(exec, 'exec')
+        .mockImplementation(async (cmd, args, options) => {
+          const io = options?.listeners?.errline
+          if (io) {
+            io.call(this, "fatal: 'new-branch' is rejected")
+            return 1
+          }
+          return 0
+        })
+
+      const errorMock = jest.spyOn(core, 'error').mockReturnValue()
+
+      await pushBranch('new-branch')
+      expect(execMock).toHaveBeenCalled()
+      expect(errorMock).toHaveBeenCalledWith("fatal: 'new-branch' is rejected")
     })
   })
 

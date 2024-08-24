@@ -13,7 +13,7 @@ export function isCommit(obj: any): obj is Commit {
 
 export type RefWithCommitHistory = Omit<Ref, 'target'> & {
   target: {
-    history: CommitHistoryConnection
+    history: Maybe<CommitHistoryConnection>
   }
 }
 

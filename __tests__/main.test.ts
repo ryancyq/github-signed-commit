@@ -14,6 +14,7 @@ describe('action', () => {
       .spyOn(github.context, 'repo', 'get')
       .mockReturnValue({ repo: 'my-repo', owner: 'my-user' })
     jest.replaceProperty(github.context, 'ref', 'refs/heads/main')
+    jest.replaceProperty(github.context, 'sha', 'parent-oid')
     jest.spyOn(core, 'debug').mockReturnValue()
   })
 
@@ -83,8 +84,8 @@ describe('action', () => {
     expect(setFailedMock).toHaveBeenCalledWith('target not the same as current')
   })
 
-  it('requires branch-name input to exists when specified', async () => {
-    jest.spyOn(core, 'getInput').mockReturnValue('new-branch')
+  it('does not push branch if target the same as current', async () => {
+    jest.spyOn(core, 'getInput').mockReturnValue('main')
     jest.spyOn(core, 'getMultilineInput').mockReturnValue(['/test.txt'])
     jest.spyOn(git, 'switchBranch').mockResolvedValue()
     jest.spyOn(git, 'addFileChanges').mockResolvedValue()
@@ -94,7 +95,11 @@ describe('action', () => {
 
     const getRepositoryMock = jest
       .spyOn(graphql, 'getRepository')
-      .mockResolvedValue({} as RepositoryWithCommitHistory)
+      .mockResolvedValue({ ref: { target: {} } } as RepositoryWithCommitHistory)
+    const pushBranchMock = jest.spyOn(git, 'pushBranch').mockResolvedValue()
+    const createCommitMock = jest
+      .spyOn(graphql, 'createCommitOnBranch')
+      .mockResolvedValue({} as CreateCommitOnBranchPayload)
 
     jest.spyOn(core, 'debug').mockReturnValue()
     jest.spyOn(core, 'group').mockImplementation(async (name, fn) => {
@@ -106,9 +111,39 @@ describe('action', () => {
     await main.run()
 
     expect(getRepositoryMock).toHaveBeenCalled()
-    expect(setFailedMock).toHaveBeenCalledWith(
-      'Input <branch-name> "new-branch" not found'
-    )
+    expect(pushBranchMock).not.toHaveBeenCalled()
+    expect(createCommitMock).toHaveBeenCalled()
+  })
+
+  it('push branch if target no the same as current', async () => {
+    jest.spyOn(core, 'getInput').mockReturnValue('new-branch')
+    jest.spyOn(core, 'getMultilineInput').mockReturnValue(['/test.txt'])
+    jest.spyOn(git, 'switchBranch').mockResolvedValue()
+    jest.spyOn(git, 'addFileChanges').mockResolvedValue()
+    jest
+      .spyOn(git, 'getFileChanges')
+      .mockResolvedValue({ additions: [{ path: '/test.txt', contents: '' }] })
+
+    const getRepositoryMock = jest
+      .spyOn(graphql, 'getRepository')
+      .mockResolvedValue({} as RepositoryWithCommitHistory)
+    const pushBranchMock = jest.spyOn(git, 'pushBranch').mockResolvedValue()
+    const createCommitMock = jest
+      .spyOn(graphql, 'createCommitOnBranch')
+      .mockResolvedValue({} as CreateCommitOnBranchPayload)
+
+    jest.spyOn(core, 'debug').mockReturnValue()
+    jest.spyOn(core, 'group').mockImplementation(async (name, fn) => {
+      return await fn()
+    })
+
+    const setFailedMock = jest.spyOn(core, 'setFailed').mockReturnValue()
+
+    await main.run()
+
+    expect(getRepositoryMock).toHaveBeenCalled()
+    expect(pushBranchMock).toHaveBeenCalled()
+    expect(createCommitMock).toHaveBeenCalled()
   })
 
   it('set commit sha to output', async () => {
@@ -128,7 +163,7 @@ describe('action', () => {
             history: {
               nodes: [
                 {
-                  oid: 'another-oid',
+                  oid: 'parent-oid',
                   message: 'another message',
                   committedDate: '2024-08-19T04:53:47Z',
                 },
