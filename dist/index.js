@@ -30488,7 +30488,7 @@ const node_path_1 = __nccwpck_require__(9411);
 const cwd_1 = __nccwpck_require__(7119);
 function switchBranch(branch) {
     return __awaiter(this, void 0, void 0, function* () {
-        yield (0, exec_1.exec)('git', ['checkout', '-b', '--', branch], {
+        yield (0, exec_1.exec)('git', ['checkout', '-b', branch], {
             listeners: {
                 errline: (error) => {
                     core.error(error);

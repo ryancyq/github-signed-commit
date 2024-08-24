@@ -10,7 +10,7 @@ import {
 import { getCwd } from './utils/cwd'
 
 export async function switchBranch(branch: string) {
-  await exec('git', ['checkout', '-b', '--', branch], {
+  await exec('git', ['checkout', '-b', branch], {
     listeners: {
       errline: (error: string) => {
         core.error(error)

@@ -23,7 +23,7 @@ describe('Git CLI', () => {
       expect(execMock).toHaveBeenCalled()
       expect(execMock).toHaveBeenCalledWith(
         'git',
-        ['checkout', '-b', '--', 'new-branch'],
+        ['checkout', '-b', 'new-branch'],
         expect.objectContaining({ listeners: { errline: expect.anything() } })
       )
     })
