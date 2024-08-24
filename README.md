@@ -1,6 +1,7 @@
 # :fountain_pen: Create a **signed** commit with GitHub Actions
 
 [![CI][ci_badge]][ci_workflows]
+[![Coverage][coverage_badge]][coverage]
 
 Learn more about [commit signature](https://docs.github.com/en/authentication/managing-commit-signature-verification/about-commit-signature-verification) on GitHub.
 
@@ -54,3 +55,5 @@ Note: The `GH_TOKEN` environment variable is **required** for GitHub API request
 
 [ci_badge]: https://github.com/ryancyq/signed-commit/actions/workflows/ci.yml/badge.svg
 [ci_workflows]: https://github.com/ryancyq/signed-commit/actions/workflows/ci.yml
+[coverage_badge]: https://codecov.io/gh/ryancyq/signed-commit/graph/badge.svg?token=KZTD2F2MN2
+[coverage]: https://codecov.io/gh/ryancyq/signed-commit
