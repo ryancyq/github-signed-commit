@@ -38,7 +38,7 @@ export async function addFileChanges(globPatterns: string[]): Promise<void> {
   const cwd = getCwd()
   const cwdPaths = globPatterns.map((p) => join(cwd, p))
 
-  await exec('git', ['add', ...cwdPaths], {
+  await exec('git', ['add', '--', ...cwdPaths], {
     ignoreReturnCode: true,
     listeners: {
       errline: (error: string) => {

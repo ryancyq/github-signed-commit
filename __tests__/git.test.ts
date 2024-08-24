@@ -115,6 +115,7 @@ describe('Git CLI', () => {
         'git',
         [
           'add',
+          '--',
           '/users/test-workspace/*.ts',
           '/users/test-workspace/~/.bashrc',
         ],
