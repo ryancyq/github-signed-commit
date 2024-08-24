@@ -11,6 +11,10 @@ on:
 permissions:
   contents: read
 
+concurrency:
+  group: test-action
+  cancel-in-progress: true
+
 jobs:
   test-typescript:
     name: TypeScript Tests
@@ -49,9 +53,6 @@ jobs:
     runs-on: ubuntu-latest
     permissions:
       contents: write
-    concurrency:
-      group: test-action
-      cancel-in-progress: false
     env:
       BRANCH: test-action-basic
 
@@ -102,9 +103,7 @@ jobs:
     runs-on: ubuntu-latest
     permissions:
       contents: write
-    concurrency:
-      group: test-action
-      cancel-in-progress: false
+    needs: test-action-basic
     env:
       BRANCH: test-action-branch
       CUSTOM_BRANCH: test-action-custom-branch
@@ -165,9 +164,7 @@ jobs:
     runs-on: ubuntu-latest
     permissions:
       contents: write
-    concurrency:
-      group: test-action
-      cancel-in-progress: false
+    needs: test-action-branch
     env:
       BRANCH: test-action-workspace
 
@@ -220,9 +217,7 @@ jobs:
     runs-on: ubuntu-latest
     permissions:
       contents: write
-    concurrency:
-      group: test-action
-      cancel-in-progress: false
+    needs: test-action-workspace
     env:
       BRANCH: test-action-glob
 
