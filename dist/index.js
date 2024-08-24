@@ -30367,8 +30367,11 @@ const cwd_1 = __nccwpck_require__(7119);
 const base64_encoder_1 = __importDefault(__nccwpck_require__(938));
 class Blob {
     constructor(path) {
-        this.path = path;
-        this.absolutePath = (0, node_path_1.join)((0, cwd_1.getCwd)(), path);
+        const cwd = (0, cwd_1.getCwd)();
+        this.absolutePath = path.startsWith(cwd) ? path : (0, node_path_1.join)(cwd, path);
+        this.path = path.startsWith(cwd)
+            ? path.replace(new RegExp(cwd, 'g'), '')
+            : path;
     }
     get streamable() {
         if (!fs.existsSync(this.absolutePath)) {

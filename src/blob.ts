@@ -14,8 +14,11 @@ export class Blob {
   absolutePath: string
 
   constructor(path: string) {
-    this.path = path
-    this.absolutePath = join(getCwd(), path)
+    const cwd = getCwd()
+    this.absolutePath = path.startsWith(cwd) ? path : join(cwd, path)
+    this.path = path.startsWith(cwd)
+      ? path.replace(new RegExp(cwd, 'g'), '')
+      : path
   }
 
   get streamable(): Readable {

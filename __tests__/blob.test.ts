@@ -19,6 +19,12 @@ describe('Blob', () => {
     expect(blob.absolutePath).toBe(join(__dirname, '/my_path.txt'))
   })
 
+  it('path with current directory', () => {
+    const blob = new Blob(join(__dirname, '/my_path.txt'))
+    expect(blob.path).toBe('/my_path.txt')
+    expect(blob.absolutePath).toBe(join(__dirname, '/my_path.txt'))
+  })
+
   it('stream', async () => {
     const blob = new Blob('/my_stream.txt')
     jest
