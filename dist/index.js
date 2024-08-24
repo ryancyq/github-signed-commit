@@ -30545,11 +30545,11 @@ function pushCurrentBranch() {
 }
 function addFileChanges(globPatterns) {
     return __awaiter(this, void 0, void 0, function* () {
-        const cwd = (0, cwd_1.getCwd)();
-        const cwdPaths = globPatterns.map((p) => (0, node_path_1.join)(cwd, p));
+        const workspace = (0, cwd_1.getWorkspace)();
+        const workspacePaths = globPatterns.map((p) => (0, node_path_1.join)(workspace, p));
         const debugOutput = [];
         const warningOutput = [];
-        yield (0, exec_1.exec)('git', ['add', '--', ...cwdPaths], {
+        yield (0, exec_1.exec)('git', ['add', '--', ...workspacePaths], {
             silent: true,
             ignoreReturnCode: true,
             listeners: {
@@ -30999,19 +30999,20 @@ var __importStar = (this && this.__importStar) || function (mod) {
 };
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.getCwd = getCwd;
+exports.getWorkspace = getWorkspace;
 const core = __importStar(__nccwpck_require__(2186));
 const input_1 = __nccwpck_require__(5073);
 function getCwd() {
-    const workspace = (0, input_1.getInput)('workspace', {
-        default: process.env.GITHUB_WORKSPACE,
-    });
-    if (workspace) {
-        core.debug(`cwd: ${workspace}`);
-        return workspace;
-    }
     const current = process.cwd();
     core.debug(`cwd: ${current}`);
     return current;
+}
+function getWorkspace() {
+    const workspace = (0, input_1.getInput)('workspace', {
+        default: process.env.GITHUB_WORKSPACE,
+    });
+    core.debug(`workspace: ${workspace}`);
+    return workspace;
 }
 
 

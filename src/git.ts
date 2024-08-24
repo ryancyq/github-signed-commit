@@ -7,7 +7,7 @@ import {
   FileDeletion,
 } from '@octokit/graphql-schema'
 
-import { getCwd } from './utils/cwd'
+import { getWorkspace } from './utils/cwd'
 
 export async function switchBranch(branch: string) {
   const debugOutput: string[] = []
@@ -57,12 +57,12 @@ export async function pushCurrentBranch() {
 }
 
 export async function addFileChanges(globPatterns: string[]): Promise<void> {
-  const cwd = getCwd()
-  const cwdPaths = globPatterns.map((p) => join(cwd, p))
+  const workspace = getWorkspace()
+  const workspacePaths = globPatterns.map((p) => join(workspace, p))
 
   const debugOutput: string[] = []
   const warningOutput: string[] = []
-  await exec('git', ['add', '--', ...cwdPaths], {
+  await exec('git', ['add', '--', ...workspacePaths], {
     silent: true,
     ignoreReturnCode: true,
     listeners: {

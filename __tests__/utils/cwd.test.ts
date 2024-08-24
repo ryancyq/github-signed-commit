@@ -7,7 +7,7 @@ import {
   it,
   jest,
 } from '@jest/globals'
-import { getCwd } from '../../src/utils/cwd'
+import { getCwd, getWorkspace } from '../../src/utils/cwd'
 
 describe('Current Working Directory', () => {
   beforeEach(() => {
@@ -16,6 +16,21 @@ describe('Current Working Directory', () => {
   })
 
   describe('getCwd', () => {
+    it('should read from process.cwd', async () => {
+      jest.spyOn(process, 'cwd').mockReturnValue('/my-process-cwd')
+
+      expect(getCwd()).toBe('/my-process-cwd')
+    })
+  })
+})
+
+describe('Current Workspace', () => {
+  beforeEach(() => {
+    jest.clearAllMocks()
+    jest.spyOn(core, 'debug').mockReturnValue()
+  })
+
+  describe('getWorkspace', () => {
     let replacedEnv: jest.Replaced<typeof process.env> | undefined
 
     afterEach(() => {
@@ -27,7 +42,7 @@ describe('Current Working Directory', () => {
         GITHUB_WORKSPACE: '/users/test',
       })
 
-      expect(getCwd()).toBe('/users/test')
+      expect(getWorkspace()).toBe('/users/test')
     })
 
     it('should read from workspace input if any', async () => {
@@ -38,7 +53,7 @@ describe('Current Working Directory', () => {
           return ''
         })
 
-      expect(getCwd()).toBe('/users/my-workspace')
+      expect(getWorkspace()).toBe('/users/my-workspace')
       expect(getInputMock).toHaveBeenCalled()
     })
   })
