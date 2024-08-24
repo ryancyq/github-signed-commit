@@ -30824,6 +30824,12 @@ function run() {
                 // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-member-access
                 currentBranch = ((_b = (_a = github.context.payload.pull_request) === null || _a === void 0 ? void 0 : _a.head) === null || _b === void 0 ? void 0 : _b.ref) || '';
             }
+            let currentSha = sha;
+            if (github.context.payload.after) {
+                // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
+                currentSha = github.context.payload.after;
+                core.debug(`sha:${sha}, payload.after:${currentSha}`);
+            }
             if (!currentBranch)
                 throw new Error(`Unsupported event: ${eventName}, ref: ${ref}`);
             const targetBranch = (0, input_1.getInput)('branch-name');
@@ -30851,10 +30857,11 @@ function run() {
             }));
             if (repository.ref) {
                 const remoteParentCommit = (_h = (_g = repository.ref.target.history) === null || _g === void 0 ? void 0 : _g.nodes) === null || _h === void 0 ? void 0 : _h[0];
-                if ((0, types_1.isCommit)(remoteParentCommit) && remoteParentCommit.oid != sha) {
+                if ((0, types_1.isCommit)(remoteParentCommit) &&
+                    remoteParentCommit.oid != currentSha) {
                     throw new Error(
                     // eslint-disable-next-line @typescript-eslint/restrict-template-expressions
-                    `Parent Commit mismatched, sha:${sha}, remote-sha:${remoteParentCommit.oid}`);
+                    `Parent Commit mismatched, sha:${currentSha}, remote-sha:${remoteParentCommit.oid}`);
                 }
             }
             else {
@@ -30865,7 +30872,7 @@ function run() {
                 const commitData = yield (0, graphql_1.createCommitOnBranch)({
                     repositoryNameWithOwner: repository.nameWithOwner,
                     branchName: branchName,
-                }, { oid: sha }, fileChanges);
+                }, { oid: currentSha }, fileChanges);
                 const endTime = Date.now();
                 core.debug(`time taken: ${(endTime - startTime).toString()} ms`);
                 return commitData;

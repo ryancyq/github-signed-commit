@@ -24,6 +24,12 @@ export async function run(): Promise<void> {
       // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-member-access
       currentBranch = github.context.payload.pull_request?.head?.ref || ''
     }
+    let currentSha = sha
+    if (github.context.payload.after) {
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
+      currentSha = github.context.payload.after
+      core.debug(`sha:${sha}, payload.after:${currentSha}`)
+    }
 
     if (!currentBranch)
       throw new Error(`Unsupported event: ${eventName}, ref: ${ref}`)
@@ -61,10 +67,13 @@ export async function run(): Promise<void> {
 
     if (repository.ref) {
       const remoteParentCommit = repository.ref.target.history?.nodes?.[0]
-      if (isCommit(remoteParentCommit) && remoteParentCommit.oid != sha) {
+      if (
+        isCommit(remoteParentCommit) &&
+        remoteParentCommit.oid != currentSha
+      ) {
         throw new Error(
           // eslint-disable-next-line @typescript-eslint/restrict-template-expressions
-          `Parent Commit mismatched, sha:${sha}, remote-sha:${remoteParentCommit.oid}`
+          `Parent Commit mismatched, sha:${currentSha}, remote-sha:${remoteParentCommit.oid}`
         )
       }
     } else {
@@ -78,7 +87,7 @@ export async function run(): Promise<void> {
           repositoryNameWithOwner: repository.nameWithOwner,
           branchName: branchName,
         },
-        { oid: sha } as Commit,
+        { oid: currentSha } as Commit,
         fileChanges
       )
       const endTime = Date.now()
