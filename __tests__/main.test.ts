@@ -14,10 +14,6 @@ describe('action', () => {
       .spyOn(github.context, 'repo', 'get')
       .mockReturnValue({ repo: 'my-repo', owner: 'my-user' })
     jest.replaceProperty(github.context, 'ref', 'refs/heads/main')
-    jest.replaceProperty(github.context, 'sha', 'current-commit-oid')
-    jest.replaceProperty(github.context, 'payload', {
-      after: 'current-commit-oid',
-    })
   })
 
   it('sets a failed status', async () => {

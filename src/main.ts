@@ -20,7 +20,7 @@ import {
 export async function run(): Promise<void> {
   try {
     const { owner, repo } = github.context.repo
-    const { sha, ref, eventName } = github.context
+    const { ref, eventName } = github.context
     let currentBranch = ''
     if (ref.startsWith('refs/heads/')) {
       currentBranch = ref.replace(/refs\/heads\//g, '')
@@ -30,13 +30,6 @@ export async function run(): Promise<void> {
     }
     if (!currentBranch)
       throw new Error(`Unsupported event: ${eventName}, ref: ${ref}`)
-
-    let currentSha = sha
-    if (github.context.payload.after) {
-      // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
-      currentSha = github.context.payload.after
-      core.debug(`sha:${sha}, payload.after:${currentSha}`)
-    }
 
     const targetBranch = getInput('branch-name')
     const branchName =
@@ -70,17 +63,9 @@ export async function run(): Promise<void> {
       }
     )
 
-    if (repository.ref) {
-      const remoteParentCommit = repository.ref.target.history?.nodes?.[0]
-      if (
-        isCommit(remoteParentCommit) &&
-        remoteParentCommit.oid !== currentSha
-      ) {
-        // eslint-disable-next-line @typescript-eslint/restrict-template-expressions
-        const errorMsg = `Commit mismatched, sha:${currentSha}, remote-sha:${remoteParentCommit.oid}`
-        throw new Error(errorMsg)
-      }
-    } else if (branchName !== currentBranch) {
+    const remoteCommit = repository.ref?.target.history?.nodes?.[0]
+    const currentCommit = isCommit(remoteCommit) ? remoteCommit : ({} as Commit)
+    if (!repository.ref && branchName !== currentBranch) {
       throw new InputBranchNotFound(targetBranch)
     }
 
@@ -91,7 +76,7 @@ export async function run(): Promise<void> {
           repositoryNameWithOwner: repository.nameWithOwner,
           branchName: branchName,
         },
-        { oid: currentSha } as Commit,
+        currentCommit,
         fileChanges
       )
       const endTime = Date.now()

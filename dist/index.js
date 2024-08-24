@@ -30826,10 +30826,10 @@ const input_1 = __nccwpck_require__(5073);
 const errors_1 = __nccwpck_require__(6976);
 function run() {
     return __awaiter(this, void 0, void 0, function* () {
-        var _a, _b, _c, _d, _e, _f, _g, _h, _j;
+        var _a, _b, _c, _d, _e, _f, _g, _h, _j, _k;
         try {
             const { owner, repo } = github.context.repo;
-            const { sha, ref, eventName } = github.context;
+            const { ref, eventName } = github.context;
             let currentBranch = '';
             if (ref.startsWith('refs/heads/')) {
                 currentBranch = ref.replace(/refs\/heads\//g, '');
@@ -30840,12 +30840,6 @@ function run() {
             }
             if (!currentBranch)
                 throw new Error(`Unsupported event: ${eventName}, ref: ${ref}`);
-            let currentSha = sha;
-            if (github.context.payload.after) {
-                // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
-                currentSha = github.context.payload.after;
-                core.debug(`sha:${sha}, payload.after:${currentSha}`);
-            }
             const targetBranch = (0, input_1.getInput)('branch-name');
             const branchName = targetBranch && currentBranch != targetBranch
                 ? targetBranch
@@ -30870,16 +30864,9 @@ function run() {
                 core.debug(`time taken: ${(endTime - startTime).toString()} ms`);
                 return repositoryData;
             }));
-            if (repository.ref) {
-                const remoteParentCommit = (_h = (_g = repository.ref.target.history) === null || _g === void 0 ? void 0 : _g.nodes) === null || _h === void 0 ? void 0 : _h[0];
-                if ((0, types_1.isCommit)(remoteParentCommit) &&
-                    remoteParentCommit.oid !== currentSha) {
-                    // eslint-disable-next-line @typescript-eslint/restrict-template-expressions
-                    const errorMsg = `Commit mismatched, sha:${currentSha}, remote-sha:${remoteParentCommit.oid}`;
-                    throw new Error(errorMsg);
-                }
-            }
-            else if (branchName !== currentBranch) {
+            const remoteCommit = (_j = (_h = (_g = repository.ref) === null || _g === void 0 ? void 0 : _g.target.history) === null || _h === void 0 ? void 0 : _h.nodes) === null || _j === void 0 ? void 0 : _j[0];
+            const currentCommit = (0, types_1.isCommit)(remoteCommit) ? remoteCommit : {};
+            if (!repository.ref && branchName !== currentBranch) {
                 throw new errors_1.InputBranchNotFound(targetBranch);
             }
             const commitResponse = yield core.group(`committing files`, () => __awaiter(this, void 0, void 0, function* () {
@@ -30887,12 +30874,12 @@ function run() {
                 const commitData = yield (0, graphql_1.createCommitOnBranch)({
                     repositoryNameWithOwner: repository.nameWithOwner,
                     branchName: branchName,
-                }, { oid: currentSha }, fileChanges);
+                }, currentCommit, fileChanges);
                 const endTime = Date.now();
                 core.debug(`time taken: ${(endTime - startTime).toString()} ms`);
                 return commitData;
             }));
-            core.setOutput('commit-sha', (_j = commitResponse.commit) === null || _j === void 0 ? void 0 : _j.oid);
+            core.setOutput('commit-sha', (_k = commitResponse.commit) === null || _k === void 0 ? void 0 : _k.oid);
         }
         catch (error) {
             if (error instanceof errors_1.NoFileChanges) {
