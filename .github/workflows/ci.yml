@@ -16,7 +16,8 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  test-typescript:
+  test-jest:
+    name: Jest Tests
     runs-on: ubuntu-latest
 
     steps:
