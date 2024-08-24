@@ -1,26 +1,19 @@
-# signed-commit
+# :fountain_pen: Create a **signed** commit with GitHub Actions
+
 [![CI][ci_badge]][ci_workflows]
 
-[signed-commit](https://github.com/ryancyq/signed-commit) is a rewrite of [commit](https://github.com/swinton/commit).
+Learn more about [commit signature](https://docs.github.com/en/authentication/managing-commit-signature-verification/about-commit-signature-verification) on GitHub.
 
-:fountain_pen: Create a **signed** commit with GitHub Actions. Learn more about [commit signature](https://docs.github.com/en/authentication/managing-commit-signature-verification/about-commit-signature-verification) on GitHub.
+## Features
 
-## signed-commit vs commit
-The inputs for **commit** and **signed-commit** are mostly the same.
-
-In general, the only difference is that the input `ref` is replaced by `branch-name`. For more details, see the [Usage](#usage) section.
-
-## Why signed-commit?
-
-**commit** was written mostly with the [GitHub REST API for Git Database](https://docs.github.com/en/rest/git).
-
-- Supports HTTP request streaming, which is more efficient in uploading large blob files to GitHub.
-
-**signed-commit**, on the other hand, solely works with the [GitHub GraphQL API](https://docs.github.com/en/graphql).
+Works with the [GitHub GraphQL API](https://docs.github.com/en/graphql).
 
 - Uses the Git CLI to detect file changes against the file paths provided in the input.
-- Uses a single GraphQL mutation request to upload all blob file content (the drawback is higher memory consumption during execution).
+- Uses a single GraphQL mutation request to upload all blob file content.
 - Supports glob patterns for file paths.
+
+## Known Limitation
+Does not support HTTP request streaming, so the action runner will consume more memory during execution when uploading large blob files.
 
 ## Usage
 In your workflow, to commit your files, configure a step as follows:
@@ -32,7 +25,7 @@ jobs:
       contents: write # grant secrets.GITHUB_TOKEN permission to push file changes
   
     - name: Commit file
-      uses: ryancyq/signed-commit@v3
+      uses: ryancyq/signed-commit@v1
       env:
         GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       with:
