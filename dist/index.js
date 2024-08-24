@@ -30488,17 +30488,27 @@ const node_path_1 = __nccwpck_require__(9411);
 const cwd_1 = __nccwpck_require__(7119);
 function switchBranch(branch) {
     return __awaiter(this, void 0, void 0, function* () {
+        const debugOutput = [];
+        const warningOutput = [];
         yield (0, exec_1.exec)('git', ['checkout', '-b', branch], {
+            silent: true,
             ignoreReturnCode: true,
             listeners: {
+                stdline: (data) => {
+                    debugOutput.push(data);
+                },
                 errline: (error) => {
                     if (/^(fatal|error):/.test(error))
                         core.error(error);
                     else
-                        core.warning(error);
+                        warningOutput.push(error);
                 },
             },
         });
+        if (debugOutput.length > 0)
+            core.debug(debugOutput.join('\n'));
+        if (warningOutput.length > 0)
+            core.warning(warningOutput.join('\n'));
     });
 }
 function pushCurrentBranch() {
@@ -30507,34 +30517,54 @@ function pushCurrentBranch() {
         if (core.getBooleanInput('branch-push-force')) {
             pushArgs.splice(1, 0, '--force');
         }
+        const debugOutput = [];
+        const warningOutput = [];
         yield (0, exec_1.exec)('git', pushArgs, {
+            silent: true,
             ignoreReturnCode: true,
             listeners: {
+                stdline: (data) => {
+                    debugOutput.push(data);
+                },
                 errline: (error) => {
                     if (/^(fatal|error):/.test(error))
                         core.error(error);
                     else
-                        core.warning(error);
+                        warningOutput.push(error);
                 },
             },
         });
+        if (debugOutput.length > 0)
+            core.debug(debugOutput.join('\n'));
+        if (warningOutput.length > 0)
+            core.warning(warningOutput.join('\n'));
     });
 }
 function addFileChanges(globPatterns) {
     return __awaiter(this, void 0, void 0, function* () {
         const cwd = (0, cwd_1.getCwd)();
         const cwdPaths = globPatterns.map((p) => (0, node_path_1.join)(cwd, p));
+        const debugOutput = [];
+        const warningOutput = [];
         yield (0, exec_1.exec)('git', ['add', '--', ...cwdPaths], {
+            silent: true,
             ignoreReturnCode: true,
             listeners: {
+                stdline: (data) => {
+                    debugOutput.push(data);
+                },
                 errline: (error) => {
                     if (/^(fatal|error):/.test(error))
                         core.error(error);
                     else
-                        core.warning(error);
+                        warningOutput.push(error);
                 },
             },
         });
+        if (debugOutput.length > 0)
+            core.debug(debugOutput.join('\n'));
+        if (warningOutput.length > 0)
+            core.warning(warningOutput.join('\n'));
     });
 }
 function getFileChanges() {

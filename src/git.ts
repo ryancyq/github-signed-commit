@@ -10,15 +10,24 @@ import {
 import { getCwd } from './utils/cwd'
 
 export async function switchBranch(branch: string) {
+  const debugOutput: string[] = []
+  const warningOutput: string[] = []
   await exec('git', ['checkout', '-b', branch], {
+    silent: true,
     ignoreReturnCode: true,
     listeners: {
+      stdline: (data: string) => {
+        debugOutput.push(data)
+      },
       errline: (error: string) => {
         if (/^(fatal|error):/.test(error)) core.error(error)
-        else core.warning(error)
+        else warningOutput.push(error)
       },
     },
   })
+
+  if (debugOutput.length > 0) core.debug(debugOutput.join('\n'))
+  if (warningOutput.length > 0) core.warning(warningOutput.join('\n'))
 }
 
 export async function pushCurrentBranch() {
@@ -27,30 +36,48 @@ export async function pushCurrentBranch() {
     pushArgs.splice(1, 0, '--force')
   }
 
+  const debugOutput: string[] = []
+  const warningOutput: string[] = []
   await exec('git', pushArgs, {
+    silent: true,
     ignoreReturnCode: true,
     listeners: {
+      stdline: (data: string) => {
+        debugOutput.push(data)
+      },
       errline: (error: string) => {
         if (/^(fatal|error):/.test(error)) core.error(error)
-        else core.warning(error)
+        else warningOutput.push(error)
       },
     },
   })
+
+  if (debugOutput.length > 0) core.debug(debugOutput.join('\n'))
+  if (warningOutput.length > 0) core.warning(warningOutput.join('\n'))
 }
 
 export async function addFileChanges(globPatterns: string[]): Promise<void> {
   const cwd = getCwd()
   const cwdPaths = globPatterns.map((p) => join(cwd, p))
 
+  const debugOutput: string[] = []
+  const warningOutput: string[] = []
   await exec('git', ['add', '--', ...cwdPaths], {
+    silent: true,
     ignoreReturnCode: true,
     listeners: {
+      stdline: (data: string) => {
+        debugOutput.push(data)
+      },
       errline: (error: string) => {
         if (/^(fatal|error):/.test(error)) core.error(error)
-        else core.warning(error)
+        else warningOutput.push(error)
       },
     },
   })
+
+  if (debugOutput.length > 0) core.debug(debugOutput.join('\n'))
+  if (warningOutput.length > 0) core.warning(warningOutput.join('\n'))
 }
 
 export async function getFileChanges(): Promise<FileChanges> {

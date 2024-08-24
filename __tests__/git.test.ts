@@ -24,7 +24,9 @@ describe('Git CLI', () => {
       expect(execMock).toHaveBeenCalledWith(
         'git',
         ['checkout', '-b', 'new-branch'],
-        expect.objectContaining({ listeners: { errline: expect.anything() } })
+        expect.objectContaining({
+          listeners: { stdline: expect.anything(), errline: expect.anything() },
+        })
       )
     })
 
@@ -60,7 +62,9 @@ describe('Git CLI', () => {
       expect(execMock).toHaveBeenCalledWith(
         'git',
         ['push', '--porcelain', '--set-upstream', 'origin', 'HEAD'],
-        expect.objectContaining({ listeners: { errline: expect.anything() } })
+        expect.objectContaining({
+          listeners: { stdline: expect.anything(), errline: expect.anything() },
+        })
       )
     })
 
@@ -73,7 +77,9 @@ describe('Git CLI', () => {
       expect(execMock).toHaveBeenCalledWith(
         'git',
         ['push', '--force', '--porcelain', '--set-upstream', 'origin', 'HEAD'],
-        expect.objectContaining({ listeners: { errline: expect.anything() } })
+        expect.objectContaining({
+          listeners: { stdline: expect.anything(), errline: expect.anything() },
+        })
       )
       expect(getInput).toHaveBeenCalledWith('branch-push-force')
     })
@@ -112,7 +118,9 @@ describe('Git CLI', () => {
           '/users/test-workspace/*.ts',
           '/users/test-workspace/~/.bashrc',
         ],
-        expect.objectContaining({ listeners: { errline: expect.anything() } })
+        expect.objectContaining({
+          listeners: { stdline: expect.anything(), errline: expect.anything() },
+        })
       )
     })
 
