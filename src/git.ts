@@ -11,6 +11,7 @@ import { getCwd } from './utils/cwd'
 
 export async function switchBranch(branch: string) {
   await exec('git', ['checkout', '-b', branch], {
+    ignoreReturnCode: true,
     listeners: {
       errline: (error: string) => {
         core.error(error)
@@ -26,6 +27,7 @@ export async function pushCurrentBranch() {
   }
 
   await exec('git', pushArgs, {
+    ignoreReturnCode: true,
     listeners: {
       errline: (error: string) => {
         core.error(error)

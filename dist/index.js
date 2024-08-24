@@ -30489,6 +30489,7 @@ const cwd_1 = __nccwpck_require__(7119);
 function switchBranch(branch) {
     return __awaiter(this, void 0, void 0, function* () {
         yield (0, exec_1.exec)('git', ['checkout', '-b', branch], {
+            ignoreReturnCode: true,
             listeners: {
                 errline: (error) => {
                     core.error(error);
@@ -30504,6 +30505,7 @@ function pushCurrentBranch() {
             pushArgs.splice(1, 0, '--force');
         }
         yield (0, exec_1.exec)('git', pushArgs, {
+            ignoreReturnCode: true,
             listeners: {
                 errline: (error) => {
                     core.error(error);
