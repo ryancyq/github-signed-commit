@@ -30812,11 +30812,20 @@ const input_1 = __nccwpck_require__(5073);
 const errors_1 = __nccwpck_require__(6976);
 function run() {
     return __awaiter(this, void 0, void 0, function* () {
-        var _a, _b, _c, _d, _e, _f, _g;
+        var _a, _b, _c, _d, _e, _f, _g, _h, _j;
         try {
             const { owner, repo } = github.context.repo;
-            const { sha, ref } = github.context;
-            const currentBranch = ref.replace(/refs\/heads\//g, '');
+            const { sha, ref, eventName } = github.context;
+            let currentBranch = '';
+            if (ref.startsWith('refs/heads/')) {
+                currentBranch = ref.replace(/refs\/heads\//g, '');
+            }
+            else if (eventName === 'pull_request') {
+                // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-member-access
+                currentBranch = ((_b = (_a = github.context.payload.pull_request) === null || _a === void 0 ? void 0 : _a.head) === null || _b === void 0 ? void 0 : _b.ref) || '';
+            }
+            if (!currentBranch)
+                throw new Error(`Unsupported event: ${eventName}, ref: ${ref}`);
             const targetBranch = (0, input_1.getInput)('branch-name');
             const branchName = targetBranch && currentBranch != targetBranch
                 ? targetBranch
@@ -30829,8 +30838,8 @@ function run() {
                 throw new errors_1.InputFilesRequired();
             yield (0, git_1.addFileChanges)(filePaths);
             const fileChanges = yield (0, git_1.getFileChanges)();
-            const fileCount = ((_b = (_a = fileChanges.additions) === null || _a === void 0 ? void 0 : _a.length) !== null && _b !== void 0 ? _b : 0) +
-                ((_d = (_c = fileChanges.deletions) === null || _c === void 0 ? void 0 : _c.length) !== null && _d !== void 0 ? _d : 0);
+            const fileCount = ((_d = (_c = fileChanges.additions) === null || _c === void 0 ? void 0 : _c.length) !== null && _d !== void 0 ? _d : 0) +
+                ((_f = (_e = fileChanges.deletions) === null || _e === void 0 ? void 0 : _e.length) !== null && _f !== void 0 ? _f : 0);
             if (fileCount <= 0)
                 throw new errors_1.NoFileChanges();
             const repository = yield core.group(`fetching repository info for owner: ${owner}, repo: ${repo}, branch: ${branchName}`, () => __awaiter(this, void 0, void 0, function* () {
@@ -30841,7 +30850,7 @@ function run() {
                 return repositoryData;
             }));
             if (repository.ref) {
-                const remoteParentCommit = (_f = (_e = repository.ref.target.history) === null || _e === void 0 ? void 0 : _e.nodes) === null || _f === void 0 ? void 0 : _f[0];
+                const remoteParentCommit = (_h = (_g = repository.ref.target.history) === null || _g === void 0 ? void 0 : _g.nodes) === null || _h === void 0 ? void 0 : _h[0];
                 if ((0, types_1.isCommit)(remoteParentCommit) && remoteParentCommit.oid != sha) {
                     throw new Error(
                     // eslint-disable-next-line @typescript-eslint/restrict-template-expressions
@@ -30861,7 +30870,7 @@ function run() {
                 core.debug(`time taken: ${(endTime - startTime).toString()} ms`);
                 return commitData;
             }));
-            core.setOutput('commit-sha', (_g = commitResponse.commit) === null || _g === void 0 ? void 0 : _g.oid);
+            core.setOutput('commit-sha', (_j = commitResponse.commit) === null || _j === void 0 ? void 0 : _j.oid);
         }
         catch (error) {
             if (error instanceof errors_1.NoFileChanges) {

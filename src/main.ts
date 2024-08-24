@@ -11,8 +11,18 @@ import { NoFileChanges, InputFilesRequired } from './errors'
 export async function run(): Promise<void> {
   try {
     const { owner, repo } = github.context.repo
-    const { sha, ref } = github.context
-    const currentBranch = ref.replace(/refs\/heads\//g, '')
+    const { sha, ref, eventName } = github.context
+    let currentBranch = ''
+    if (ref.startsWith('refs/heads/')) {
+      currentBranch = ref.replace(/refs\/heads\//g, '')
+    } else if (eventName === 'pull_request') {
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-member-access
+      currentBranch = github.context.payload.pull_request?.head?.ref || ''
+    }
+
+    if (!currentBranch)
+      throw new Error(`Unsupported event: ${eventName}, ref: ${ref}`)
+
     const targetBranch = getInput('branch-name')
     const branchName =
       targetBranch && currentBranch != targetBranch
