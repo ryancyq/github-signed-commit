@@ -2,7 +2,7 @@ import * as core from '@actions/core'
 import * as exec from '@actions/exec'
 import { describe, jest, beforeEach, afterAll, it, expect } from '@jest/globals'
 import * as cwd from '../src/utils/cwd'
-import { addFileChanges, getFileChanges } from '../src/git'
+import { addFileChanges, getFileChanges, switchBranch } from '../src/git'
 
 describe('Git CLI', () => {
   beforeEach(() => {
@@ -10,15 +10,53 @@ describe('Git CLI', () => {
     jest.spyOn(cwd, 'getCwd').mockReturnValue('/users/test-workspace')
   })
 
-  describe('git add', () => {
-    it('should ensure file paths are within curent working directory', async () => {
+  describe('git checkout', () => {
+    it('should git fetch + git checkout', async () => {
+      const execMock = jest.spyOn(exec, 'exec').mockResolvedValue(0)
+
+      await switchBranch('new-branch')
+      expect(execMock).toHaveBeenCalledTimes(2)
+      expect(execMock).toHaveBeenNthCalledWith(
+        1,
+        'git',
+        ['fetch', 'origin', '--no-tags'],
+        expect.objectContaining({ listeners: { errline: expect.anything() } })
+      )
+      expect(execMock).toHaveBeenNthCalledWith(
+        2,
+        'git',
+        ['checkout', 'new-branch'],
+        expect.objectContaining({ listeners: { errline: expect.anything() } })
+      )
+    })
+
+    it('should log error', async () => {
       const execMock = jest
         .spyOn(exec, 'exec')
-        .mockReturnValue(Promise.resolve(0))
+        .mockImplementation(async (cmd, args, options) => {
+          const io = options?.listeners?.errline
+          if (io) {
+            io.call(this, "fatal: 'new-branch' is invalid")
+            return 1
+          }
+          return 0
+        })
+
+      const warningMock = jest.spyOn(core, 'error').mockReturnValue()
+
+      await switchBranch('new-branch')
+      expect(execMock).toHaveBeenCalled()
+      expect(warningMock).toHaveBeenCalledWith("fatal: 'new-branch' is invalid")
+    })
+  })
+
+  describe('git add', () => {
+    it('should ensure file paths are within curent working directory', async () => {
+      const execMock = jest.spyOn(exec, 'exec').mockResolvedValue(0)
 
       await addFileChanges(['*.ts', '~/.bashrc'])
-      expect(execMock).toBeCalled()
-      expect(execMock).toBeCalledWith(
+      expect(execMock).toHaveBeenCalled()
+      expect(execMock).toHaveBeenCalledWith(
         'git',
         [
           'add',
@@ -43,8 +81,8 @@ describe('Git CLI', () => {
 
       const warningMock = jest.spyOn(core, 'warning').mockReturnValue()
       await addFileChanges(['*.ts'])
-      expect(execMock).toBeCalled()
-      expect(warningMock).toBeCalledWith(
+      expect(execMock).toHaveBeenCalled()
+      expect(warningMock).toHaveBeenCalledWith(
         "fatal: pathspec 'main.ts' did not match any files"
       )
     })
@@ -76,7 +114,7 @@ describe('Git CLI', () => {
         })
 
       const changes = await getFileChanges()
-      expect(execMock).toBeCalled()
+      expect(execMock).toHaveBeenCalled()
       expect(changes).toBeDefined()
       expect(changes.additions).toBeDefined()
       expect(changes.additions).toHaveLength(5)

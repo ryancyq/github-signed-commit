@@ -93,7 +93,7 @@ describe('GitHub API', () => {
       const debugMock = jest.spyOn(core, 'debug').mockReturnValue()
 
       const repo = await getRepository('owner', 'repo', 'custom-branch')
-      expect(clientMock).toBeCalled()
+      expect(clientMock).toHaveBeenCalled()
       expect(repo).toHaveProperty('id', 'repo-id')
       expect(repo).toHaveProperty('nameWithOwner', 'my-user/repo-id')
       expect(repo).toHaveProperty('ref.name', 'custom-branch')
@@ -142,7 +142,7 @@ describe('GitHub API', () => {
       await expect(getRepository('owner', 'repo', 'branch')).rejects.toThrow(
         'GraphQL error'
       )
-      expect(clientMock).toBeCalled()
+      expect(clientMock).toHaveBeenCalled()
       expect(errorMock).toHaveBeenCalledWith(
         'Request failed due to following response errors:\n - GraphQL error'
       )
@@ -185,7 +185,7 @@ describe('GitHub API', () => {
         createCommitOnBranch(branch, parentCommit, fileChanges)
       ).resolves.toHaveProperty('commit.oid', 'commit-id')
 
-      expect(clientMock).toBeCalled()
+      expect(clientMock).toHaveBeenCalled()
       expect(debugMock).toHaveBeenCalledWith(
         expect.stringMatching(
           /Request\[createCommitOnBranch\] successful, query: [\s\S]*, variables: [\s\S]*, data: [\s\S]*/
@@ -213,7 +213,7 @@ describe('GitHub API', () => {
         createCommitOnBranch(branch, parentCommit, fileChanges)
       ).rejects.toThrow('GraphQL error')
 
-      expect(clientMock).toBeCalled()
+      expect(clientMock).toHaveBeenCalled()
       expect(errorMock).toHaveBeenCalledWith(
         'Request failed due to following response errors:\n - GraphQL error'
       )
@@ -288,7 +288,7 @@ describe('GitHub API', () => {
         parentCommit,
         fileChanges
       )
-      expect(clientMock).toBeCalled()
+      expect(clientMock).toHaveBeenCalled()
     })
   })
 })

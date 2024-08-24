@@ -39,7 +39,7 @@ describe('Current Working Directory', () => {
         })
 
       expect(getCwd()).toBe('/users/my-workspace')
-      expect(getInputMock).toBeCalled()
+      expect(getInputMock).toHaveBeenCalled()
     })
   })
 })
