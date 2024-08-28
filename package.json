@@ -1,18 +1,18 @@
 {
   "type": "module",
-  "name": "@ryancyq/signed-commit",
+  "name": "@ryancyq/signed-commits",
   "version": "1.0.0",
   "description": "Create a signed commit with GitHub Actions",
   "main": "dist/index.js",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/ryancyq/signed-commit.git"
+    "url": "git+https://github.com/ryancyq/signed-commits.git"
   },
   "keywords": [],
   "author": "Ryan Chang <ryancyq@gmail.com> (https://github.com/ryancyq)",
   "license": "MIT",
   "bugs": {
-    "url": "https://github.com/ryancyq/signed-commit/issues"
+    "url": "https://github.com/ryancyq/signed-commits/issues"
   },
   "scripts": {
     "start": "node dist/index.js",
@@ -24,7 +24,7 @@
     "test": "npx jest",
     "ci-test": "npx jest --runInBand"
   },
-  "homepage": "https://github.com/ryancyq/signed-commit#readme",
+  "homepage": "https://github.com/ryancyq/signed-commits#readme",
   "dependencies": {
     "@actions/core": "^1.10.0",
     "@actions/exec": "^1.1.0",
