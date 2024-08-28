@@ -26,7 +26,7 @@ jobs:
       contents: write # grant secrets.GITHUB_TOKEN permission to push file changes
   
     - name: Commit file
-      uses: ryancyq/signed-commits@v1
+      uses: ryancyq/github-signed-commit@v1
       env:
         GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       with:
@@ -53,7 +53,7 @@ Note: The `GH_TOKEN` environment variable is **required** for GitHub API request
 | :--- | :--- |
 | `commit-sha` | Full SHA of the signed commit |
 
-[ci_badge]: https://github.com/ryancyq/signed-commits/actions/workflows/ci.yml/badge.svg
-[ci_workflows]: https://github.com/ryancyq/signed-commits/actions/workflows/ci.yml
-[coverage_badge]: https://codecov.io/gh/ryancyq/signed-commits/graph/badge.svg?token=KZTD2F2MN2
-[coverage]: https://codecov.io/gh/ryancyq/signed-commits
+[ci_badge]: https://github.com/ryancyq/github-signed-commit/actions/workflows/ci.yml/badge.svg
+[ci_workflows]: https://github.com/ryancyq/github-signed-commit/actions/workflows/ci.yml
+[coverage_badge]: https://codecov.io/gh/ryancyq/github-signed-commit/graph/badge.svg?token=KZTD2F2MN2
+[coverage]: https://codecov.io/gh/ryancyq/github-signed-commit
