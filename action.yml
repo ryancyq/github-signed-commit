@@ -1,4 +1,4 @@
-name: Signed Commit
+name: GitHub Signed Commit
 description: GitHub Action to create signed commits
 
 branding:
