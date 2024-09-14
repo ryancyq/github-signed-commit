@@ -32,8 +32,8 @@ jobs:
       with:
         files: |
           path/to/myfile1
-          path/to/myfile2
-          path/to/myfile3
+          path/to/*.md
+          path/to/**/*.js
         commit-message: Committing files
 ```
 
