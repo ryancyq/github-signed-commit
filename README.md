@@ -47,6 +47,7 @@ Note: The `GH_TOKEN` environment variable is **required** for GitHub API request
 | `commit-message` | **YES** | Commit message for the file changes. |
 | `branch-name` | **NO** | Branch to commit, it must already exist in the remote. **DEFAULT:** Workflow triggered branch |
 | `branch-push-force` | **NO** | `--force` flag when running `git push <branch-name>`. |
+| `tag` | **NO** | Tag for the commit. |
 
 ## Outputs
 | Output | Description |

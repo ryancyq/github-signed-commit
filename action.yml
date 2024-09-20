@@ -29,6 +29,11 @@ inputs:
       --force flag when running git push <branch-name>.
     required: false
     default: false
+  tag:
+    description: |
+      Tag for the commit.
+    required: false
+    default: ''
 
 outputs:
   commit-sha:
