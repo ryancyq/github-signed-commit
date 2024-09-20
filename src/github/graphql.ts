@@ -3,9 +3,11 @@ import { GraphqlResponseError } from '@octokit/graphql'
 import {
   Commit,
   CommittableBranch,
-  CreateCommitOnBranchPayload,
   FileChanges,
-  MutationCreateCommitOnBranchArgs,
+  CreateCommitOnBranchInput,
+  CreateCommitOnBranchPayload,
+  CreateRefInput,
+  CreateRefPayload,
 } from '@octokit/graphql-schema'
 
 import { graphqlClient } from './client'
@@ -92,21 +94,11 @@ export async function getRepository(
   }
 }
 
-export async function createCommitOnBranch(
+async function prepareCreateCommitOnBranch(
+  currentCommit: Commit,
   branch: CommittableBranch,
-  parentCommit: Commit,
   fileChanges: FileChanges
-): Promise<CreateCommitOnBranchPayload> {
-  const commitMessage = core.getInput('commit-message', { required: true })
-  const mutation = `
-    mutation($input: CreateCommitOnBranchInput!) {
-      createCommitOnBranch(input: $input) {
-        commit {
-          oid
-        }
-      }
-    }`
-
+) {
   if (fileChanges.additions) {
     const promises = fileChanges.additions.map((file) =>
       getBlob(file.path).load()
@@ -114,34 +106,123 @@ export async function createCommitOnBranch(
     fileChanges.additions = await Promise.all(promises)
   }
 
-  const variables: MutationCreateCommitOnBranchArgs = {
-    input: {
-      branch,
-      // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
-      expectedHeadOid: parentCommit.oid,
-      message: {
-        headline: commitMessage,
-      },
-      fileChanges,
+  const input = 'commitInput'
+  const query = `
+    createCommitOnBranch(input: $${input}) {
+      commit {
+        oid
+      }
+    }
+  `
+  const commitMessage = core.getInput('commit-message', { required: true })
+  const variables: CreateCommitOnBranchInput = {
+    branch,
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
+    expectedHeadOid: currentCommit.oid,
+    message: {
+      headline: commitMessage,
     },
+    fileChanges,
   }
 
-  try {
-    const { createCommitOnBranch } = await graphqlClient()<{
-      createCommitOnBranch: CreateCommitOnBranchPayload
-    }>(mutation, variables)
+  return { input, query, variables }
+}
 
-    logSuccess(
-      'createCommitOnBranch',
-      mutation,
-      variables,
-      createCommitOnBranch
+function prepareCreateTag(
+  currentCommit: Commit,
+  tag: string,
+  repositoryId: string
+) {
+  const input = 'tagInput'
+  const query = `
+    createRef(input: $${input}) {
+      ref {
+        name
+      }
+    }
+  `
+  const variables: CreateRefInput = {
+    repositoryId: repositoryId,
+    name: `refs/tags/${tag}`,
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
+    oid: currentCommit.oid,
+  }
+
+  return { input, query, variables }
+}
+
+export class CreateCommitInput {
+  branch: CommittableBranch
+  fileChanges: FileChanges
+
+  constructor(branch: CommittableBranch, fileChanges: FileChanges) {
+    this.branch = branch
+    this.fileChanges = fileChanges
+  }
+}
+
+export class CreateTagInput {
+  tag: string
+  repositoryId: string
+
+  constructor(tag: string, repositoryId: string) {
+    this.tag = tag
+    this.repositoryId = repositoryId
+  }
+}
+
+export async function createCommitOrTag(
+  currentCommit: Commit,
+  createCommit?: CreateCommitInput,
+  createTag?: CreateTagInput
+): Promise<{
+  createCommitOnBranch?: CreateCommitOnBranchPayload
+  createRef?: CreateRefPayload
+}> {
+  const mutationInputs: string[] = []
+  const mutationQueries: string[] = []
+  // eslint-disable-next-line @typescript-eslint/consistent-indexed-object-style,@typescript-eslint/no-explicit-any
+  const mutationVariables: { [key: string]: any } = {}
+
+  if (createCommit) {
+    const { input, query, variables } = await prepareCreateCommitOnBranch(
+      currentCommit,
+      createCommit.branch,
+      createCommit.fileChanges
     )
+    mutationInputs.push(`$${input}: CreateCommitOnBranchInput!`)
+    mutationQueries.push(query)
+    mutationVariables[input] = variables
+  }
 
-    return createCommitOnBranch
+  if (createTag) {
+    const { input, query, variables } = prepareCreateTag(
+      currentCommit,
+      createTag.tag,
+      createTag.repositoryId
+    )
+    mutationInputs.push(`$${input}: CreateRefInput!`)
+    mutationQueries.push(query)
+    mutationVariables[input] = variables
+  }
+
+  const mutation = `
+    mutation(${mutationInputs.join(',')}) {
+      ${mutationQueries.join('\n')}
+    }`
+
+  try {
+    const response = await graphqlClient()<{
+      createCommitOnBranch?: CreateCommitOnBranchPayload
+      createRef?: CreateRefPayload
+    }>(mutation, mutationVariables)
+
+    logSuccess('createCommitOrTag', mutation, mutationVariables, response)
+
+    return response
   } catch (error) {
     if (error instanceof GraphqlResponseError)
-      logError('createCommitOnBranch', error)
+      logError('createCommitOrTag', error)
     throw error
   }
 }

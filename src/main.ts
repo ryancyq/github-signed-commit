@@ -2,7 +2,7 @@ import * as core from '@actions/core'
 import * as github from '@actions/github'
 
 import { Commit } from '@octokit/graphql-schema'
-import { getRepository, createCommitOnBranch } from './github/graphql'
+import { getRepository, createCommitOrTag } from './github/graphql'
 import { isCommit } from './github/types'
 import {
   addFileChanges,
@@ -69,22 +69,36 @@ export async function run(): Promise<void> {
       throw new InputBranchNotFound(targetBranch)
     }
 
-    const commitResponse = await core.group(`committing files`, async () => {
+    let createTag = undefined
+    const tag = getInput('tag')
+    if (tag) {
+      createTag = {
+        tag,
+        repositoryId: repository.id,
+      }
+    }
+    const createResponse = await core.group(`committing files`, async () => {
       const startTime = Date.now()
-      const commitData = await createCommitOnBranch(
-        {
-          repositoryNameWithOwner: repository.nameWithOwner,
-          branchName: branchName,
-        },
+      const commitData = await createCommitOrTag(
         currentCommit,
-        fileChanges
+        {
+          branch: {
+            repositoryNameWithOwner: repository.nameWithOwner,
+            branchName: branchName,
+          },
+          fileChanges: fileChanges,
+        },
+        createTag
       )
       const endTime = Date.now()
       core.debug(`time taken: ${(endTime - startTime).toString()} ms`)
       return commitData
     })
 
-    core.setOutput('commit-sha', commitResponse.commit?.oid)
+    core.setOutput(
+      'commit-sha',
+      createResponse.createCommitOnBranch?.commit?.oid
+    )
   } catch (error) {
     if (error instanceof NoFileChanges) {
       core.notice('No changes found')
