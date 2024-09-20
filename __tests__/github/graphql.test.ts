@@ -14,7 +14,7 @@ import {
 } from '@octokit/graphql-schema'
 import * as client from '../../src/github/client'
 import * as blob from '../../src/blob'
-import { getRepository, createCommitOnBranch } from '../../src/github/graphql'
+import { getRepository, createCommitOrTag } from '../../src/github/graphql'
 
 describe('GitHub API', () => {
   beforeEach(() => {
@@ -154,7 +154,7 @@ describe('GitHub API', () => {
     })
   })
 
-  describe('createCommitOnBranch', () => {
+  describe('createCommitOrTag', () => {
     it('should create a commit on the given branch', async () => {
       jest.spyOn(core, 'getInput').mockImplementation((name, options) => {
         return name === 'commit-message' ? 'fake commit message' : ''
@@ -179,16 +179,16 @@ describe('GitHub API', () => {
       const debugMock = jest.spyOn(core, 'debug').mockReturnValue()
 
       const branch = {} as CommittableBranch
-      const parentCommit = {} as Commit
+      const currentCommit = {} as Commit
       const fileChanges = {} as FileChanges
       await expect(
-        createCommitOnBranch(branch, parentCommit, fileChanges)
-      ).resolves.toHaveProperty('commit.oid', 'commit-id')
+        createCommitOrTag(currentCommit, { branch, fileChanges })
+      ).resolves.toHaveProperty('createCommitOnBranch.commit.oid', 'commit-id')
 
       expect(clientMock).toHaveBeenCalled()
       expect(debugMock).toHaveBeenCalledWith(
         expect.stringMatching(
-          /Request\[createCommitOnBranch\] successful, query: [\s\S]*, variables: [\s\S]*, data: [\s\S]*/
+          /Request\[createCommitOrTag\] successful, query: [\s\S]*, variables: [\s\S]*, data: [\s\S]*/
         )
       )
     })
@@ -207,10 +207,10 @@ describe('GitHub API', () => {
       const debugMock = jest.spyOn(core, 'debug').mockReturnValue()
 
       const branch = {} as CommittableBranch
-      const parentCommit = {} as Commit
+      const currentCommit = {} as Commit
       const fileChanges = {} as FileChanges
       await expect(
-        createCommitOnBranch(branch, parentCommit, fileChanges)
+        createCommitOrTag(currentCommit, { branch, fileChanges })
       ).rejects.toThrow('GraphQL error')
 
       expect(clientMock).toHaveBeenCalled()
@@ -219,7 +219,7 @@ describe('GitHub API', () => {
       )
       expect(debugMock).toHaveBeenCalledWith(
         expect.stringMatching(
-          /Request\[createCommitOnBranch\] failed, query: [\s\S]*, variables: [\s\S]*, data: [\s\S]*/
+          /Request\[createCommitOrTag\] failed, query: [\s\S]*, variables: [\s\S]*, data: [\s\S]*/
         )
       )
     })
@@ -253,22 +253,24 @@ describe('GitHub API', () => {
                   )
 
                   expect(body.variables).toHaveProperty(
-                    'input.branch.repositoryNameWithOwner',
+                    'commitInput.branch.repositoryNameWithOwner',
                     'my-user/my-repo'
                   )
                   expect(body.variables).toHaveProperty(
-                    'input.branch.branchName',
+                    'commitInput.branch.branchName',
                     'my-branch'
                   )
-                  expect(body.variables).toHaveProperty('input.expectedHeadOid')
-                  expect(body.variables.input.expectedHeadOid).toContain(
+                  expect(body.variables).toHaveProperty(
+                    'commitInput.expectedHeadOid'
+                  )
+                  expect(body.variables.commitInput.expectedHeadOid).toContain(
                     'MyOid'
                   )
-
                   expect(body.variables).toHaveProperty(
-                    'input.fileChanges.additions'
+                    'commitInput.fileChanges.additions'
                   )
-                  const additions = body.variables.input.fileChanges.additions
+                  const additions =
+                    body.variables.commitInput.fileChanges.additions
                   expect(additions).toContainEqual(fileAddition)
 
                   return { data: {} }
@@ -282,12 +284,11 @@ describe('GitHub API', () => {
         repositoryNameWithOwner: 'my-user/my-repo',
         branchName: 'my-branch',
       } as CommittableBranch
-      const parentCommit = { oid: 'MyOid' } as Commit
-      const result = await createCommitOnBranch(
+      const currentCommit = { oid: 'MyOid' } as Commit
+      const result = await createCommitOrTag(currentCommit, {
         branch,
-        parentCommit,
-        fileChanges
-      )
+        fileChanges,
+      })
       expect(clientMock).toHaveBeenCalled()
     })
   })
