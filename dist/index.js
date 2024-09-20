@@ -30687,8 +30687,9 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
     });
 };
 Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.CreateTagInput = exports.CreateCommitInput = void 0;
 exports.getRepository = getRepository;
-exports.createCommitOnBranch = createCommitOnBranch;
+exports.createCommitOrTag = createCommitOrTag;
 const core = __importStar(__nccwpck_require__(2186));
 const graphql_1 = __nccwpck_require__(8467);
 const client_1 = __nccwpck_require__(7047);
@@ -30756,40 +30757,94 @@ function getRepository(owner, repo, branch) {
         }
     });
 }
-function createCommitOnBranch(branch, parentCommit, fileChanges) {
+function prepareCreateCommitOnBranch(currentCommit, branch, fileChanges) {
     return __awaiter(this, void 0, void 0, function* () {
-        const commitMessage = core.getInput('commit-message', { required: true });
-        const mutation = `
-    mutation($input: CreateCommitOnBranchInput!) {
-      createCommitOnBranch(input: $input) {
-        commit {
-          oid
-        }
-      }
-    }`;
         if (fileChanges.additions) {
             const promises = fileChanges.additions.map((file) => (0, blob_1.getBlob)(file.path).load());
             fileChanges.additions = yield Promise.all(promises);
         }
+        const input = 'commitInput';
+        const query = `
+    createCommitOnBranch(input: $${input}) {
+      commit {
+        oid
+      }
+    }
+  `;
+        const commitMessage = core.getInput('commit-message', { required: true });
         const variables = {
-            input: {
-                branch,
-                // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
-                expectedHeadOid: parentCommit.oid,
-                message: {
-                    headline: commitMessage,
-                },
-                fileChanges,
+            branch,
+            // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
+            expectedHeadOid: currentCommit.oid,
+            message: {
+                headline: commitMessage,
             },
+            fileChanges,
         };
+        return { input, query, variables };
+    });
+}
+function prepareCreateTag(currentCommit, tag, repositoryId) {
+    const input = 'tagInput';
+    const query = `
+    createRef(input: $${input}) {
+      ref {
+        name
+      }
+    }
+  `;
+    const variables = {
+        repositoryId: repositoryId,
+        name: `refs/tags/${tag}`,
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
+        oid: currentCommit.oid,
+    };
+    return { input, query, variables };
+}
+class CreateCommitInput {
+    constructor(branch, fileChanges) {
+        this.branch = branch;
+        this.fileChanges = fileChanges;
+    }
+}
+exports.CreateCommitInput = CreateCommitInput;
+class CreateTagInput {
+    constructor(tag, repositoryId) {
+        this.tag = tag;
+        this.repositoryId = repositoryId;
+    }
+}
+exports.CreateTagInput = CreateTagInput;
+function createCommitOrTag(currentCommit, createCommit, createTag) {
+    return __awaiter(this, void 0, void 0, function* () {
+        const mutationInputs = [];
+        const mutationQueries = [];
+        // eslint-disable-next-line @typescript-eslint/consistent-indexed-object-style,@typescript-eslint/no-explicit-any
+        const mutationVariables = {};
+        if (createCommit) {
+            const { input, query, variables } = yield prepareCreateCommitOnBranch(currentCommit, createCommit.branch, createCommit.fileChanges);
+            mutationInputs.push(`$${input}: CreateCommitOnBranchInput!`);
+            mutationQueries.push(query);
+            mutationVariables[input] = variables;
+        }
+        if (createTag) {
+            const { input, query, variables } = prepareCreateTag(currentCommit, createTag.tag, createTag.repositoryId);
+            mutationInputs.push(`$${input}: CreateRefInput!`);
+            mutationQueries.push(query);
+            mutationVariables[input] = variables;
+        }
+        const mutation = `
+    mutation(${mutationInputs.join(',')}) {
+      ${mutationQueries.join('\n')}
+    }`;
         try {
-            const { createCommitOnBranch } = yield (0, client_1.graphqlClient)()(mutation, variables);
-            logSuccess('createCommitOnBranch', mutation, variables, createCommitOnBranch);
-            return createCommitOnBranch;
+            const response = yield (0, client_1.graphqlClient)()(mutation, mutationVariables);
+            logSuccess('createCommitOrTag', mutation, mutationVariables, response);
+            return response;
         }
         catch (error) {
             if (error instanceof graphql_1.GraphqlResponseError)
-                logError('createCommitOnBranch', error);
+                logError('createCommitOrTag', error);
             throw error;
         }
     });
@@ -30859,7 +30914,7 @@ const input_1 = __nccwpck_require__(5073);
 const errors_1 = __nccwpck_require__(6976);
 function run() {
     return __awaiter(this, void 0, void 0, function* () {
-        var _a, _b, _c, _d, _e, _f, _g, _h, _j, _k;
+        var _a, _b, _c, _d, _e, _f, _g, _h, _j, _k, _l;
         try {
             const { owner, repo } = github.context.repo;
             const { ref, eventName } = github.context;
@@ -30902,17 +30957,28 @@ function run() {
             if (!repository.ref && branchName !== currentBranch) {
                 throw new errors_1.InputBranchNotFound(targetBranch);
             }
-            const commitResponse = yield core.group(`committing files`, () => __awaiter(this, void 0, void 0, function* () {
+            let createTag = undefined;
+            const tag = (0, input_1.getInput)('tag');
+            if (tag) {
+                createTag = {
+                    tag,
+                    repositoryId: repository.id,
+                };
+            }
+            const createResponse = yield core.group(`committing files`, () => __awaiter(this, void 0, void 0, function* () {
                 const startTime = Date.now();
-                const commitData = yield (0, graphql_1.createCommitOnBranch)({
-                    repositoryNameWithOwner: repository.nameWithOwner,
-                    branchName: branchName,
-                }, currentCommit, fileChanges);
+                const commitData = yield (0, graphql_1.createCommitOrTag)(currentCommit, {
+                    branch: {
+                        repositoryNameWithOwner: repository.nameWithOwner,
+                        branchName: branchName,
+                    },
+                    fileChanges: fileChanges,
+                }, createTag);
                 const endTime = Date.now();
                 core.debug(`time taken: ${(endTime - startTime).toString()} ms`);
                 return commitData;
             }));
-            core.setOutput('commit-sha', (_k = commitResponse.commit) === null || _k === void 0 ? void 0 : _k.oid);
+            core.setOutput('commit-sha', (_l = (_k = createResponse.createCommitOnBranch) === null || _k === void 0 ? void 0 : _k.commit) === null || _l === void 0 ? void 0 : _l.oid);
         }
         catch (error) {
             if (error instanceof errors_1.NoFileChanges) {
