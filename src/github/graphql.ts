@@ -99,7 +99,7 @@ export async function createCommitOnBranch(
 ): Promise<CreateCommitOnBranchPayload> {
   const commitMessage = core.getInput('commit-message', { required: true })
   const mutation = `
-      mutation($input: CreateCommitOnBranchInput!) {
+    mutation($input: CreateCommitOnBranchInput!) {
       createCommitOnBranch(input: $input) {
         commit {
           oid
@@ -114,7 +114,7 @@ export async function createCommitOnBranch(
     fileChanges.additions = await Promise.all(promises)
   }
 
-  const input: MutationCreateCommitOnBranchArgs = {
+  const variables: MutationCreateCommitOnBranchArgs = {
     input: {
       branch,
       // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
@@ -129,9 +129,14 @@ export async function createCommitOnBranch(
   try {
     const { createCommitOnBranch } = await graphqlClient()<{
       createCommitOnBranch: CreateCommitOnBranchPayload
-    }>(mutation, input)
+    }>(mutation, variables)
 
-    logSuccess('createCommitOnBranch', mutation, input, createCommitOnBranch)
+    logSuccess(
+      'createCommitOnBranch',
+      mutation,
+      variables,
+      createCommitOnBranch
+    )
 
     return createCommitOnBranch
   } catch (error) {

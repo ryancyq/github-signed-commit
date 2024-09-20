@@ -30760,7 +30760,7 @@ function createCommitOnBranch(branch, parentCommit, fileChanges) {
     return __awaiter(this, void 0, void 0, function* () {
         const commitMessage = core.getInput('commit-message', { required: true });
         const mutation = `
-      mutation($input: CreateCommitOnBranchInput!) {
+    mutation($input: CreateCommitOnBranchInput!) {
       createCommitOnBranch(input: $input) {
         commit {
           oid
@@ -30771,7 +30771,7 @@ function createCommitOnBranch(branch, parentCommit, fileChanges) {
             const promises = fileChanges.additions.map((file) => (0, blob_1.getBlob)(file.path).load());
             fileChanges.additions = yield Promise.all(promises);
         }
-        const input = {
+        const variables = {
             input: {
                 branch,
                 // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
@@ -30783,8 +30783,8 @@ function createCommitOnBranch(branch, parentCommit, fileChanges) {
             },
         };
         try {
-            const { createCommitOnBranch } = yield (0, client_1.graphqlClient)()(mutation, input);
-            logSuccess('createCommitOnBranch', mutation, input, createCommitOnBranch);
+            const { createCommitOnBranch } = yield (0, client_1.graphqlClient)()(mutation, variables);
+            logSuccess('createCommitOnBranch', mutation, variables, createCommitOnBranch);
             return createCommitOnBranch;
         }
         catch (error) {
