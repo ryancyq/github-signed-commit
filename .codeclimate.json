@@ -1,9 +1,4 @@
 {
   "version": "2",
-  "exclude_patterns": ["__tests__/", "dist/"],
-  "checks": {
-    "method-lines": {
-      "enabled": false
-    }
-  }
+  "exclude_patterns": ["__tests__/", "dist/"]
 }
