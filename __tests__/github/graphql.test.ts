@@ -124,7 +124,7 @@ describe('GitHub API', () => {
       )
       expect(debugMock).toHaveBeenCalledWith(
         expect.stringMatching(
-          /Request\[repository\] successful, query: [\s\S]*, variables: [\s\S]*, data: [\s\S]*/
+          /request: GetRepository, status: success, query: [\s\S]*, variables: [\s\S]*, data: [\s\S]*/
         )
       )
     })
@@ -152,7 +152,7 @@ describe('GitHub API', () => {
       )
       expect(debugMock).toHaveBeenCalledWith(
         expect.stringMatching(
-          /Request\[repository\] failed, query: [\s\S]*, variables: [\s\S]*, data: [\s\S]*/
+          /request: GetRepository, status: failed, query: [\s\S]*, variables: [\s\S]*, data: [\s\S]*/
         )
       )
     })
@@ -196,7 +196,7 @@ describe('GitHub API', () => {
       expect(clientMock).toHaveBeenCalled()
       expect(debugMock).toHaveBeenCalledWith(
         expect.stringMatching(
-          /Request\[createCommitOnBranch\] successful, query: [\s\S]*, variables: [\s\S]*, data: [\s\S]*/
+          /request: CreateCommitOnBranch, status: success, query: [\s\S]*, variables: [\s\S]*, data: [\s\S]*/
         )
       )
     })
@@ -233,7 +233,7 @@ describe('GitHub API', () => {
       )
       expect(debugMock).toHaveBeenCalledWith(
         expect.stringMatching(
-          /Request\[createCommitOnBranch\] failed, query: [\s\S]*, variables: [\s\S]*, data: [\s\S]*/
+          /request: CreateCommitOnBranch, status: failed, query: [\s\S]*, variables: [\s\S]*, data: [\s\S]*/
         )
       )
     })
@@ -341,7 +341,7 @@ describe('GitHub API', () => {
       expect(clientMock).toHaveBeenCalled()
       expect(debugMock).toHaveBeenCalledWith(
         expect.stringMatching(
-          /Request\[createTagOnCommit\] successful, query: [\s\S]*, variables: [\s\S]*, data: [\s\S]*/
+          /request: CreateTagOnCommit, status: success, query: [\s\S]*, variables: [\s\S]*, data: [\s\S]*/
         )
       )
     })
@@ -375,7 +375,7 @@ describe('GitHub API', () => {
       )
       expect(debugMock).toHaveBeenCalledWith(
         expect.stringMatching(
-          /Request\[createTagOnCommit\] failed, query: [\s\S]*, variables: [\s\S]*, data: [\s\S]*/
+          /request: CreateTagOnCommit, status: failed, query: [\s\S]*, variables: [\s\S]*, data: [\s\S]*/
         )
       )
     })
