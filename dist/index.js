@@ -30495,11 +30495,12 @@ const core = __importStar(__nccwpck_require__(2186));
 const exec_1 = __nccwpck_require__(1514);
 const node_path_1 = __nccwpck_require__(9411);
 const cwd_1 = __nccwpck_require__(7119);
-function switchBranch(branch) {
+function execGit(args) {
     return __awaiter(this, void 0, void 0, function* () {
         const debugOutput = [];
         const warningOutput = [];
-        yield (0, exec_1.exec)('git', ['checkout', '-b', branch], {
+        const errorOutput = [];
+        yield (0, exec_1.exec)('git', args, {
             silent: true,
             ignoreReturnCode: true,
             listeners: {
@@ -30508,16 +30509,28 @@ function switchBranch(branch) {
                 },
                 errline: (error) => {
                     if (/^(fatal|error):/.test(error))
-                        core.error(error);
+                        errorOutput.push(error);
                     else
                         warningOutput.push(error);
                 },
             },
         });
-        if (debugOutput.length > 0)
-            core.debug(debugOutput.join('\n'));
-        if (warningOutput.length > 0)
-            core.warning(warningOutput.join('\n'));
+        for (const msg of debugOutput)
+            core.debug(msg);
+        for (const msg of warningOutput)
+            core.warning(msg);
+        for (const msg of errorOutput)
+            core.error(msg);
+        return {
+            debug: debugOutput,
+            warn: warningOutput,
+            error: errorOutput,
+        };
+    });
+}
+function switchBranch(branch) {
+    return __awaiter(this, void 0, void 0, function* () {
+        yield execGit(['checkout', '-b', branch]);
     });
 }
 function pushCurrentBranch() {
@@ -30526,75 +30539,22 @@ function pushCurrentBranch() {
         if (core.getBooleanInput('branch-push-force')) {
             pushArgs.splice(1, 0, '--force');
         }
-        const debugOutput = [];
-        const warningOutput = [];
-        yield (0, exec_1.exec)('git', pushArgs, {
-            silent: true,
-            ignoreReturnCode: true,
-            listeners: {
-                stdline: (data) => {
-                    debugOutput.push(data);
-                },
-                errline: (error) => {
-                    if (/^(fatal|error):/.test(error))
-                        core.error(error);
-                    else
-                        warningOutput.push(error);
-                },
-            },
-        });
-        if (debugOutput.length > 0)
-            core.debug(debugOutput.join('\n'));
-        if (warningOutput.length > 0)
-            core.warning(warningOutput.join('\n'));
+        yield execGit(pushArgs);
     });
 }
 function addFileChanges(globPatterns) {
     return __awaiter(this, void 0, void 0, function* () {
         const workspace = (0, cwd_1.getWorkspace)();
         const workspacePaths = globPatterns.map((p) => (0, node_path_1.join)(workspace, p));
-        const debugOutput = [];
-        const warningOutput = [];
-        yield (0, exec_1.exec)('git', ['add', '--', ...workspacePaths], {
-            silent: true,
-            ignoreReturnCode: true,
-            listeners: {
-                stdline: (data) => {
-                    debugOutput.push(data);
-                },
-                errline: (error) => {
-                    if (/^(fatal|error):/.test(error))
-                        core.error(error);
-                    else
-                        warningOutput.push(error);
-                },
-            },
-        });
-        if (debugOutput.length > 0)
-            core.debug(debugOutput.join('\n'));
-        if (warningOutput.length > 0)
-            core.warning(warningOutput.join('\n'));
+        yield execGit(['add', '--', ...workspacePaths]);
     });
 }
 function getFileChanges() {
     return __awaiter(this, void 0, void 0, function* () {
-        const output = [];
-        yield (0, exec_1.exec)('git', ['status', '-suall', '--porcelain'], {
-            listeners: {
-                stdline: (data) => {
-                    output.push(data);
-                },
-                errline: (error) => {
-                    if (/^(fatal|error):/.test(error))
-                        core.error(error);
-                    else
-                        core.warning(error);
-                },
-            },
-        });
+        const { debug } = yield execGit(['status', '-suall', '--porcelain']);
         const additions = [];
         const deletions = [];
-        output.forEach((line) => {
+        debug.forEach((line) => {
             const staged = line.charAt(0);
             const filePath = line.slice(3);
             switch (staged) {
