@@ -319,7 +319,7 @@ jobs:
       contents: write
     needs: test-action-file-tag
     env:
-      BRANCH: test-action--no-file-changes-tag
+      BRANCH: test-action-no-file-changes-tag
       TAG: 7.8.9
 
     steps:
