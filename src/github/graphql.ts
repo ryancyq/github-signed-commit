@@ -15,7 +15,7 @@ import { graphqlClient } from './client'
 import { getBlob } from '../blob'
 import { RepositoryWithCommitHistory } from '../github/types'
 
-function formatLogMessage(...params: Record<string, unknown>[]): string {
+function mergeParams(params: Record<string, unknown>[]) {
   const merged: Record<string, unknown> = {}
   for (const param of params) {
     if (typeof param === 'object') {
@@ -24,7 +24,11 @@ function formatLogMessage(...params: Record<string, unknown>[]): string {
       }
     }
   }
-  return Object.entries(merged)
+  return merged
+}
+
+function formatLogMessage(...params: Record<string, unknown>[]): string {
+  return Object.entries(mergeParams(params))
     .map(([key, value]) => {
       return `${String(key)}: ${typeof value === 'string' ? value : JSON.stringify(value)}`
     })
