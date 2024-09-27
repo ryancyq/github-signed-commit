@@ -23,7 +23,7 @@ export class Blob {
 
   get streamable(): Readable {
     if (!fs.existsSync(this.absolutePath)) {
-      throw new Error(`File does not exist, path: ${this.absolutePath}.`)
+      throw new Error(`File does not exist, path: ${this.absolutePath}`)
     }
 
     return fs
