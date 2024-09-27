@@ -30660,85 +30660,109 @@ const core = __importStar(__nccwpck_require__(2186));
 const graphql_1 = __nccwpck_require__(8467);
 const client_1 = __nccwpck_require__(7047);
 const blob_1 = __nccwpck_require__(5312);
-function logSuccess(queryName, query, variables, data) {
-    core.debug(`Request[${queryName}] successful, query: ${query}, variables: ${JSON.stringify(variables)}, data: ${JSON.stringify(data)}`);
+function formatLogMessage(...params) {
+    const merged = {};
+    for (const param of params) {
+        if (typeof param === 'object') {
+            for (const key of Object.keys(param)) {
+                merged[key] = param[key];
+            }
+        }
+    }
+    return Object.entries(merged)
+        .map(([key, value]) => {
+        return `${String(key)}: ${typeof value === 'string' ? value : JSON.stringify(value)}`;
+    })
+        .join(', ');
 }
-function logError(queryName, error) {
-    const { query, variables } = error.request;
-    core.error(error.message);
-    core.debug(`Request[${queryName}] failed, query: ${query}, variables: ${JSON.stringify(variables)}, data: ${JSON.stringify(error.data)}`);
-}
-function getRepository(owner, repo, branch) {
+function execGraphql(name, query, variables) {
     return __awaiter(this, void 0, void 0, function* () {
-        const query = `
-    query($owner: String!, $repo: String!, $ref: String!) {
-      repository(owner: $owner, name: $repo) {
-        id
-        nameWithOwner
-        ref(qualifiedName: $ref) {
-          name
-          target {
-            ... on Commit {
-              history(first: 1) {
-                nodes {
-                  oid
-                  message
-                  committedDate
-                }
+        const requestParams = {
+            query: query,
+            variables: JSON.stringify(variables),
+        };
+        try {
+            const response = yield (0, client_1.graphqlClient)()(query, variables);
+            core.debug(formatLogMessage({ request: name, status: 'success' }, requestParams, {
+                data: response,
+            }));
+            return response;
+        }
+        catch (error) {
+            if (error instanceof graphql_1.GraphqlResponseError) {
+                core.error(error.message);
+                core.debug(formatLogMessage({ request: name, status: 'failed' }, requestParams, {
+                    data: error.data,
+                }));
+            }
+            throw error;
+        }
+    });
+}
+const getRepositoryQuery = `
+  query($owner: String!, $repo: String!, $ref: String!) {
+    repository(owner: $owner, name: $repo) {
+      id
+      nameWithOwner
+      ref(qualifiedName: $ref) {
+        name
+        target {
+          ... on Commit {
+            history(first: 1) {
+              nodes {
+                oid
+                message
+                committedDate
               }
             }
           }
         }
-        defaultBranchRef {
-          name
-          target {
-            ... on Commit {
-              history(first: 1) {
-                nodes {
-                  oid
-                  message
-                  committedDate
-                }
+      }
+      defaultBranchRef {
+        name
+        target {
+          ... on Commit {
+            history(first: 1) {
+              nodes {
+                oid
+                message
+                committedDate
               }
             }
           }
         }
       }
     }
-  `;
+  }
+`;
+function getRepository(owner, repo, branch) {
+    return __awaiter(this, void 0, void 0, function* () {
         const variables = {
             owner: owner,
             repo: repo,
             ref: `refs/heads/${branch}`,
         };
-        try {
-            const { repository } = yield (0, client_1.graphqlClient)()(query, variables);
-            logSuccess('repository', query, variables, repository);
-            return repository;
-        }
-        catch (error) {
-            if (error instanceof graphql_1.GraphqlResponseError)
-                logError('repository', error);
-            throw error;
-        }
+        const { repository } = yield execGraphql('GetRepository', getRepositoryQuery, variables);
+        return repository;
     });
 }
+const createCommitMutation = `
+  mutation($commitInput: CreateCommitOnBranchInput!) {
+    createCommitOnBranch(input: $commitInput) {
+      commit {
+        oid
+        message
+        committedDate
+      }
+    }
+  }
+`;
 function createCommitOnBranch(currentCommit, commitMessage, branch, fileChanges) {
     return __awaiter(this, void 0, void 0, function* () {
         if (fileChanges.additions) {
             const promises = fileChanges.additions.map((file) => (0, blob_1.getBlob)(file.path).load());
             fileChanges.additions = yield Promise.all(promises);
         }
-        const mutation = `
-    mutation($commitInput: CreateCommitOnBranchInput!) {
-      createCommitOnBranch(input: $commitInput) {
-        commit {
-          oid
-          message
-          committedDate
-        }
-      }
-    }`;
         const commitInput = {
             branch,
             // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
@@ -30748,46 +30772,29 @@ function createCommitOnBranch(currentCommit, commitMessage, branch, fileChanges)
             },
             fileChanges,
         };
-        const variables = { commitInput };
-        try {
-            const { createCommitOnBranch } = yield (0, client_1.graphqlClient)()(mutation, variables);
-            logSuccess('createCommitOnBranch', mutation, variables, createCommitOnBranch);
-            return createCommitOnBranch;
-        }
-        catch (error) {
-            if (error instanceof graphql_1.GraphqlResponseError)
-                logError('createCommitOnBranch', error);
-            throw error;
-        }
+        const { createCommitOnBranch } = yield execGraphql('CreateCommitOnBranch', createCommitMutation, { commitInput });
+        return createCommitOnBranch;
     });
 }
+const createTagMutation = `
+  mutation($tagInput: CreateRefInput!) {
+    createRef(input: $tagInput) {
+      ref {
+        name
+      }
+    }
+  }
+`;
 function createTagOnCommit(currentCommit, tag, repositoryId) {
     return __awaiter(this, void 0, void 0, function* () {
-        const mutation = `
-    mutation($tagInput: CreateRefInput!) {
-      createRef(input: $tagInput) {
-        ref {
-          name
-        }
-      }
-    }`;
         const tagInput = {
             repositoryId: repositoryId,
             name: `refs/tags/${tag}`,
             // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
             oid: currentCommit.oid,
         };
-        const variables = { tagInput };
-        try {
-            const { createRef } = yield (0, client_1.graphqlClient)()(mutation, variables);
-            logSuccess('createTagOnCommit', mutation, variables, createRef);
-            return createRef;
-        }
-        catch (error) {
-            if (error instanceof graphql_1.GraphqlResponseError)
-                logError('createTagOnCommit', error);
-            throw error;
-        }
+        const { createRef } = yield execGraphql('CreateTagOnCommit', createTagMutation, { tagInput });
+        return createRef;
     });
 }
 
