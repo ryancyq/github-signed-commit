@@ -75,7 +75,7 @@ jobs:
         id: output
         run: echo "${{ steps.test-action.outputs.commit-sha }}"
 
-      - name: Clean up test action branch
+      - name: Clean up test action environment
         shell: bash
         if: always()
         run: |
@@ -122,7 +122,7 @@ jobs:
         id: output
         run: echo "${{ steps.test-action.outputs.commit-sha }}"
 
-      - name: Clean up test action branch
+      - name: Clean up test action environment
         shell: bash
         if: always()
         run: |
@@ -170,7 +170,7 @@ jobs:
         id: output
         run: echo "${{ steps.test-action.outputs.commit-sha }}"
 
-      - name: Clean up test action branch
+      - name: Clean up test action environment
         shell: bash
         if: always()
         run: |
@@ -217,7 +217,7 @@ jobs:
         id: output
         run: echo "${{ steps.test-action.outputs.commit-sha }}"
 
-      - name: Clean up test action branch
+      - name: Clean up test action environment
         shell: bash
         if: always()
         run: |
@@ -253,7 +253,7 @@ jobs:
           branch-name: ${{ env.BRANCH }}
           tag: ${{ env.TAG }}
 
-      - name: Clean up test action branch
+      - name: Clean up test action environment
         shell: bash
         if: always()
         run: |
@@ -309,7 +309,7 @@ jobs:
         id: output
         run: echo "${{ steps.test-action.outputs.commit-sha }}"
 
-      - name: Clean up test action branch
+      - name: Clean up test action environment
         shell: bash
         if: always()
         run: |
@@ -359,7 +359,7 @@ jobs:
         id: output
         run: echo "${{ steps.test-action.outputs.commit-sha }}"
 
-      - name: Clean up test action branch
+      - name: Clean up test action environment
         shell: bash
         if: always()
         run: |
