@@ -58,15 +58,10 @@ describe('action', () => {
             if (name == 'tag-only-if-file-changes') return true
             return false
           })
+        jest.spyOn(core, 'getMultilineInput').mockReturnValue(['/test.txt'])
       })
 
       it('skip tag commit', async () => {
-        jest
-          .spyOn(core, 'getMultilineInput')
-          .mockImplementationOnce((name, _option) => {
-            if (name == 'files') return ['/test.txt']
-            return []
-          })
         const addFilesMock = jest
           .spyOn(git, 'addFileChanges')
           .mockResolvedValue()
@@ -97,15 +92,10 @@ describe('action', () => {
             if (name == 'tag-only-if-file-changes') return false
             return true
           })
+        jest.spyOn(core, 'getMultilineInput').mockReturnValue(['/test.txt'])
       })
 
       it('proceed with tag commit', async () => {
-        jest
-          .spyOn(core, 'getMultilineInput')
-          .mockImplementationOnce((name, _option) => {
-            if (name == 'files') return ['/test.txt']
-            return []
-          })
         const addFilesMock = jest
           .spyOn(git, 'addFileChanges')
           .mockResolvedValue()
@@ -209,32 +199,159 @@ describe('action', () => {
     })
   })
 
-  it('requires branch-name input to exists when specified', async () => {
-    jest.spyOn(core, 'getInput').mockImplementation((name, option) => {
-      if (name == 'branch-name') return 'new-branch'
-      return ''
-    })
-    jest.spyOn(core, 'getMultilineInput').mockReturnValue(['/test.txt'])
-    jest.spyOn(git, 'switchBranch').mockResolvedValue()
-    jest.spyOn(git, 'addFileChanges').mockResolvedValue()
-    jest.spyOn(git, 'getFileChanges').mockResolvedValue({
-      additions: [{ path: '/test.txt', contents: '' }],
+  describe('input branch is given', () => {
+    beforeEach(() => {
+      jest.spyOn(core, 'getMultilineInput').mockReturnValue(['/test.txt'])
+      jest.spyOn(git, 'switchBranch').mockResolvedValue()
+      jest.spyOn(git, 'pushCurrentBranch').mockResolvedValue()
+      jest.spyOn(git, 'addFileChanges').mockResolvedValue()
+      jest.spyOn(git, 'getFileChanges').mockResolvedValue({})
     })
 
-    const getRepositoryMock = jest
-      .spyOn(graphql, 'getRepository')
-      .mockResolvedValue({} as RepositoryWithCommitHistory)
-    const pushBranchMock = jest
-      .spyOn(git, 'pushCurrentBranch')
-      .mockResolvedValue()
-    const setFailedMock = jest.spyOn(core, 'setFailed').mockReturnValue()
+    describe('exists in remote', () => {
+      beforeEach(() => {
+        jest.spyOn(core, 'getInput').mockImplementationOnce((name, option) => {
+          if (name == 'branch-name') return 'existing-branch'
+          return ''
+        })
+      })
 
-    await main.run()
+      it('succeed', async () => {
+        const getRepositoryMock = jest
+          .spyOn(graphql, 'getRepository')
+          .mockResolvedValue({
+            ref: {
+              name: 'existing-branch',
+              target: {
+                history: {
+                  nodes: [
+                    {
+                      oid: 'existing-commit-oid',
+                      message: 'existing message',
+                      committedDate: '2024-08-19T04:53:47Z',
+                    },
+                  ],
+                },
+              },
+            },
+          } as RepositoryWithCommitHistory)
+        const setFailedMock = jest.spyOn(core, 'setFailed').mockReturnValue()
 
-    expect(getRepositoryMock).toHaveBeenCalled()
-    expect(setFailedMock).toHaveBeenCalledWith(
-      'Input <branch-name> "new-branch" not found'
-    )
+        await main.run()
+
+        expect(getRepositoryMock).toHaveBeenCalled()
+        expect(setFailedMock).not.toHaveBeenCalled()
+      })
+    })
+
+    describe('does not exist in remote', () => {
+      beforeEach(() => {
+        jest.spyOn(core, 'getInput').mockImplementationOnce((name, option) => {
+          if (name == 'branch-name') return 'new-branch'
+          return ''
+        })
+      })
+
+      it('fails', async () => {
+        const getRepositoryMock = jest
+          .spyOn(graphql, 'getRepository')
+          .mockResolvedValue({} as RepositoryWithCommitHistory)
+        const setFailedMock = jest.spyOn(core, 'setFailed').mockReturnValue()
+
+        await main.run()
+
+        expect(getRepositoryMock).toHaveBeenCalled()
+        expect(setFailedMock).toHaveBeenCalledWith(
+          'Input <branch-name> "new-branch" not found'
+        )
+      })
+    })
+  })
+
+  describe('workflow branch', () => {
+    beforeEach(() => {
+      jest.spyOn(repo, 'getContext').mockReturnValue({
+        repo: 'workflow-repo',
+        owner: 'workflow-user',
+        branch: 'workflow-branch',
+      })
+      jest.spyOn(core, 'getMultilineInput').mockReturnValue(['/test.txt'])
+      jest.spyOn(core, 'getBooleanInput').mockReturnValue(true)
+      jest.spyOn(git, 'switchBranch').mockResolvedValue()
+      jest.spyOn(git, 'pushCurrentBranch').mockResolvedValue()
+      jest.spyOn(git, 'addFileChanges').mockResolvedValue()
+      jest.spyOn(git, 'getFileChanges').mockResolvedValue({})
+    })
+
+    describe('exists in remote', () => {
+      it('succeed', async () => {
+        const getRepositoryMock = jest
+          .spyOn(graphql, 'getRepository')
+          .mockResolvedValue({
+            ref: {
+              name: 'workflow-branch',
+              target: {
+                history: {
+                  nodes: [
+                    {
+                      oid: 'workflow-commit-oid',
+                      message: 'existing message',
+                      committedDate: '2024-08-19T04:53:47Z',
+                    },
+                  ],
+                },
+              },
+            },
+          } as RepositoryWithCommitHistory)
+        const setFailedMock = jest.spyOn(core, 'setFailed').mockReturnValue()
+
+        await main.run()
+
+        expect(getRepositoryMock).toHaveBeenCalled()
+        expect(setFailedMock).not.toHaveBeenCalled()
+      })
+    })
+
+    describe('does not exist in remote', () => {
+      it('fails', async () => {
+        const getRepositoryMock = jest
+          .spyOn(graphql, 'getRepository')
+          .mockResolvedValue({} as RepositoryWithCommitHistory)
+        const setFailedMock = jest.spyOn(core, 'setFailed').mockReturnValue()
+
+        await main.run()
+
+        expect(getRepositoryMock).toHaveBeenCalled()
+        expect(setFailedMock).toHaveBeenCalledWith(
+          'Branch "workflow-branch" not found'
+        )
+      })
+    })
+
+    describe('does not have commit history', () => {
+      it('fails', async () => {
+        const getRepositoryMock = jest
+          .spyOn(graphql, 'getRepository')
+          .mockResolvedValue({
+            ref: {
+              name: 'workflow-branch',
+              target: {
+                history: {
+                  nodes: [] as any,
+                },
+              },
+            },
+          } as RepositoryWithCommitHistory)
+        const setFailedMock = jest.spyOn(core, 'setFailed').mockReturnValue()
+
+        await main.run()
+
+        expect(getRepositoryMock).toHaveBeenCalled()
+        expect(setFailedMock).toHaveBeenCalledWith(
+          'Latest commit on branch "workflow-branch" not found'
+        )
+      })
+    })
   })
 
   it('commit files and output commit sha', async () => {
@@ -338,12 +455,7 @@ describe('action', () => {
       if (name == 'tag') return 'fake-file-tag'
       return ''
     })
-    jest
-      .spyOn(core, 'getMultilineInput')
-      .mockImplementationOnce((name, _options) => {
-        if (name == 'files') return ['/test.txt']
-        return []
-      })
+    jest.spyOn(core, 'getMultilineInput').mockReturnValue(['/test.txt'])
     jest.spyOn(git, 'addFileChanges').mockResolvedValue()
     jest.spyOn(git, 'getFileChanges').mockResolvedValue({
       additions: [{ path: '/test.txt', contents: '' }],
