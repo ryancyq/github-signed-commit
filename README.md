@@ -2,6 +2,7 @@
 
 [![CI][ci_badge]][ci_workflows]
 [![Coverage][coverage_badge]][coverage]
+[![Maintainability][maintainability_badge]][maintainability]
 
 Learn more about [commit signature](https://docs.github.com/en/authentication/managing-commit-signature-verification/about-commit-signature-verification) on GitHub.
 
@@ -77,3 +78,5 @@ Note: The `GH_TOKEN` environment variable is **required** for GitHub API request
 [ci_workflows]: https://github.com/ryancyq/github-signed-commit/actions/workflows/ci.yml
 [coverage_badge]: https://codecov.io/gh/ryancyq/github-signed-commit/graph/badge.svg?token=KZTD2F2MN2
 [coverage]: https://codecov.io/gh/ryancyq/github-signed-commit
+[maintainability_badge]: https://api.codeclimate.com/v1/badges/0de9dbec270ca85719c6/maintainability
+[maintainability]: https://codeclimate.com/github/ryancyq/github-signed-commit/maintainability
