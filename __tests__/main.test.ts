@@ -63,7 +63,7 @@ describe('action', () => {
       it('skip tag commit', async () => {
         jest
           .spyOn(core, 'getMultilineInput')
-          .mockImplementation((name, _option) => {
+          .mockImplementationOnce((name, _option) => {
             if (name == 'files') return ['/test.txt']
             return []
           })
@@ -93,7 +93,7 @@ describe('action', () => {
       beforeEach(() => {
         jest
           .spyOn(core, 'getBooleanInput')
-          .mockImplementation((name, _option) => {
+          .mockImplementationOnce((name, _option) => {
             if (name == 'tag-only-if-file-changes') return false
             return true
           })
@@ -102,7 +102,7 @@ describe('action', () => {
       it('proceed with tag commit', async () => {
         jest
           .spyOn(core, 'getMultilineInput')
-          .mockImplementation((name, _option) => {
+          .mockImplementationOnce((name, _option) => {
             if (name == 'files') return ['/test.txt']
             return []
           })
@@ -135,7 +135,7 @@ describe('action', () => {
 
   describe('input branch same as current branch', () => {
     beforeEach(() => {
-      jest.spyOn(core, 'getInput').mockImplementation((name, option) => {
+      jest.spyOn(core, 'getInput').mockImplementationOnce((name, option) => {
         if (name == 'branch-name') return 'main'
         return ''
       })
@@ -172,7 +172,7 @@ describe('action', () => {
 
   describe('input branch not the same as current branch', () => {
     beforeEach(() => {
-      jest.spyOn(core, 'getInput').mockImplementation((name, option) => {
+      jest.spyOn(core, 'getInput').mockImplementationOnce((name, option) => {
         if (name == 'branch-name') return 'another-branch'
         return ''
       })
@@ -238,7 +238,7 @@ describe('action', () => {
   })
 
   it('commit files and output commit sha', async () => {
-    jest.spyOn(core, 'getInput').mockImplementation((name, option) => {
+    jest.spyOn(core, 'getInput').mockImplementationOnce((name, option) => {
       if (name == 'branch-name') return 'custom-branch'
       return ''
     })
@@ -338,7 +338,12 @@ describe('action', () => {
       if (name == 'tag') return 'fake-file-tag'
       return ''
     })
-    jest.spyOn(core, 'getMultilineInput').mockReturnValue(['/test.txt'])
+    jest
+      .spyOn(core, 'getMultilineInput')
+      .mockImplementationOnce((name, _options) => {
+        if (name == 'files') return ['/test.txt']
+        return []
+      })
     jest.spyOn(git, 'addFileChanges').mockResolvedValue()
     jest.spyOn(git, 'getFileChanges').mockResolvedValue({
       additions: [{ path: '/test.txt', contents: '' }],
@@ -390,7 +395,7 @@ describe('action', () => {
   })
 
   it('commit file fails woukd skip push tag', async () => {
-    jest.spyOn(core, 'getInput').mockImplementation((name, option) => {
+    jest.spyOn(core, 'getInput').mockImplementationOnce((name, option) => {
       if (name == 'branch-name') return 'file-fail-tag-branch'
       if (name == 'tag') return 'unreachable-tag'
       return ''
