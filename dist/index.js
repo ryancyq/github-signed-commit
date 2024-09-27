@@ -30549,33 +30549,37 @@ function addFileChanges(globPatterns) {
         yield execGit(['add', '--', ...workspacePaths]);
     });
 }
+function processFileChanges(output) {
+    const additions = [];
+    const deletions = [];
+    for (const line of output) {
+        const staged = line.charAt(0);
+        const filePath = line.slice(3);
+        switch (staged) {
+            case 'D': {
+                deletions.push({ path: filePath });
+                break;
+            }
+            case '?':
+            case 'A':
+            case 'M': {
+                additions.push({ path: filePath, contents: '' });
+                break;
+            }
+            case 'R': {
+                const [from, to] = filePath.split('->');
+                deletions.push({ path: from.trim() });
+                additions.push({ path: to.trim(), contents: '' });
+                break;
+            }
+        }
+    }
+    return { additions, deletions };
+}
 function getFileChanges() {
     return __awaiter(this, void 0, void 0, function* () {
         const { debug } = yield execGit(['status', '-suall', '--porcelain']);
-        const additions = [];
-        const deletions = [];
-        debug.forEach((line) => {
-            const staged = line.charAt(0);
-            const filePath = line.slice(3);
-            switch (staged) {
-                case 'D': {
-                    deletions.push({ path: filePath });
-                    break;
-                }
-                case '?':
-                case 'A':
-                case 'M': {
-                    additions.push({ path: filePath, contents: '' });
-                    break;
-                }
-                case 'R': {
-                    const [from, to] = filePath.split('->');
-                    deletions.push({ path: from.trim() });
-                    additions.push({ path: to.trim(), contents: '' });
-                    break;
-                }
-            }
-        });
+        const { additions, deletions } = processFileChanges(debug);
         const filesChanges = {};
         if (additions.length > 0) {
             filesChanges.additions = additions;
