@@ -109,16 +109,13 @@ export async function run(): Promise<void> {
     if (!tag) {
       core.debug('skip commit tagging, empty tag input')
     } else {
+      const tagCommit = createdCommit ?? currentCommit
       core.debug(
-        `proceed with commit tagging, input: ${tag}, commit: ${createdCommit?.oid ?? currentCommit.oid}`
+        `proceed with commit tagging, input: ${tag}, commit: ${tagCommit.oid as string}`
       )
       await core.group('tagging commit', async () => {
         const startTime = Date.now()
-        const tagData = await createTagOnCommit(
-          createdCommit ?? currentCommit,
-          tag,
-          repository.id
-        )
+        const tagData = await createTagOnCommit(tagCommit, tag, repository.id)
         const endTime = Date.now()
         core.debug(`time taken: ${(endTime - startTime).toString()} ms`)
         return tagData
