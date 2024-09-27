@@ -42,17 +42,95 @@ describe('action', () => {
     )
   })
 
-  it('does not fail when no file changes', async () => {
-    jest.spyOn(core, 'getMultilineInput').mockReturnValue(['/test.txt'])
-    const addFilesMock = jest.spyOn(git, 'addFileChanges').mockResolvedValue()
-    const getFilesMock = jest.spyOn(git, 'getFileChanges').mockResolvedValue({})
-    const noticeMock = jest.spyOn(core, 'notice').mockReturnValue()
+  describe('no file changes', () => {
+    beforeEach(() => {
+      jest.spyOn(core, 'getInput').mockImplementation((name, _option) => {
+        if (name == 'tag') return 'no-file-tag'
+        return ''
+      })
+    })
 
-    await main.run()
+    describe('when tag only if files changes', () => {
+      beforeEach(() => {
+        jest
+          .spyOn(core, 'getBooleanInput')
+          .mockImplementation((name, _option) => {
+            if (name == 'tag-only-if-file-changes') return true
+            return false
+          })
+      })
 
-    expect(addFilesMock).toHaveBeenCalled()
-    expect(getFilesMock).toHaveBeenCalled()
-    expect(noticeMock).toHaveBeenCalledWith('No files changes')
+      it('skip tag commit', async () => {
+        jest
+          .spyOn(core, 'getMultilineInput')
+          .mockImplementation((name, _option) => {
+            if (name == 'files') return ['/test.txt']
+            return []
+          })
+        const addFilesMock = jest
+          .spyOn(git, 'addFileChanges')
+          .mockResolvedValue()
+        const getFilesMock = jest
+          .spyOn(git, 'getFileChanges')
+          .mockResolvedValue({})
+        const createCommitMock = jest.spyOn(graphql, 'createCommitOnBranch')
+        const createTagMock = jest.spyOn(graphql, 'createTagOnCommit')
+        const noticeMock = jest.spyOn(core, 'notice').mockReturnValue()
+        const setFailedMock = jest.spyOn(core, 'setFailed').mockReturnValue()
+
+        await main.run()
+
+        expect(addFilesMock).toHaveBeenCalled()
+        expect(getFilesMock).toHaveBeenCalled()
+        expect(createCommitMock).not.toHaveBeenCalled()
+        expect(createTagMock).not.toHaveBeenCalled()
+        expect(noticeMock).toHaveBeenCalledWith('No files changes')
+        expect(setFailedMock).not.toHaveBeenCalled()
+      })
+    })
+
+    describe('when tag without files changes', () => {
+      beforeEach(() => {
+        jest
+          .spyOn(core, 'getBooleanInput')
+          .mockImplementation((name, _option) => {
+            if (name == 'tag-only-if-file-changes') return false
+            return true
+          })
+      })
+
+      it('proceed with tag commit', async () => {
+        jest
+          .spyOn(core, 'getMultilineInput')
+          .mockImplementation((name, _option) => {
+            if (name == 'files') return ['/test.txt']
+            return []
+          })
+        const addFilesMock = jest
+          .spyOn(git, 'addFileChanges')
+          .mockResolvedValue()
+        const getFilesMock = jest
+          .spyOn(git, 'getFileChanges')
+          .mockResolvedValue({})
+        const createCommitMock = jest.spyOn(graphql, 'createCommitOnBranch')
+        const createTagMock = jest
+          .spyOn(graphql, 'createTagOnCommit')
+          .mockResolvedValue({
+            ref: { name: 'fake-file-tag' },
+          } as CreateRefPayload)
+        const noticeMock = jest.spyOn(core, 'notice').mockReturnValue()
+        const setFailedMock = jest.spyOn(core, 'setFailed').mockReturnValue()
+
+        await main.run()
+
+        expect(addFilesMock).toHaveBeenCalled()
+        expect(getFilesMock).toHaveBeenCalled()
+        expect(createCommitMock).not.toHaveBeenCalled()
+        expect(createTagMock).toHaveBeenCalled()
+        expect(noticeMock).toHaveBeenCalledWith('No files changes')
+        expect(setFailedMock).not.toHaveBeenCalled()
+      })
+    })
   })
 
   describe('input branch same as current branch', () => {

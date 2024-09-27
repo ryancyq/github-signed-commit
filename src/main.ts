@@ -72,6 +72,8 @@ export async function run(): Promise<void> {
       core.debug(`detect file changes: ${JSON.stringify(fileChanges)}`)
 
       if (fileCount <= 0) {
+        const skipTagCommit = core.getBooleanInput('tag-only-if-file-changes')
+        if (skipTagCommit) throw new NoFileChanges()
         core.notice(new NoFileChanges().message)
       } else {
         const commitMessage = core.getInput('commit-message', {
