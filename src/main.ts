@@ -115,13 +115,17 @@ export async function run(): Promise<void> {
       core.debug(
         `proceed with commit tagging, input: ${tag}, commit: ${tagCommit.oid as string}`
       )
-      await core.group('tagging commit', async () => {
+      const tagResponse = await core.group('tagging commit', async () => {
         const startTime = Date.now()
         const tagData = await createTagOnCommit(tagCommit, tag, repository.id)
         const endTime = Date.now()
         core.debug(`time taken: ${(endTime - startTime).toString()} ms`)
         return tagData
       })
+      // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+      const tagName = tagResponse.ref!.name
+      core.info(`committed tag ${tagName} at ${tagCommit.oid as string}`)
+      core.setOutput('tag', tagName)
       core.debug('completed commit tag')
     }
 
