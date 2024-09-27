@@ -156,7 +156,7 @@ export async function createTagOnCommit(
   repositoryId: string
 ): Promise<CreateRefPayload> {
   const mutation = `
-    mutation(tagInput: CreateRefInput!) {
+    mutation($tagInput: CreateRefInput!) {
       createRef(input: $tagInput) {
         ref {
           name
