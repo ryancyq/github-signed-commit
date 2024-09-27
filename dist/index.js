@@ -30664,7 +30664,7 @@ const core = __importStar(__nccwpck_require__(2186));
 const graphql_1 = __nccwpck_require__(8467);
 const client_1 = __nccwpck_require__(7047);
 const blob_1 = __nccwpck_require__(5312);
-function formatLogMessage(...params) {
+function mergeParams(params) {
     const merged = {};
     for (const param of params) {
         if (typeof param === 'object') {
@@ -30673,7 +30673,10 @@ function formatLogMessage(...params) {
             }
         }
     }
-    return Object.entries(merged)
+    return merged;
+}
+function formatLogMessage(...params) {
+    return Object.entries(mergeParams(params))
         .map(([key, value]) => {
         return `${String(key)}: ${typeof value === 'string' ? value : JSON.stringify(value)}`;
     })
