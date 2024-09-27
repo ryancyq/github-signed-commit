@@ -4,14 +4,20 @@ export class NoFileChanges extends Error {
   }
 }
 
-export class InputFilesRequired extends Error {
-  constructor() {
-    super('Input <files> is required')
-  }
-}
-
 export class InputBranchNotFound extends Error {
   constructor(branchName: string) {
     super(`Input <branch-name> "${branchName}" not found`)
+  }
+}
+
+export class BranchNotFound extends Error {
+  constructor(branchName: string) {
+    super(`Branch "${branchName}" not found`)
+  }
+}
+
+export class BranchCommitNotFound extends Error {
+  constructor(branchName: string) {
+    super(`Latest commit on branch "${branchName}" not found`)
   }
 }
