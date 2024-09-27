@@ -386,6 +386,7 @@ describe('action', () => {
     expect(createCommitMock).toHaveBeenCalled()
     expect(createTagMock).toHaveBeenCalled()
     expect(setOutputMock).toHaveBeenCalledWith('commit-sha', 'fake-commit-sha')
+    expect(setOutputMock).toHaveBeenCalledWith('tag', 'fake-file-tag')
   })
 
   it('commit file fails woukd skip push tag', async () => {

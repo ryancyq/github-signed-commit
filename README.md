@@ -70,7 +70,8 @@ Note: The `GH_TOKEN` environment variable is **required** for GitHub API request
 ## Outputs
 | Output | Description |
 | :--- | :--- |
-| `commit-sha` | Full SHA of the signed commit |
+| `commit-sha` | Full SHA of the signed commit. |
+| `tag` | Tag of the signed commit. |
 
 [ci_badge]: https://github.com/ryancyq/github-signed-commit/actions/workflows/ci.yml/badge.svg
 [ci_workflows]: https://github.com/ryancyq/github-signed-commit/actions/workflows/ci.yml

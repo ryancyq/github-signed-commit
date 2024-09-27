@@ -31010,13 +31010,17 @@ function run() {
             else {
                 const tagCommit = createdCommit !== null && createdCommit !== void 0 ? createdCommit : currentCommit;
                 core.debug(`proceed with commit tagging, input: ${tag}, commit: ${tagCommit.oid}`);
-                yield core.group('tagging commit', () => __awaiter(this, void 0, void 0, function* () {
+                const tagResponse = yield core.group('tagging commit', () => __awaiter(this, void 0, void 0, function* () {
                     const startTime = Date.now();
                     const tagData = yield (0, graphql_1.createTagOnCommit)(tagCommit, tag, repository.id);
                     const endTime = Date.now();
                     core.debug(`time taken: ${(endTime - startTime).toString()} ms`);
                     return tagData;
                 }));
+                // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+                const tagName = tagResponse.ref.name;
+                core.info(`committed tag ${tagName} at ${tagCommit.oid}`);
+                core.setOutput('tag', tagName);
                 core.debug('completed commit tag');
             }
             if (filePaths.length <= 0 && !tag) {
