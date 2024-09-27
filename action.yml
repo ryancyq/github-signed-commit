@@ -9,7 +9,7 @@ inputs:
   files:
     description: |
       Multi-line string of file paths to be committed, relative to the current workspace.
-    required: true
+    required: false
   workspace:
     description: |
       Directory containing files to be committed. Default: GitHub workspace directory (root of repository).
@@ -18,7 +18,7 @@ inputs:
   commit-message:
     description: |
       Commit message for the file changes.
-    required: true
+    required: false
   branch-name:
     description: |
       Branch to commit to. Default: Workflow triggered branch.
@@ -31,13 +31,18 @@ inputs:
     default: false
   tag:
     description: |
-      Tag for the commit.
+      Push tag for the new/current commit.
     required: false
     default: ''
+  tag-only-if-file-changes:
+    description: |
+      Push tag for new commit only when file changes present.
+    required: false
+    default: true
 
 outputs:
   commit-sha:
-    description: SHA of created commit
+    description: commit SHA of files or tag
 
 runs:
   using: node20
