@@ -1,5 +1,6 @@
 import * as core from '@actions/core'
 import { GraphqlResponseError } from '@octokit/graphql'
+import { RequestParameters } from '@octokit/types'
 import {
   Commit,
   CommittableBranch,
@@ -14,85 +15,117 @@ import { graphqlClient } from './client'
 import { getBlob } from '../blob'
 import { RepositoryWithCommitHistory } from '../github/types'
 
-function logSuccess(
-  queryName: string,
+function formatLogMessage(...params: Record<string, unknown>[]): string {
+  const merged: Record<string, unknown> = {}
+  for (const param of params) {
+    if (typeof param === 'object') {
+      for (const key of Object.keys(param)) {
+        merged[key] = param[key]
+      }
+    }
+  }
+  return Object.entries(merged)
+    .map(([key, value]) => {
+      return `${String(key)}: ${typeof value === 'string' ? value : JSON.stringify(value)}`
+    })
+    .join(', ')
+}
+
+async function execGraphql<T>(
+  name: string,
   query: string,
-  variables: unknown,
-  data: unknown
-) {
-  core.debug(
-    `Request[${queryName}] successful, query: ${query}, variables: ${JSON.stringify(variables)}, data: ${JSON.stringify(data)}`
-  )
+  variables: RequestParameters
+): Promise<T> {
+  const requestParams = {
+    query: query,
+    variables: JSON.stringify(variables),
+  }
+  try {
+    const response = await graphqlClient()<T>(query, variables)
+    core.debug(
+      formatLogMessage({ request: name, status: 'success' }, requestParams, {
+        data: response,
+      })
+    )
+    return response
+  } catch (error) {
+    if (error instanceof GraphqlResponseError) {
+      core.error(error.message)
+      core.debug(
+        formatLogMessage({ request: name, status: 'failed' }, requestParams, {
+          data: error.data,
+        })
+      )
+    }
+    throw error
+  }
 }
 
-function logError(queryName: string, error: GraphqlResponseError<unknown>) {
-  const { query, variables } = error.request
-  core.error(error.message)
-  core.debug(
-    `Request[${queryName}] failed, query: ${query as string}, variables: ${JSON.stringify(variables)}, data: ${JSON.stringify(error.data)}`
-  )
-}
-
-export async function getRepository(
-  owner: string,
-  repo: string,
-  branch: string
-): Promise<RepositoryWithCommitHistory> {
-  const query = `
-    query($owner: String!, $repo: String!, $ref: String!) {
-      repository(owner: $owner, name: $repo) {
-        id
-        nameWithOwner
-        ref(qualifiedName: $ref) {
-          name
-          target {
-            ... on Commit {
-              history(first: 1) {
-                nodes {
-                  oid
-                  message
-                  committedDate
-                }
+const getRepositoryQuery = `
+  query($owner: String!, $repo: String!, $ref: String!) {
+    repository(owner: $owner, name: $repo) {
+      id
+      nameWithOwner
+      ref(qualifiedName: $ref) {
+        name
+        target {
+          ... on Commit {
+            history(first: 1) {
+              nodes {
+                oid
+                message
+                committedDate
               }
             }
           }
         }
-        defaultBranchRef {
-          name
-          target {
-            ... on Commit {
-              history(first: 1) {
-                nodes {
-                  oid
-                  message
-                  committedDate
-                }
+      }
+      defaultBranchRef {
+        name
+        target {
+          ... on Commit {
+            history(first: 1) {
+              nodes {
+                oid
+                message
+                committedDate
               }
             }
           }
         }
       }
     }
-  `
+  }
+`
 
+export async function getRepository(
+  owner: string,
+  repo: string,
+  branch: string
+): Promise<RepositoryWithCommitHistory> {
   const variables = {
     owner: owner,
     repo: repo,
     ref: `refs/heads/${branch}`,
   }
-  try {
-    const { repository } = await graphqlClient()<{
-      repository: RepositoryWithCommitHistory
-    }>(query, variables)
 
-    logSuccess('repository', query, variables, repository)
-
-    return repository
-  } catch (error) {
-    if (error instanceof GraphqlResponseError) logError('repository', error)
-    throw error
-  }
+  const { repository } = await execGraphql<{
+    repository: RepositoryWithCommitHistory
+  }>('GetRepository', getRepositoryQuery, variables)
+  return repository
 }
+
+const createCommitMutation = `
+  mutation($commitInput: CreateCommitOnBranchInput!) {
+    createCommitOnBranch(input: $commitInput) {
+      commit {
+        oid
+        message
+        committedDate
+      }
+    }
+  }
+`
 
 export async function createCommitOnBranch(
   currentCommit: Commit,
@@ -107,17 +140,6 @@ export async function createCommitOnBranch(
     fileChanges.additions = await Promise.all(promises)
   }
 
-  const mutation = `
-    mutation($commitInput: CreateCommitOnBranchInput!) {
-      createCommitOnBranch(input: $commitInput) {
-        commit {
-          oid
-          message
-          committedDate
-        }
-      }
-    }`
-
   const commitInput: CreateCommitOnBranchInput = {
     branch,
     // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
@@ -128,42 +150,27 @@ export async function createCommitOnBranch(
     fileChanges,
   }
 
-  const variables = { commitInput }
-
-  try {
-    const { createCommitOnBranch } = await graphqlClient()<{
-      createCommitOnBranch: CreateCommitOnBranchPayload
-    }>(mutation, variables)
-
-    logSuccess(
-      'createCommitOnBranch',
-      mutation,
-      variables,
-      createCommitOnBranch
-    )
-
-    return createCommitOnBranch
-  } catch (error) {
-    if (error instanceof GraphqlResponseError)
-      logError('createCommitOnBranch', error)
-    throw error
-  }
+  const { createCommitOnBranch } = await execGraphql<{
+    createCommitOnBranch: CreateCommitOnBranchPayload
+  }>('CreateCommitOnBranch', createCommitMutation, { commitInput })
+  return createCommitOnBranch
 }
+
+const createTagMutation = `
+  mutation($tagInput: CreateRefInput!) {
+    createRef(input: $tagInput) {
+      ref {
+        name
+      }
+    }
+  }
+`
 
 export async function createTagOnCommit(
   currentCommit: Commit,
   tag: string,
   repositoryId: string
 ): Promise<CreateRefPayload> {
-  const mutation = `
-    mutation($tagInput: CreateRefInput!) {
-      createRef(input: $tagInput) {
-        ref {
-          name
-        }
-      }
-    }`
-
   const tagInput: CreateRefInput = {
     repositoryId: repositoryId,
     name: `refs/tags/${tag}`,
@@ -171,19 +178,8 @@ export async function createTagOnCommit(
     oid: currentCommit.oid,
   }
 
-  const variables = { tagInput }
-
-  try {
-    const { createRef } = await graphqlClient()<{
-      createRef: CreateRefPayload
-    }>(mutation, variables)
-
-    logSuccess('createTagOnCommit', mutation, variables, createRef)
-
-    return createRef
-  } catch (error) {
-    if (error instanceof GraphqlResponseError)
-      logError('createTagOnCommit', error)
-    throw error
-  }
+  const { createRef } = await execGraphql<{
+    createRef: CreateRefPayload
+  }>('CreateTagOnCommit', createTagMutation, { tagInput })
+  return createRef
 }
