@@ -30804,7 +30804,7 @@ function createCommitOnBranch(currentCommit, commitMessage, branch, fileChanges)
 function createTagOnCommit(currentCommit, tag, repositoryId) {
     return __awaiter(this, void 0, void 0, function* () {
         const mutation = `
-    mutation(tagInput: CreateRefInput!) {
+    mutation($tagInput: CreateRefInput!) {
       createRef(input: $tagInput) {
         ref {
           name
