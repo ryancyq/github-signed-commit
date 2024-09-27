@@ -71,7 +71,9 @@ export async function run(): Promise<void> {
       core.info(`detected ${fileCount.toString()} file changes`)
       core.debug(`detect file changes: ${JSON.stringify(fileChanges)}`)
 
-      if (fileCount > 0) {
+      if (fileCount <= 0) {
+        core.notice(new NoFileChanges().message)
+      } else {
         const commitMessage = core.getInput('commit-message', {
           required: true,
         })
@@ -123,9 +125,13 @@ export async function run(): Promise<void> {
       })
       core.debug('completed commit tag')
     }
+
+    if (filePaths.length <= 0 && !tag) {
+      core.setFailed('Neither files nor tag input has been configured')
+    }
   } catch (error) {
     if (error instanceof NoFileChanges) {
-      core.notice('No changes found')
+      core.notice(error.message)
     } else if (error instanceof Error) {
       core.setFailed(error.message)
     } else {
