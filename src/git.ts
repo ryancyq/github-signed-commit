@@ -9,10 +9,12 @@ import {
 
 import { getWorkspace } from './utils/cwd'
 
-export async function switchBranch(branch: string) {
+async function execGit(args: string[]) {
   const debugOutput: string[] = []
   const warningOutput: string[] = []
-  await exec('git', ['checkout', '-b', branch], {
+  const errorOutput: string[] = []
+
+  await exec('git', args, {
     silent: true,
     ignoreReturnCode: true,
     listeners: {
@@ -20,14 +22,25 @@ export async function switchBranch(branch: string) {
         debugOutput.push(data)
       },
       errline: (error: string) => {
-        if (/^(fatal|error):/.test(error)) core.error(error)
+        if (/^(fatal|error):/.test(error)) errorOutput.push(error)
         else warningOutput.push(error)
       },
     },
   })
 
-  if (debugOutput.length > 0) core.debug(debugOutput.join('\n'))
-  if (warningOutput.length > 0) core.warning(warningOutput.join('\n'))
+  for (const msg of debugOutput) core.debug(msg)
+  for (const msg of warningOutput) core.warning(msg)
+  for (const msg of errorOutput) core.error(msg)
+
+  return {
+    debug: debugOutput,
+    warn: warningOutput,
+    error: errorOutput,
+  }
+}
+
+export async function switchBranch(branch: string) {
+  await execGit(['checkout', '-b', branch])
 }
 
 export async function pushCurrentBranch() {
@@ -36,67 +49,22 @@ export async function pushCurrentBranch() {
     pushArgs.splice(1, 0, '--force')
   }
 
-  const debugOutput: string[] = []
-  const warningOutput: string[] = []
-  await exec('git', pushArgs, {
-    silent: true,
-    ignoreReturnCode: true,
-    listeners: {
-      stdline: (data: string) => {
-        debugOutput.push(data)
-      },
-      errline: (error: string) => {
-        if (/^(fatal|error):/.test(error)) core.error(error)
-        else warningOutput.push(error)
-      },
-    },
-  })
-
-  if (debugOutput.length > 0) core.debug(debugOutput.join('\n'))
-  if (warningOutput.length > 0) core.warning(warningOutput.join('\n'))
+  await execGit(pushArgs)
 }
 
 export async function addFileChanges(globPatterns: string[]): Promise<void> {
   const workspace = getWorkspace()
   const workspacePaths = globPatterns.map((p) => join(workspace, p))
 
-  const debugOutput: string[] = []
-  const warningOutput: string[] = []
-  await exec('git', ['add', '--', ...workspacePaths], {
-    silent: true,
-    ignoreReturnCode: true,
-    listeners: {
-      stdline: (data: string) => {
-        debugOutput.push(data)
-      },
-      errline: (error: string) => {
-        if (/^(fatal|error):/.test(error)) core.error(error)
-        else warningOutput.push(error)
-      },
-    },
-  })
-
-  if (debugOutput.length > 0) core.debug(debugOutput.join('\n'))
-  if (warningOutput.length > 0) core.warning(warningOutput.join('\n'))
+  await execGit(['add', '--', ...workspacePaths])
 }
 
 export async function getFileChanges(): Promise<FileChanges> {
-  const output: string[] = []
-  await exec('git', ['status', '-suall', '--porcelain'], {
-    listeners: {
-      stdline: (data: string) => {
-        output.push(data)
-      },
-      errline: (error: string) => {
-        if (/^(fatal|error):/.test(error)) core.error(error)
-        else core.warning(error)
-      },
-    },
-  })
+  const { debug } = await execGit(['status', '-suall', '--porcelain'])
 
   const additions: FileAddition[] = []
   const deletions: FileDeletion[] = []
-  output.forEach((line) => {
+  debug.forEach((line) => {
     const staged = line.charAt(0)
     const filePath = line.slice(3)
     switch (staged) {
