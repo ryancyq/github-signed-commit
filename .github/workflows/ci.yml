@@ -228,3 +228,46 @@ jobs:
           else
             echo "test branch $BRANCH does not exist"
           fi
+
+  test-action-tag:
+    name: GitHub Actions Test (Tag)
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    needs: test-action-glob
+    env:
+      TAG: v1.2.3
+      BRANCH: test-action-tag
+
+    steps:
+      - name: Checkout
+        id: checkout
+        uses: actions/checkout@v4
+
+      - name: Test Action
+        id: test-action
+        uses: ./
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          branch-name: ${{ env.BRANCH }}
+          tag: ${{ env.TAG }}
+
+      - name: Clean up test action branch
+        shell: bash
+        if: always()
+        run: |
+          test_branch=$(git ls-remote --heads origin refs/heads/$BRANCH)
+          if [[ -n $test_branch ]]; then
+            echo "test branch $BRANCH existed"
+            git push -d origin refs/heads/$BRANCH
+          else
+            echo "test branch $BRANCH does not exist"
+          fi
+          test_tag=$(git ls-remote --tags origin refs/tags/$TAG)
+          if [[ -n $test_tag ]]; then
+            echo "test tag $TAG existed"
+            git push -d origin refs/tags/$TAG
+          else
+            echo "test tag $TAG does not exist"
+          fi
