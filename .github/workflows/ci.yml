@@ -75,7 +75,7 @@ jobs:
         id: output
         run: echo "${{ steps.test-action.outputs.commit-sha }}"
 
-      - name: Clean up test action branch
+      - name: Clean up test action environment
         shell: bash
         if: always()
         run: |
@@ -122,7 +122,7 @@ jobs:
         id: output
         run: echo "${{ steps.test-action.outputs.commit-sha }}"
 
-      - name: Clean up test action branch
+      - name: Clean up test action environment
         shell: bash
         if: always()
         run: |
@@ -170,7 +170,7 @@ jobs:
         id: output
         run: echo "${{ steps.test-action.outputs.commit-sha }}"
 
-      - name: Clean up test action branch
+      - name: Clean up test action environment
         shell: bash
         if: always()
         run: |
@@ -217,7 +217,7 @@ jobs:
         id: output
         run: echo "${{ steps.test-action.outputs.commit-sha }}"
 
-      - name: Clean up test action branch
+      - name: Clean up test action environment
         shell: bash
         if: always()
         run: |
@@ -227,4 +227,153 @@ jobs:
             git push -d origin refs/heads/$BRANCH
           else
             echo "test branch $BRANCH does not exist"
+          fi
+
+  test-action-tag:
+    name: GitHub Actions Test (Tag)
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    needs: test-action-glob
+    env:
+      TAG: v1.2.3
+      BRANCH: test-action-tag
+
+    steps:
+      - name: Checkout
+        id: checkout
+        uses: actions/checkout@v4
+
+      - name: Test Action
+        id: test-action
+        uses: ./
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          branch-name: ${{ env.BRANCH }}
+          tag: ${{ env.TAG }}
+
+      - name: Clean up test action environment
+        shell: bash
+        if: always()
+        run: |
+          test_branch=$(git ls-remote --heads origin refs/heads/$BRANCH)
+          if [[ -n $test_branch ]]; then
+            echo "test branch $BRANCH existed"
+            git push -d origin refs/heads/$BRANCH
+          else
+            echo "test branch $BRANCH does not exist"
+          fi
+          test_tag=$(git ls-remote --tags origin refs/tags/$TAG)
+          if [[ -n $test_tag ]]; then
+            echo "test tag $TAG existed"
+            git push -d origin refs/tags/$TAG
+          else
+            echo "test tag $TAG does not exist"
+          fi
+
+  test-action-file-tag:
+    name: GitHub Actions Test (File & Tag)
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    needs: test-action-tag
+    env:
+      BRANCH: test-action-file-tag
+      TAG: 4.5.6
+
+    steps:
+      - name: Checkout
+        id: checkout
+        uses: actions/checkout@v4
+
+      - name: generate dummy content
+        shell: bash
+        run: |
+          touch test_1.txt && echo 'abc123' > test_1.txt
+          touch test_2.txt && echo 'abc456' > test_2.txt
+
+      - name: Test Action
+        id: test-action
+        uses: ./
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          files: |
+            test*.txt
+          commit-message: Add Dummy Content
+          branch-name: ${{ env.BRANCH }}
+          tag: ${{ env.TAG }}
+
+      - name: Print Action Output
+        id: output
+        run: echo "${{ steps.test-action.outputs.commit-sha }}"
+
+      - name: Clean up test action environment
+        shell: bash
+        if: always()
+        run: |
+          test_branch=$(git ls-remote --heads origin refs/heads/$BRANCH)
+          if [[ -n $test_branch ]]; then
+            echo "test branch $BRANCH existed"
+            git push -d origin refs/heads/$BRANCH
+          else
+            echo "test branch $BRANCH does not exist"
+          fi
+          test_tag=$(git ls-remote --tags origin refs/tags/$TAG)
+          if [[ -n $test_tag ]]; then
+            echo "test tag $TAG existed"
+            git push -d origin refs/tags/$TAG
+          else
+            echo "test tag $TAG does not exist"
+          fi
+
+  test-action-no-file-changes-tag:
+    name: GitHub Actions Test (No File Changes & Tag)
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    needs: test-action-file-tag
+    env:
+      BRANCH: test-action--no-file-changes-tag
+      TAG: 7.8.9
+
+    steps:
+      - name: Checkout
+        id: checkout
+        uses: actions/checkout@v4
+
+      - name: Test Action
+        id: test-action
+        uses: ./
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          files: |
+            test*.txt
+          commit-message: Add Dummy Content
+          branch-name: ${{ env.BRANCH }}
+          tag: ${{ env.TAG }}
+
+      - name: Print Action Output
+        id: output
+        run: echo "${{ steps.test-action.outputs.commit-sha }}"
+
+      - name: Clean up test action environment
+        shell: bash
+        if: always()
+        run: |
+          test_branch=$(git ls-remote --heads origin refs/heads/$BRANCH)
+          if [[ -n $test_branch ]]; then
+            echo "test branch $BRANCH existed"
+            git push -d origin refs/heads/$BRANCH
+          else
+            echo "test branch $BRANCH does not exist"
+          fi
+          test_tag=$(git ls-remote --tags origin refs/tags/$TAG)
+          if [[ -n $test_tag ]]; then
+            echo "test tag $TAG existed"
+            git push -d origin refs/tags/$TAG
+          else
+            echo "test tag $TAG does not exist"
           fi
