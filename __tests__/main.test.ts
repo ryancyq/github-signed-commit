@@ -58,15 +58,10 @@ describe('action', () => {
             if (name == 'tag-only-if-file-changes') return true
             return false
           })
+        jest.spyOn(core, 'getMultilineInput').mockReturnValue(['/test.txt'])
       })
 
       it('skip tag commit', async () => {
-        jest
-          .spyOn(core, 'getMultilineInput')
-          .mockImplementationOnce((name, _option) => {
-            if (name == 'files') return ['/test.txt']
-            return []
-          })
         const addFilesMock = jest
           .spyOn(git, 'addFileChanges')
           .mockResolvedValue()
@@ -97,15 +92,10 @@ describe('action', () => {
             if (name == 'tag-only-if-file-changes') return false
             return true
           })
+        jest.spyOn(core, 'getMultilineInput').mockReturnValue(['/test.txt'])
       })
 
       it('proceed with tag commit', async () => {
-        jest
-          .spyOn(core, 'getMultilineInput')
-          .mockImplementationOnce((name, _option) => {
-            if (name == 'files') return ['/test.txt']
-            return []
-          })
         const addFilesMock = jest
           .spyOn(git, 'addFileChanges')
           .mockResolvedValue()
@@ -465,12 +455,7 @@ describe('action', () => {
       if (name == 'tag') return 'fake-file-tag'
       return ''
     })
-    jest
-      .spyOn(core, 'getMultilineInput')
-      .mockImplementationOnce((name, _options) => {
-        if (name == 'files') return ['/test.txt']
-        return []
-      })
+    jest.spyOn(core, 'getMultilineInput').mockReturnValue(['/test.txt'])
     jest.spyOn(git, 'addFileChanges').mockResolvedValue()
     jest.spyOn(git, 'getFileChanges').mockResolvedValue({
       additions: [{ path: '/test.txt', contents: '' }],
