@@ -30375,7 +30375,7 @@ class Blob {
     }
     get streamable() {
         if (!fs.existsSync(this.absolutePath)) {
-            throw new Error(`File does not exist, path: ${this.absolutePath}.`);
+            throw new Error(`File does not exist, path: ${this.absolutePath}`);
         }
         return fs
             .createReadStream(this.absolutePath, { encoding: 'utf8' })
