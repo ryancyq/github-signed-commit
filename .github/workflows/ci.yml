@@ -332,8 +332,7 @@ jobs:
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
-          files: |
-            test*.txt
+          files: README.md
           commit-message: Add Dummy Content
           branch-name: ${{ env.BRANCH }}
           tag: ${{ env.TAG }}
