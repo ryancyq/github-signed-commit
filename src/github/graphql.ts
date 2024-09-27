@@ -3,9 +3,11 @@ import { GraphqlResponseError } from '@octokit/graphql'
 import {
   Commit,
   CommittableBranch,
-  CreateCommitOnBranchPayload,
   FileChanges,
-  MutationCreateCommitOnBranchArgs,
+  CreateCommitOnBranchInput,
+  CreateCommitOnBranchPayload,
+  CreateRefInput,
+  CreateRefPayload,
 } from '@octokit/graphql-schema'
 
 import { graphqlClient } from './client'
@@ -93,20 +95,11 @@ export async function getRepository(
 }
 
 export async function createCommitOnBranch(
+  currentCommit: Commit,
+  commitMessage: string,
   branch: CommittableBranch,
-  parentCommit: Commit,
   fileChanges: FileChanges
 ): Promise<CreateCommitOnBranchPayload> {
-  const commitMessage = core.getInput('commit-message', { required: true })
-  const mutation = `
-    mutation($input: CreateCommitOnBranchInput!) {
-      createCommitOnBranch(input: $input) {
-        commit {
-          oid
-        }
-      }
-    }`
-
   if (fileChanges.additions) {
     const promises = fileChanges.additions.map((file) =>
       getBlob(file.path).load()
@@ -114,17 +107,28 @@ export async function createCommitOnBranch(
     fileChanges.additions = await Promise.all(promises)
   }
 
-  const variables: MutationCreateCommitOnBranchArgs = {
-    input: {
-      branch,
-      // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
-      expectedHeadOid: parentCommit.oid,
-      message: {
-        headline: commitMessage,
-      },
-      fileChanges,
+  const mutation = `
+    mutation($commitInput: CreateCommitOnBranchInput!) {
+      createCommitOnBranch(input: $commitInput) {
+        commit {
+          oid
+          message
+          committedDate
+        }
+      }
+    }`
+
+  const commitInput: CreateCommitOnBranchInput = {
+    branch,
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
+    expectedHeadOid: currentCommit.oid,
+    message: {
+      headline: commitMessage,
     },
+    fileChanges,
   }
+
+  const variables = { commitInput }
 
   try {
     const { createCommitOnBranch } = await graphqlClient()<{
@@ -142,6 +146,44 @@ export async function createCommitOnBranch(
   } catch (error) {
     if (error instanceof GraphqlResponseError)
       logError('createCommitOnBranch', error)
+    throw error
+  }
+}
+
+export async function createTagOnCommit(
+  currentCommit: Commit,
+  tag: string,
+  repositoryId: string
+): Promise<CreateRefPayload> {
+  const mutation = `
+    mutation(tagInput: CreateRefInput!) {
+      createRef(input: $tagInput) {
+        ref {
+          name
+        }
+      }
+    }`
+
+  const tagInput: CreateRefInput = {
+    repositoryId: repositoryId,
+    name: `refs/tags/${tag}`,
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
+    oid: currentCommit.oid,
+  }
+
+  const variables = { tagInput }
+
+  try {
+    const { createRef } = await graphqlClient()<{
+      createRef: CreateRefPayload
+    }>(mutation, variables)
+
+    logSuccess('createTagOnCommit', mutation, variables, createRef)
+
+    return createRef
+  } catch (error) {
+    if (error instanceof GraphqlResponseError)
+      logError('createTagOnCommit', error)
     throw error
   }
 }

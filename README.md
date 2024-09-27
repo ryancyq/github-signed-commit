@@ -12,6 +12,7 @@ Works with the [GitHub GraphQL API](https://docs.github.com/en/graphql).
 - Uses the Git CLI to detect file changes against the file paths provided in the input.
 - Uses a single GraphQL mutation request to upload all blob file content.
 - Supports glob patterns for file paths.
+- Push tag to the new/current commit on a branch.
 
 ## Known Limitation
 Does not support HTTP request streaming, so the action runner will consume more memory during execution when uploading large blob files.
@@ -37,6 +38,22 @@ jobs:
         commit-message: Committing files
 ```
 
+```yaml
+jobs:
+  <job-id>:
+    permissions:
+      contents: write # grant secrets.GITHUB_TOKEN permission to push file changes
+  
+    - name: Commit file
+      uses: ryancyq/github-signed-commit@v1
+      env:
+        GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      with:
+        files: path/to/myversion
+        commit-message: Release new version
+        tag: v1.0.3
+```
+
 Note: The `GH_TOKEN` environment variable is **required** for GitHub API request authentication.
 
 ## Inputs
@@ -47,6 +64,8 @@ Note: The `GH_TOKEN` environment variable is **required** for GitHub API request
 | `commit-message` | **YES** | Commit message for the file changes. |
 | `branch-name` | **NO** | Branch to commit, it must already exist in the remote. **DEFAULT:** Workflow triggered branch |
 | `branch-push-force` | **NO** | `--force` flag when running `git push <branch-name>`. |
+| `tag` | **NO** | Push tag for the new/current commit. |
+| `tag-only-if-file-changes` | **NO** | Push tag for new commit only when file changes present. **DEFAULT:** true |
 
 ## Outputs
 | Output | Description |
