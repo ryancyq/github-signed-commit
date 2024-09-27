@@ -29,10 +29,50 @@ describe('Git CLI', () => {
       )
     })
 
+    it('should log debug', async () => {
+      const execMock = jest
+        .spyOn(exec, 'exec')
+        .mockImplementationOnce(async (cmd, args, options) => {
+          const io = options?.listeners?.stdline
+          if (io) {
+            io.call(this, 'git checkout debug log message')
+            return 0
+          }
+          return 0
+        })
+
+      const debugMock = jest.spyOn(core, 'debug').mockReturnValue()
+
+      await switchBranch('new-branch')
+      expect(execMock).toHaveBeenCalled()
+      expect(debugMock).toHaveBeenCalledWith('git checkout debug log message')
+    })
+
+    it('should log warning', async () => {
+      const execMock = jest
+        .spyOn(exec, 'exec')
+        .mockImplementationOnce(async (cmd, args, options) => {
+          const io = options?.listeners?.errline
+          if (io) {
+            io.call(this, "Switched to a new branch 'new-branch'")
+            return 1
+          }
+          return 0
+        })
+
+      const warningMock = jest.spyOn(core, 'warning').mockReturnValue()
+
+      await switchBranch('new-branch')
+      expect(execMock).toHaveBeenCalled()
+      expect(warningMock).toHaveBeenCalledWith(
+        "Switched to a new branch 'new-branch'"
+      )
+    })
+
     it('should log error', async () => {
       const execMock = jest
         .spyOn(exec, 'exec')
-        .mockImplementation(async (cmd, args, options) => {
+        .mockImplementationOnce(async (cmd, args, options) => {
           const io = options?.listeners?.errline
           if (io) {
             io.call(this, "fatal: 'new-branch' is invalid")
@@ -83,10 +123,48 @@ describe('Git CLI', () => {
       expect(getInput).toHaveBeenCalledWith('branch-push-force')
     })
 
+    it('should log debug', async () => {
+      const execMock = jest
+        .spyOn(exec, 'exec')
+        .mockImplementationOnce(async (cmd, args, options) => {
+          const io = options?.listeners?.stdline
+          if (io) {
+            io.call(this, 'git push debug log message')
+            return 0
+          }
+          return 0
+        })
+
+      const debugMock = jest.spyOn(core, 'debug').mockReturnValue()
+
+      await pushCurrentBranch()
+      expect(execMock).toHaveBeenCalled()
+      expect(debugMock).toHaveBeenCalledWith('git push debug log message')
+    })
+
+    it('should log warning', async () => {
+      const execMock = jest
+        .spyOn(exec, 'exec')
+        .mockImplementationOnce(async (cmd, args, options) => {
+          const io = options?.listeners?.errline
+          if (io) {
+            io.call(this, 'git push warning log message')
+            return 1
+          }
+          return 0
+        })
+
+      const warningMock = jest.spyOn(core, 'warning').mockReturnValue()
+
+      await pushCurrentBranch()
+      expect(execMock).toHaveBeenCalled()
+      expect(warningMock).toHaveBeenCalledWith('git push warning log message')
+    })
+
     it('should log error', async () => {
       const execMock = jest
         .spyOn(exec, 'exec')
-        .mockImplementation(async (cmd, args, options) => {
+        .mockImplementationOnce(async (cmd, args, options) => {
           const io = options?.listeners?.errline
           if (io) {
             io.call(this, "fatal: 'new-branch' is rejected")
@@ -122,10 +200,48 @@ describe('Git CLI', () => {
       )
     })
 
+    it('should log debug', async () => {
+      const execMock = jest
+        .spyOn(exec, 'exec')
+        .mockImplementationOnce(async (cmd, args, options) => {
+          const io = options?.listeners?.stdline
+          if (io) {
+            io.call(this, 'git add debug log message')
+            return 0
+          }
+          return 0
+        })
+
+      const debugMock = jest.spyOn(core, 'debug').mockReturnValue()
+
+      await addFileChanges(['*.ts'])
+      expect(execMock).toHaveBeenCalled()
+      expect(debugMock).toHaveBeenCalledWith('git add debug log message')
+    })
+
+    it('should log warning', async () => {
+      const execMock = jest
+        .spyOn(exec, 'exec')
+        .mockImplementationOnce(async (cmd, args, options) => {
+          const io = options?.listeners?.errline
+          if (io) {
+            io.call(this, 'git add warning log message')
+            return 1
+          }
+          return 0
+        })
+
+      const warningMock = jest.spyOn(core, 'warning').mockReturnValue()
+
+      await addFileChanges(['*.ts'])
+      expect(execMock).toHaveBeenCalled()
+      expect(warningMock).toHaveBeenCalledWith('git add warning log message')
+    })
+
     it('should log error', async () => {
       const execMock = jest
         .spyOn(exec, 'exec')
-        .mockImplementation(async (cmd, args, options) => {
+        .mockImplementationOnce(async (cmd, args, options) => {
           const io = options?.listeners?.errline
           if (io) {
             io.call(this, "fatal: pathspec 'main.ts' did not match any files")
@@ -135,6 +251,7 @@ describe('Git CLI', () => {
         })
 
       const errorMock = jest.spyOn(core, 'error').mockReturnValue()
+
       await addFileChanges(['*.ts'])
       expect(execMock).toHaveBeenCalled()
       expect(errorMock).toHaveBeenCalledWith(
@@ -155,12 +272,10 @@ describe('Git CLI', () => {
       'A  tests/run.test.ts',
     ]
 
-    beforeEach(() => {})
-
     it('should parse ouput into file changes', async () => {
       const execMock = jest
         .spyOn(exec, 'exec')
-        .mockImplementation(async (cmd, args, options) => {
+        .mockImplementationOnce(async (cmd, args, options) => {
           const io = options?.listeners?.stdline
           if (io) {
             gitStatus.forEach((o) => io.call(this, o))
@@ -198,6 +313,46 @@ describe('Git CLI', () => {
       )
       expect(changes.deletions).toContainEqual(
         expect.objectContaining({ path: 'tests/runner.test.ts' })
+      )
+    })
+
+    it('should log warning', async () => {
+      const execMock = jest
+        .spyOn(exec, 'exec')
+        .mockImplementationOnce(async (cmd, args, options) => {
+          const io = options?.listeners?.errline
+          if (io) {
+            io.call(this, 'git status warning log message')
+            return 1
+          }
+          return 0
+        })
+
+      const warningMock = jest.spyOn(core, 'warning').mockReturnValue()
+
+      await getFileChanges()
+      expect(execMock).toHaveBeenCalled()
+      expect(warningMock).toHaveBeenCalledWith('git status warning log message')
+    })
+
+    it('should log error', async () => {
+      const execMock = jest
+        .spyOn(exec, 'exec')
+        .mockImplementationOnce(async (cmd, args, options) => {
+          const io = options?.listeners?.errline
+          if (io) {
+            io.call(this, 'fatal: git status error log message')
+            return 1
+          }
+          return 0
+        })
+
+      const errorMock = jest.spyOn(core, 'error').mockReturnValue()
+
+      await getFileChanges()
+      expect(execMock).toHaveBeenCalled()
+      expect(errorMock).toHaveBeenCalledWith(
+        'fatal: git status error log message'
       )
     })
   })
