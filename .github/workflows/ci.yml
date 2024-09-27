@@ -22,30 +22,24 @@ jobs:
 
     steps:
       - name: Checkout
-        id: checkout
         uses: actions/checkout@v4
 
       - name: Setup Node.js
-        id: setup-node
         uses: actions/setup-node@v4
         with:
           node-version-file: .node-version
           cache: npm
 
       - name: Install Dependencies
-        id: npm-ci
         run: npm ci
 
       - name: Check Format
-        id: npm-format-check
         run: npm run format:check
 
       - name: Lint
-        id: npm-lint
         run: npm run lint
 
       - name: Test
-        id: npm-ci-test
         run: npm run ci-test
 
   test-action-basic:
@@ -58,7 +52,6 @@ jobs:
 
     steps:
       - name: Checkout
-        id: checkout
         uses: actions/checkout@v4
 
       - name: Test Action
@@ -72,7 +65,6 @@ jobs:
           commit-message: Add Dummy Content
 
       - name: Print Action Output
-        id: output
         run: echo "${{ steps.test-action.outputs.commit-sha }}"
 
       - name: Clean up test action environment
@@ -98,7 +90,6 @@ jobs:
 
     steps:
       - name: Checkout
-        id: checkout
         uses: actions/checkout@v4
 
       - name: generate dummy content
@@ -119,7 +110,6 @@ jobs:
           branch-push-force: true
 
       - name: Print Action Output
-        id: output
         run: echo "${{ steps.test-action.outputs.commit-sha }}"
 
       - name: Clean up test action environment
@@ -145,7 +135,6 @@ jobs:
 
     steps:
       - name: Checkout
-        id: checkout
         uses: actions/checkout@v4
 
       - name: generate dummy content
@@ -167,7 +156,6 @@ jobs:
           workspace: dummy
 
       - name: Print Action Output
-        id: output
         run: echo "${{ steps.test-action.outputs.commit-sha }}"
 
       - name: Clean up test action environment
@@ -193,7 +181,6 @@ jobs:
 
     steps:
       - name: Checkout
-        id: checkout
         uses: actions/checkout@v4
 
       - name: generate dummy content
@@ -214,7 +201,6 @@ jobs:
           branch-name: ${{ env.BRANCH }}
 
       - name: Print Action Output
-        id: output
         run: echo "${{ steps.test-action.outputs.commit-sha }}"
 
       - name: Clean up test action environment
@@ -241,7 +227,6 @@ jobs:
 
     steps:
       - name: Checkout
-        id: checkout
         uses: actions/checkout@v4
 
       - name: Test Action
@@ -306,7 +291,6 @@ jobs:
           tag: ${{ env.TAG }}
 
       - name: Print Action Output
-        id: output
         run: echo "${{ steps.test-action.outputs.commit-sha }}"
 
       - name: Clean up test action environment
@@ -335,12 +319,11 @@ jobs:
       contents: write
     needs: test-action-file-tag
     env:
-      BRANCH: test-action--no-file-changes-tag
+      BRANCH: test-action-no-file-changes-tag
       TAG: 7.8.9
 
     steps:
       - name: Checkout
-        id: checkout
         uses: actions/checkout@v4
 
       - name: Test Action
@@ -349,14 +332,12 @@ jobs:
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
-          files: |
-            test*.txt
+          files: README.md
           commit-message: Add Dummy Content
           branch-name: ${{ env.BRANCH }}
           tag: ${{ env.TAG }}
 
       - name: Print Action Output
-        id: output
         run: echo "${{ steps.test-action.outputs.commit-sha }}"
 
       - name: Clean up test action environment
