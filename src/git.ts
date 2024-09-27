@@ -52,19 +52,17 @@ export async function pushCurrentBranch() {
   await execGit(pushArgs)
 }
 
-export async function addFileChanges(globPatterns: string[]): Promise<void> {
+export async function addFileChanges(globPatterns: string[]) {
   const workspace = getWorkspace()
   const workspacePaths = globPatterns.map((p) => join(workspace, p))
 
   await execGit(['add', '--', ...workspacePaths])
 }
 
-export async function getFileChanges(): Promise<FileChanges> {
-  const { debug } = await execGit(['status', '-suall', '--porcelain'])
-
+function processFileChanges(output: string[]) {
   const additions: FileAddition[] = []
   const deletions: FileDeletion[] = []
-  debug.forEach((line) => {
+  for (const line of output) {
     const staged = line.charAt(0)
     const filePath = line.slice(3)
     switch (staged) {
@@ -85,8 +83,13 @@ export async function getFileChanges(): Promise<FileChanges> {
         break
       }
     }
-  })
+  }
+  return { additions, deletions }
+}
 
+export async function getFileChanges(): Promise<FileChanges> {
+  const { debug } = await execGit(['status', '-suall', '--porcelain'])
+  const { additions, deletions } = processFileChanges(debug)
   const filesChanges: FileChanges = {}
   if (additions.length > 0) {
     filesChanges.additions = additions
