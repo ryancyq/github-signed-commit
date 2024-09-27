@@ -238,6 +238,11 @@ jobs:
           branch-name: ${{ env.BRANCH }}
           tag: ${{ env.TAG }}
 
+      - name: Print Action Output
+        run: |
+          echo "[commit] ${{ steps.test-action.outputs.commit-sha }}"
+          echo "[tag] ${{ steps.test-action.outputs.tag }}"
+
       - name: Clean up test action environment
         shell: bash
         if: always()
@@ -291,7 +296,9 @@ jobs:
           tag: ${{ env.TAG }}
 
       - name: Print Action Output
-        run: echo "${{ steps.test-action.outputs.commit-sha }}"
+        run: |
+          echo "[commit] ${{ steps.test-action.outputs.commit-sha }}"
+          echo "[tag] ${{ steps.test-action.outputs.tag }}"
 
       - name: Clean up test action environment
         shell: bash
@@ -338,7 +345,9 @@ jobs:
           tag: ${{ env.TAG }}
 
       - name: Print Action Output
-        run: echo "${{ steps.test-action.outputs.commit-sha }}"
+        run: |
+          echo "[commit] ${{ steps.test-action.outputs.commit-sha }}"
+          echo "[tag] ${{ steps.test-action.outputs.tag }}"
 
       - name: Clean up test action environment
         shell: bash
