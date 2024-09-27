@@ -42,7 +42,9 @@ inputs:
 
 outputs:
   commit-sha:
-    description: commit SHA of files or tag
+    description: Full SHA of the signed commit.
+  tag:
+    description: Tag of the signed commit.
 
 runs:
   using: node20
