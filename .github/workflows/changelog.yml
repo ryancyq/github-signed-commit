@@ -23,12 +23,13 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - uses: actions/setup-node@v4
+      - uses: orhun/git-cliff-action@v3
         with:
-          node-version: 20
-
-      - run: npm install git-cliff
-      - run: git cliff -o CHANGELOG.md v1.0.0..HEAD
+          config: cliff.toml
+          args: v1.0.0..HEAD
+        env:
+          OUTPUT: CHANGELOG.md
+          GITHUB_REPO: ${{ github.repository }}
 
       - uses: ryancyq/github-signed-commit@v1
         env:
