@@ -88,7 +88,7 @@ function processFileChanges(output: string[]) {
 }
 
 export async function getFileChanges(): Promise<FileChanges> {
-  const { debug } = await execGit(['status', '-suall', '--porcelain'])
+  const { debug } = await execGit(['status', '-suno', '--porcelain'])
   const { additions, deletions } = processFileChanges(debug)
   const filesChanges: FileChanges = {}
   if (additions.length > 0) {

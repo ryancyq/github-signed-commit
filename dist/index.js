@@ -30578,7 +30578,7 @@ function processFileChanges(output) {
 }
 function getFileChanges() {
     return __awaiter(this, void 0, void 0, function* () {
-        const { debug } = yield execGit(['status', '-suall', '--porcelain']);
+        const { debug } = yield execGit(['status', '-suno', '--porcelain']);
         const { additions, deletions } = processFileChanges(debug);
         const filesChanges = {};
         if (additions.length > 0) {

@@ -19,7 +19,6 @@ describe('Git CLI', () => {
       const execMock = jest.spyOn(exec, 'exec').mockResolvedValue(0)
 
       await switchBranch('new-branch')
-      expect(execMock).toHaveBeenCalled()
       expect(execMock).toHaveBeenCalledWith(
         'git',
         ['checkout', '-b', 'new-branch'],
@@ -97,7 +96,6 @@ describe('Git CLI', () => {
         .mockReturnValue(false)
 
       await pushCurrentBranch()
-      expect(execMock).toHaveBeenCalled()
       expect(execMock).toHaveBeenCalledWith(
         'git',
         ['push', '--porcelain', '--set-upstream', 'origin', 'HEAD'],
@@ -190,7 +188,6 @@ describe('Git CLI', () => {
       const execMock = jest.spyOn(exec, 'exec').mockResolvedValue(0)
 
       await addFileChanges(['*.ts', '~/.bashrc'])
-      expect(execMock).toHaveBeenCalled()
       expect(execMock).toHaveBeenCalledWith(
         'git',
         ['add', '--', '/test-workspace/*.ts', '/test-workspace/~/.bashrc'],
@@ -284,7 +281,13 @@ describe('Git CLI', () => {
         })
 
       const changes = await getFileChanges()
-      expect(execMock).toHaveBeenCalled()
+      expect(execMock).toHaveBeenCalledWith(
+        'git',
+        ['status', '-suno', '--porcelain'],
+        expect.objectContaining({
+          listeners: { stdline: expect.anything(), errline: expect.anything() },
+        })
+      )
       expect(changes).toBeDefined()
       expect(changes.additions).toBeDefined()
       expect(changes.additions).toHaveLength(5)
