@@ -34,7 +34,7 @@ describe('GitHub Client', () => {
   it('should set user-agent', async () => {
     expect(graphqlClient().endpoint.DEFAULTS.headers).toHaveProperty(
       'user-agent',
-      '@ryancyq/github-signed-commit/1.1.0'
+      `${process.env.npm_package_name}/${process.env.npm_package_version}`
     )
   })
 })
