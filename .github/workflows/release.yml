@@ -18,6 +18,8 @@ env:
 jobs:
   github-actions:
     runs-on: ubuntu-latest
+    permissions:
+      contents: write
     steps:
       - uses: actions/checkout@v4
 
@@ -27,11 +29,11 @@ jobs:
 
       - run: npm version --no-git-tag-version ${{ env.NPM_VERSION }}
 
-      - name: Commit Gemfile.lock & lib/rodiff/version.rb
+      - name: Commit package.json
         uses: ryancyq/github-signed-commit@v1
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           files: package*.json
-          commit-message: Bump version for ${{ env.NPM_VERSION }}
+          commit-message: "release: Bump version for ${{ env.NPM_VERSION }}"
           tag: v${{ env.NPM_VERSION }}
