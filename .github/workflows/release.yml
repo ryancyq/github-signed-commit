@@ -1,17 +1,37 @@
-name: Generate Release PR
-on:
-  push:
-    branches: [main]
+name: Release Version
+run-name: Release Version ${{ inputs.version }}
+concurrency:
+  group: release-new-version
+  cancel-in-progress: true
 
-permissions:
-  contents: write
-  pull-requests: write
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: NPM Version
+        required: true
+        type: string
+
+env:
+  NPM_VERSION: ${{ inputs.version }}
 
 jobs:
-  release-please:
+  github-actions:
     runs-on: ubuntu-latest
     steps:
-      - uses: googleapis/release-please-action@v4
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
         with:
-          token: ${{ secrets.GITHUB_TOKEN }}
-          release-type: node
+          node-version: 20
+
+      - run: npm version --no-git-tag-version ${{ env.NPM_VERSION }}
+
+      - name: Commit Gemfile.lock & lib/rodiff/version.rb
+        uses: ryancyq/github-signed-commit@v1
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          files: package*.json
+          commit-message: Bump version for ${{ env.NPM_VERSION }}
+          tag: v${{ env.NPM_VERSION }}
