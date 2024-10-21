@@ -30,7 +30,7 @@
     "@actions/exec": "^1.1.0",
     "@actions/github": "^6.0.0",
     "@octokit/graphql-schema": "^15.25.0",
-    "@types/node": "^22.7.4"
+    "@types/node": "^22.7.7"
   },
   "devDependencies": {
     "@tsconfig/recommended": "^1.0.7",
