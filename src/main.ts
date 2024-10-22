@@ -23,18 +23,28 @@ import {
 
 export async function run(): Promise<void> {
   try {
+    core.info('Getting info from context')
     const { owner, repo, branch } = getContext()
+
+    core.debug('Setting branch according to input and context')
     const inputBranch = getInput('branch-name')
     if (inputBranch && inputBranch !== branch) {
       await switchBranch(inputBranch)
       await pushCurrentBranch()
     }
     const currentBranch = inputBranch ? inputBranch : branch
+
+    const inputOwner = getInput('owner')
+    const currentOwner = inputOwner ? inputOwner : owner
+
+    const inputRepo = getInput('repo')
+    const currentRepo = inputRepo ? inputRepo : repo
+
     const repository = await core.group(
-      `fetching repository info for owner: ${owner}, repo: ${repo}, branch: ${currentBranch}`,
+      `fetching repository info for owner: ${currentOwner}, repo: ${currentRepo}, branch: ${currentBranch}`,
       async () => {
         const startTime = Date.now()
-        const repositoryData = await getRepository(owner, repo, currentBranch)
+        const repositoryData = await getRepository(currentOwner, currentRepo, currentBranch)
         const endTime = Date.now()
         core.debug(`time taken: ${(endTime - startTime).toString()} ms`)
         return repositoryData
