@@ -30387,16 +30387,22 @@ function run() {
     return __awaiter(this, void 0, void 0, function* () {
         var _a, _b, _c, _d, _e, _f;
         try {
+            core.info('Getting info from context');
             const { owner, repo, branch } = (0, repo_1.getContext)();
+            core.debug('Setting branch according to input and context');
             const inputBranch = (0, input_1.getInput)('branch-name');
             if (inputBranch && inputBranch !== branch) {
                 yield (0, git_1.switchBranch)(inputBranch);
                 yield (0, git_1.pushCurrentBranch)();
             }
             const currentBranch = inputBranch ? inputBranch : branch;
-            const repository = yield core.group(`fetching repository info for owner: ${owner}, repo: ${repo}, branch: ${currentBranch}`, () => __awaiter(this, void 0, void 0, function* () {
+            const inputOwner = (0, input_1.getInput)('owner');
+            const currentOwner = inputOwner ? inputOwner : owner;
+            const inputRepo = (0, input_1.getInput)('repo');
+            const currentRepo = inputRepo ? inputRepo : repo;
+            const repository = yield core.group(`fetching repository info for owner: ${currentOwner}, repo: ${currentRepo}, branch: ${currentBranch}`, () => __awaiter(this, void 0, void 0, function* () {
                 const startTime = Date.now();
-                const repositoryData = yield (0, graphql_1.getRepository)(owner, repo, currentBranch);
+                const repositoryData = yield (0, graphql_1.getRepository)(currentOwner, currentRepo, currentBranch);
                 const endTime = Date.now();
                 core.debug(`time taken: ${(endTime - startTime).toString()} ms`);
                 return repositoryData;
