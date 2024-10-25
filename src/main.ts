@@ -44,7 +44,11 @@ export async function run(): Promise<void> {
       `fetching repository info for owner: ${currentOwner}, repo: ${currentRepo}, branch: ${currentBranch}`,
       async () => {
         const startTime = Date.now()
-        const repositoryData = await getRepository(currentOwner, currentRepo, currentBranch)
+        const repositoryData = await getRepository(
+          currentOwner,
+          currentRepo,
+          currentBranch
+        )
         const endTime = Date.now()
         core.debug(`time taken: ${(endTime - startTime).toString()} ms`)
         return repositoryData

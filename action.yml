@@ -14,7 +14,7 @@ inputs:
     description: |
       Directory containing files to be committed. Default: GitHub workspace directory (root of repository).
     required: false
-    default: ""
+    default: ''
   commit-message:
     description: |
       Commit message for the file changes.
@@ -31,7 +31,7 @@ inputs:
     description: |
       Branch to commit to. Default: Workflow triggered branch.
     required: false
-    default: ""
+    default: ''
   branch-push-force:
     description: |
       --force flag when running git push <branch-name>.
@@ -41,7 +41,7 @@ inputs:
     description: |
       Push tag for the new/current commit.
     required: false
-    default: ""
+    default: ''
   tag-only-if-file-changes:
     description: |
       Push tag for new commit only when file changes present.
