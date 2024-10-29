@@ -23,31 +23,41 @@ import {
 
 export async function run(): Promise<void> {
   try {
-    core.info('Getting info from context')
+    core.info('Getting info from GH Worklfow context')
     const { owner, repo, branch } = getContext()
 
-    core.debug('Setting branch according to input and context')
+    core.info('Setting variables according to inputs and context')
+    core.debug('* branch')
     const inputBranch = getInput('branch-name')
-    if (inputBranch && inputBranch !== branch) {
-      await switchBranch(inputBranch)
+    const selectedBranch = inputBranch ? inputBranch : branch
+
+    core.debug('* owner')
+    const inputOwner = getInput('owner')
+    const selectedOwner = inputOwner ? inputOwner : owner
+
+    core.debug('* repo')
+    const inputRepo = getInput('repo')
+    const selectedRepo = inputRepo ? inputRepo : repo
+
+    core.warning('Pushing local and current branch to remote before proceeding')
+    if (
+      selectedOwner == owner &&
+      selectedRepo == repo &&
+      selectedBranch !== branch
+    ) {
+      // Git commands
+      await switchBranch(selectedBranch)
       await pushCurrentBranch()
     }
-    const currentBranch = inputBranch ? inputBranch : branch
-
-    const inputOwner = getInput('owner')
-    const currentOwner = inputOwner ? inputOwner : owner
-
-    const inputRepo = getInput('repo')
-    const currentRepo = inputRepo ? inputRepo : repo
 
     const repository = await core.group(
-      `fetching repository info for owner: ${currentOwner}, repo: ${currentRepo}, branch: ${currentBranch}`,
+      `fetching repository info for owner: ${selectedOwner}, repo: ${selectedRepo}, branch: ${selectedBranch}`,
       async () => {
         const startTime = Date.now()
         const repositoryData = await getRepository(
-          currentOwner,
-          currentRepo,
-          currentBranch
+          selectedOwner,
+          selectedRepo,
+          selectedBranch
         )
         const endTime = Date.now()
         core.debug(`time taken: ${(endTime - startTime).toString()} ms`)
@@ -55,14 +65,17 @@ export async function run(): Promise<void> {
       }
     )
 
+    core.info('Checking remote branches')
     if (!repository.ref) {
-      if (inputBranch && currentBranch == inputBranch) {
+      if (inputBranch) {
         throw new InputBranchNotFound(inputBranch)
       } else {
-        throw new BranchNotFound(currentBranch)
+        throw new BranchNotFound(branch)
       }
     }
 
+    core.info('Processing to create signed commit')
+    core.debug('Get last (current?) commit')
     const currentCommit = repository.ref.target.history?.nodes?.[0]
     if (!currentCommit) {
       throw new BranchCommitNotFound(repository.ref.name)
@@ -103,7 +116,7 @@ export async function run(): Promise<void> {
               commitMessage,
               {
                 repositoryNameWithOwner: repository.nameWithOwner,
-                branchName: currentBranch,
+                branchName: selectedBranch,
               },
               fileChanges
             )

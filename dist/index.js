@@ -30387,34 +30387,44 @@ function run() {
     return __awaiter(this, void 0, void 0, function* () {
         var _a, _b, _c, _d, _e, _f;
         try {
-            core.info('Getting info from context');
+            core.info('Getting info from GH Worklfow context');
             const { owner, repo, branch } = (0, repo_1.getContext)();
-            core.debug('Setting branch according to input and context');
+            core.info('Setting variables according to inputs and context');
+            core.debug('* branch');
             const inputBranch = (0, input_1.getInput)('branch-name');
-            if (inputBranch && inputBranch !== branch) {
-                yield (0, git_1.switchBranch)(inputBranch);
+            const selectedBranch = inputBranch ? inputBranch : branch;
+            core.debug('* owner');
+            const inputOwner = (0, input_1.getInput)('owner');
+            const selectedOwner = inputOwner ? inputOwner : owner;
+            core.debug('* repo');
+            const inputRepo = (0, input_1.getInput)('repo');
+            const selectedRepo = inputRepo ? inputRepo : repo;
+            core.warning('Pushing local and current branch to remote before proceeding');
+            if (selectedOwner == owner &&
+                selectedRepo == repo &&
+                selectedBranch !== branch) {
+                // Git commands
+                yield (0, git_1.switchBranch)(selectedBranch);
                 yield (0, git_1.pushCurrentBranch)();
             }
-            const currentBranch = inputBranch ? inputBranch : branch;
-            const inputOwner = (0, input_1.getInput)('owner');
-            const currentOwner = inputOwner ? inputOwner : owner;
-            const inputRepo = (0, input_1.getInput)('repo');
-            const currentRepo = inputRepo ? inputRepo : repo;
-            const repository = yield core.group(`fetching repository info for owner: ${currentOwner}, repo: ${currentRepo}, branch: ${currentBranch}`, () => __awaiter(this, void 0, void 0, function* () {
+            const repository = yield core.group(`fetching repository info for owner: ${selectedOwner}, repo: ${selectedRepo}, branch: ${selectedBranch}`, () => __awaiter(this, void 0, void 0, function* () {
                 const startTime = Date.now();
-                const repositoryData = yield (0, graphql_1.getRepository)(currentOwner, currentRepo, currentBranch);
+                const repositoryData = yield (0, graphql_1.getRepository)(selectedOwner, selectedRepo, selectedBranch);
                 const endTime = Date.now();
                 core.debug(`time taken: ${(endTime - startTime).toString()} ms`);
                 return repositoryData;
             }));
+            core.info('Checking remote branches');
             if (!repository.ref) {
-                if (inputBranch && currentBranch == inputBranch) {
+                if (inputBranch) {
                     throw new errors_1.InputBranchNotFound(inputBranch);
                 }
                 else {
-                    throw new errors_1.BranchNotFound(currentBranch);
+                    throw new errors_1.BranchNotFound(branch);
                 }
             }
+            core.info('Processing to create signed commit');
+            core.debug('Get last (current?) commit');
             const currentCommit = (_b = (_a = repository.ref.target.history) === null || _a === void 0 ? void 0 : _a.nodes) === null || _b === void 0 ? void 0 : _b[0];
             if (!currentCommit) {
                 throw new errors_1.BranchCommitNotFound(repository.ref.name);
@@ -30447,7 +30457,7 @@ function run() {
                         const startTime = Date.now();
                         const commitData = yield (0, graphql_1.createCommitOnBranch)(currentCommit, commitMessage, {
                             repositoryNameWithOwner: repository.nameWithOwner,
-                            branchName: currentBranch,
+                            branchName: selectedBranch,
                         }, fileChanges);
                         const endTime = Date.now();
                         core.debug(`time taken: ${(endTime - startTime).toString()} ms`);
