@@ -30381,6 +30381,7 @@ const core = __importStar(__nccwpck_require__(7484));
 const graphql_1 = __nccwpck_require__(1422);
 const repo_1 = __nccwpck_require__(1839);
 const git_1 = __nccwpck_require__(1243);
+const cwd_1 = __nccwpck_require__(9827);
 const input_1 = __nccwpck_require__(7797);
 const errors_1 = __nccwpck_require__(3916);
 function run() {
@@ -30432,10 +30433,16 @@ function run() {
             let createdCommit;
             const filePaths = core.getMultilineInput('files');
             if (filePaths.length <= 0) {
-                core.debug('skip file commit, empty files input');
+                core.notice('skip file commit, empty files input');
             }
             else {
-                core.debug(`proceed with file commit, input: ${JSON.stringify(filePaths)}`);
+                core.debug(`Proceed with file commit, input: ${JSON.stringify(filePaths)}`);
+                const workdir = (0, cwd_1.getWorkdir)();
+                const cwd = (0, cwd_1.getCwd)();
+                if (cwd !== workdir) {
+                    core.notice('Changing working directory to Workdir: ' + workdir);
+                    process.chdir(workdir);
+                }
                 yield (0, git_1.addFileChanges)(filePaths);
                 const fileChanges = yield (0, git_1.getFileChanges)();
                 const fileCount = ((_d = (_c = fileChanges.additions) === null || _c === void 0 ? void 0 : _c.length) !== null && _d !== void 0 ? _d : 0) +
@@ -30581,6 +30588,7 @@ var __importStar = (this && this.__importStar) || function (mod) {
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.getCwd = getCwd;
 exports.getWorkspace = getWorkspace;
+exports.getWorkdir = getWorkdir;
 const core = __importStar(__nccwpck_require__(7484));
 const input_1 = __nccwpck_require__(7797);
 function getCwd() {
@@ -30594,6 +30602,13 @@ function getWorkspace() {
     });
     core.debug(`workspace: ${workspace}`);
     return workspace;
+}
+function getWorkdir() {
+    const workdir = (0, input_1.getInput)('workdir', {
+        default: process.env.GITHUB_WORKSPACE,
+    });
+    core.debug(`workdir: ${workdir}`);
+    return workdir;
 }
 
 

@@ -13,6 +13,7 @@ import {
   pushCurrentBranch,
   switchBranch,
 } from './git'
+import { getCwd, getWorkdir } from './utils/cwd'
 import { getInput } from './utils/input'
 import {
   NoFileChanges,
@@ -84,11 +85,18 @@ export async function run(): Promise<void> {
     let createdCommit: Commit | undefined
     const filePaths = core.getMultilineInput('files')
     if (filePaths.length <= 0) {
-      core.debug('skip file commit, empty files input')
+      core.notice('skip file commit, empty files input')
     } else {
       core.debug(
-        `proceed with file commit, input: ${JSON.stringify(filePaths)}`
+        `Proceed with file commit, input: ${JSON.stringify(filePaths)}`
       )
+
+      const workdir = getWorkdir()
+      const cwd = getCwd()
+      if (cwd !== workdir) {
+        core.notice('Changing working directory to Workdir: ' + workdir)
+        process.chdir(workdir)
+      }
 
       await addFileChanges(filePaths)
       const fileChanges = await getFileChanges()

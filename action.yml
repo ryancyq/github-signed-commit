@@ -15,6 +15,11 @@ inputs:
       Directory containing files to be committed. Default: GitHub workspace directory (root of repository).
     required: false
     default: ''
+  workdir:
+    description: |
+      Directory where the action should run. Default: GitHub workspace directory (root of repository from where the GH Workflow is triggered).
+    required: false
+    default: ''
   commit-message:
     description: |
       Commit message for the file changes.
