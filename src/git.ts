@@ -1,19 +1,20 @@
 import * as core from '@actions/core'
 import { exec } from '@actions/exec'
-import { join } from 'node:path'
+import { join, relative, resolve } from 'node:path'
 import {
   FileChanges,
   FileAddition,
   FileDeletion,
 } from '@octokit/graphql-schema'
 
-import { getWorkspace } from './utils/cwd'
+import { getCwd, getWorkspace } from './utils/cwd'
 
 async function execGit(args: string[]) {
   const debugOutput: string[] = []
   const warningOutput: string[] = []
   const errorOutput: string[] = []
 
+  core.debug('execGit() - args: ' + JSON.stringify(args))
   await exec('git', args, {
     silent: true,
     ignoreReturnCode: true,
@@ -53,8 +54,22 @@ export async function pushCurrentBranch() {
 }
 
 export async function addFileChanges(globPatterns: string[]) {
+  const cwd = getCwd()
   const workspace = getWorkspace()
-  const workspacePaths = globPatterns.map((p) => join(workspace, p))
+  const resolvedWorkspace = resolve(workspace)
+  core.debug(
+    'addFileChanges() - resolvedWorkspace: ' + JSON.stringify(resolvedWorkspace)
+  )
+
+  let workspacePaths = globPatterns
+  if (resolvedWorkspace.includes(cwd)) {
+    core.notice(
+      'addFileChanges() - "workspace" is a subdirectory, updating globPatterns'
+    )
+    workspacePaths = globPatterns.map((p) =>
+      join(relative(cwd, resolvedWorkspace), p)
+    )
+  }
 
   await execGit(['add', '--', ...workspacePaths])
 }
