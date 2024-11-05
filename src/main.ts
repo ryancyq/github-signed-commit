@@ -18,23 +18,37 @@ import {
   NoFileChanges,
   BranchNotFound,
   BranchCommitNotFound,
+  InputRepositoryInvalid,
   InputBranchNotFound,
 } from './errors'
 
 export async function run(): Promise<void> {
   try {
     const { owner, repo, branch } = getContext()
+    const inputRepository = getInput('repository')
     const inputBranch = getInput('branch-name')
     if (inputBranch && inputBranch !== branch) {
       await switchBranch(inputBranch)
       await pushCurrentBranch()
     }
+
+    const repositoryParts = inputRepository ? inputRepository.split('/') : []
+    if (repositoryParts.length && repositoryParts.length != 2) {
+      throw new InputRepositoryInvalid(inputRepository)
+    }
+
+    const currentOwner = repositoryParts.length ? repositoryParts[0] : owner
+    const currentRepository = repositoryParts.length ? repositoryParts[1] : repo
     const currentBranch = inputBranch ? inputBranch : branch
     const repository = await core.group(
-      `fetching repository info for owner: ${owner}, repo: ${repo}, branch: ${currentBranch}`,
+      `fetching repository info for owner: ${currentOwner}, repo: ${currentRepository}, branch: ${currentBranch}`,
       async () => {
         const startTime = Date.now()
-        const repositoryData = await getRepository(owner, repo, currentBranch)
+        const repositoryData = await getRepository(
+          currentOwner,
+          currentRepository,
+          currentBranch
+        )
         const endTime = Date.now()
         core.debug(`time taken: ${(endTime - startTime).toString()} ms`)
         return repositoryData

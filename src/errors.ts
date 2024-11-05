@@ -4,6 +4,12 @@ export class NoFileChanges extends Error {
   }
 }
 
+export class InputRepositoryInvalid extends Error {
+  constructor(repository: string) {
+    super(`Input <repository> "${repository}" is invalid`)
+  }
+}
+
 export class InputBranchNotFound extends Error {
   constructor(branchName: string) {
     super(`Input <branch-name> "${branchName}" not found`)
