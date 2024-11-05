@@ -11,7 +11,7 @@ import {
 
 describe('Git CLI', () => {
   beforeEach(() => {
-    jest.clearAllMocks()
+    jest.restoreAllMocks()
   })
 
   describe('git checkout', () => {
@@ -89,11 +89,12 @@ describe('Git CLI', () => {
   })
 
   describe('git push', () => {
+    beforeEach(() => {
+      jest.spyOn(core, 'getBooleanInput').mockReturnValue(false)
+    })
+
     it('should push new branch', async () => {
       const execMock = jest.spyOn(exec, 'exec').mockResolvedValue(0)
-      const getInput = jest
-        .spyOn(core, 'getBooleanInput')
-        .mockReturnValue(false)
 
       await pushCurrentBranch()
       expect(execMock).toHaveBeenCalledWith(

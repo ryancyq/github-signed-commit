@@ -5,13 +5,13 @@ import { getContext } from '../../src/github/repo'
 
 describe('getContext', () => {
   beforeEach(() => {
-    jest.clearAllMocks()
-  })
-
-  it('extract owner and repo', () => {
+    jest.restoreAllMocks()
     jest
       .spyOn(github.context, 'repo', 'get')
       .mockReturnValue({ repo: 'my-repo', owner: 'my-user' })
+  })
+
+  it('extract owner and repo', () => {
     jest.replaceProperty(github.context, 'ref', 'refs/heads/main')
     const context = getContext()
     expect(context).toHaveProperty('owner', 'my-user')
