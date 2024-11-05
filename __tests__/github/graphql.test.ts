@@ -23,81 +23,75 @@ import {
 describe('GitHub API', () => {
   beforeEach(() => {
     jest.clearAllMocks()
-    fetchMock.reset()
+    fetchMock.clearHistory()
+    fetchMock.removeRoutes()
   })
 
   describe('getRepository', () => {
     it('should fetch repository details', async () => {
-      const clientMock = jest.spyOn(client, 'graphqlClient').mockReturnValue(
-        graphql.defaults({
-          request: {
-            fetch: fetchMock
-              .sandbox()
-              .post(
-                'https://api.github.com/graphql',
-                (_url, options: RequestOptions) => {
-                  const body = JSON.parse(options.body)
-                  expect(body.query).toEqual(
-                    expect.stringMatching(/query(.+\$owner.+\$repo.+\$ref)/)
-                  )
-
-                  expect(body.variables).toHaveProperty('owner', 'owner')
-                  expect(body.variables).toHaveProperty('repo', 'repo')
-                  expect(body.variables).toHaveProperty(
-                    'ref',
-                    'refs/heads/custom-branch'
-                  )
-
-                  return {
-                    data: {
-                      repository: {
-                        id: 'repo-id',
-                        nameWithOwner: 'my-user/repo-id',
-                        ref: {
-                          name: 'custom-branch',
-                          target: {
-                            history: {
-                              nodes: [
-                                {
-                                  oid: 'another-oid',
-                                  message: 'another message',
-                                  committedDate: '2024-08-19T04:53:47Z',
-                                  __typename: 'Commit',
-                                },
-                              ],
-                            },
-                          },
-                          __typename: 'Ref',
-                        },
-                        defaultBranchRef: {
-                          name: 'main',
-                          target: {
-                            history: {
-                              nodes: [
-                                {
-                                  oid: 'my-oid',
-                                  message: 'my message',
-                                  committedDate: '2024-08-19T04:53:47Z',
-                                  __typename: 'Commit',
-                                },
-                              ],
-                            },
-                          },
-                          __typename: 'Ref',
-                        },
-                        __typename: 'Repository',
-                      },
+      const clientMock = jest
+        .spyOn(client, 'graphqlClient')
+        .mockReturnValue(
+          graphql.defaults({ request: { fetch: fetchMock.fetchHandler } })
+        )
+      fetchMock.post('https://api.github.com/graphql', {
+        data: {
+          repository: {
+            id: 'repo-id',
+            nameWithOwner: 'my-user/repo-id',
+            ref: {
+              name: 'custom-branch',
+              target: {
+                history: {
+                  nodes: [
+                    {
+                      oid: 'another-oid',
+                      message: 'another message',
+                      committedDate: '2024-08-19T04:53:47Z',
+                      __typename: 'Commit',
                     },
-                  }
-                }
-              ),
+                  ],
+                },
+              },
+              __typename: 'Ref',
+            },
+            defaultBranchRef: {
+              name: 'main',
+              target: {
+                history: {
+                  nodes: [
+                    {
+                      oid: 'my-oid',
+                      message: 'my message',
+                      committedDate: '2024-08-19T04:53:47Z',
+                      __typename: 'Commit',
+                    },
+                  ],
+                },
+              },
+              __typename: 'Ref',
+            },
+            __typename: 'Repository',
           },
-        })
-      )
+        },
+      })
       const debugMock = jest.spyOn(core, 'debug').mockReturnValue()
 
       const repo = await getRepository('owner', 'repo', 'custom-branch')
       expect(clientMock).toHaveBeenCalled()
+      const calls = fetchMock.callHistory.calls(
+        'https://api.github.com/graphql'
+      )
+      expect(calls.length).toBe(1)
+      const body = JSON.parse(calls[0].options.body!.toString())
+      expect(body.query).toEqual(
+        expect.stringMatching(/query(.+\$owner.+\$repo.+\$ref)/)
+      )
+
+      expect(body.variables).toHaveProperty('owner', 'owner')
+      expect(body.variables).toHaveProperty('repo', 'repo')
+      expect(body.variables).toHaveProperty('ref', 'refs/heads/custom-branch')
+
       expect(repo).toHaveProperty('id', 'repo-id')
       expect(repo).toHaveProperty('nameWithOwner', 'my-user/repo-id')
       expect(repo).toHaveProperty('ref.name', 'custom-branch')
@@ -130,16 +124,15 @@ describe('GitHub API', () => {
     })
 
     it('should handle GraphqlResponseError', async () => {
-      const clientMock = jest.spyOn(client, 'graphqlClient').mockReturnValue(
-        graphql.defaults({
-          request: {
-            fetch: fetchMock.sandbox().post('https://api.github.com/graphql', {
-              errors: [{ message: 'GraphQL error' }],
-              data: null,
-            }),
-          },
-        })
-      )
+      const clientMock = jest
+        .spyOn(client, 'graphqlClient')
+        .mockReturnValue(
+          graphql.defaults({ request: { fetch: fetchMock.fetchHandler } })
+        )
+      fetchMock.post('https://api.github.com/graphql', {
+        errors: [{ message: 'GraphQL error' }],
+        data: null,
+      })
       const errorMock = jest.spyOn(core, 'error').mockReturnValue()
       const debugMock = jest.spyOn(core, 'debug').mockReturnValue()
 
@@ -160,25 +153,24 @@ describe('GitHub API', () => {
 
   describe('createCommitOnBranch', () => {
     it('should create a commit on the given branch', async () => {
-      const clientMock = jest.spyOn(client, 'graphqlClient').mockReturnValue(
-        graphql.defaults({
-          request: {
-            fetch: fetchMock.sandbox().post('https://api.github.com/graphql', {
-              data: {
-                createCommitOnBranch: {
-                  commit: {
-                    oid: 'commit-id',
-                    message: 'fake commit message',
-                    committedDate: '2024-08-19T04:53:47Z',
-                    __typename: 'Commit',
-                  },
-                  __typename: 'CreateCommitOnBranchPayload',
-                },
-              },
-            }),
+      const clientMock = jest
+        .spyOn(client, 'graphqlClient')
+        .mockReturnValue(
+          graphql.defaults({ request: { fetch: fetchMock.fetchHandler } })
+        )
+      fetchMock.post('https://api.github.com/graphql', {
+        data: {
+          createCommitOnBranch: {
+            commit: {
+              oid: 'commit-id',
+              message: 'fake commit message',
+              committedDate: '2024-08-19T04:53:47Z',
+              __typename: 'Commit',
+            },
+            __typename: 'CreateCommitOnBranchPayload',
           },
-        })
-      )
+        },
+      })
       const debugMock = jest.spyOn(core, 'debug').mockReturnValue()
 
       const branch = {} as CommittableBranch
@@ -204,14 +196,13 @@ describe('GitHub API', () => {
     it('should handle GraphqlResponseError', async () => {
       const clientMock = jest.spyOn(client, 'graphqlClient').mockReturnValue(
         graphql.defaults({
-          request: {
-            fetch: fetchMock.sandbox().post('https://api.github.com/graphql', {
-              errors: [{ message: 'GraphQL error' }],
-              data: null,
-            }),
-          },
+          request: { fetch: fetchMock.fetchHandler },
         })
       )
+      fetchMock.post('https://api.github.com/graphql', {
+        errors: [{ message: 'GraphQL error' }],
+        data: null,
+      })
       const errorMock = jest.spyOn(core, 'error').mockReturnValue()
       const debugMock = jest.spyOn(core, 'debug').mockReturnValue()
 
@@ -254,48 +245,10 @@ describe('GitHub API', () => {
 
       const clientMock = jest.spyOn(client, 'graphqlClient').mockReturnValue(
         graphql.defaults({
-          request: {
-            fetch: fetchMock
-              .sandbox()
-              .post(
-                'https://api.github.com/graphql',
-                (_url, options: RequestOptions) => {
-                  const body = JSON.parse(options.body)
-                  expect(body.query).toEqual(
-                    expect.stringMatching(
-                      /mutation(.+CreateCommitOnBranchInput)/
-                    )
-                  )
-
-                  expect(body.variables).toHaveProperty(
-                    'commitInput.branch.repositoryNameWithOwner',
-                    'my-user/my-repo'
-                  )
-                  expect(body.variables).toHaveProperty(
-                    'commitInput.branch.branchName',
-                    'my-branch'
-                  )
-                  expect(body.variables).toHaveProperty(
-                    'commitInput.expectedHeadOid',
-                    'MyOid'
-                  )
-                  expect(body.variables).toHaveProperty(
-                    'commitInput.message.headline',
-                    'new file content'
-                  )
-                  expect(body.variables).toHaveProperty(
-                    'commitInput.fileChanges.additions'
-                  )
-                  const additions =
-                    body.variables.commitInput.fileChanges.additions
-                  expect(additions).toContainEqual(fileAddition)
-
-                  return { data: {} }
-                }
-              ),
-          },
+          request: { fetch: fetchMock.fetchHandler },
         })
       )
+      fetchMock.post('https://api.github.com/graphql', { data: {} })
 
       const branch = {
         repositoryNameWithOwner: 'my-user/my-repo',
@@ -309,6 +262,34 @@ describe('GitHub API', () => {
         fileChanges
       )
       expect(clientMock).toHaveBeenCalled()
+      const calls = fetchMock.callHistory.calls(
+        'https://api.github.com/graphql'
+      )
+      expect(calls.length).toBe(1)
+      const body = JSON.parse(calls[0].options.body!.toString())
+      expect(body.query).toEqual(
+        expect.stringMatching(/mutation(.+CreateCommitOnBranchInput)/)
+      )
+
+      expect(body.variables).toHaveProperty(
+        'commitInput.branch.repositoryNameWithOwner',
+        'my-user/my-repo'
+      )
+      expect(body.variables).toHaveProperty(
+        'commitInput.branch.branchName',
+        'my-branch'
+      )
+      expect(body.variables).toHaveProperty(
+        'commitInput.expectedHeadOid',
+        'MyOid'
+      )
+      expect(body.variables).toHaveProperty(
+        'commitInput.message.headline',
+        'new file content'
+      )
+      expect(body.variables).toHaveProperty('commitInput.fileChanges.additions')
+      const additions = body.variables.commitInput.fileChanges.additions
+      expect(additions).toContainEqual(fileAddition)
     })
   })
 
@@ -316,21 +297,20 @@ describe('GitHub API', () => {
     it('should create a tag on the given commit', async () => {
       const clientMock = jest.spyOn(client, 'graphqlClient').mockReturnValue(
         graphql.defaults({
-          request: {
-            fetch: fetchMock.sandbox().post('https://api.github.com/graphql', {
-              data: {
-                createRef: {
-                  ref: {
-                    name: 'refs/tags/faked-tag',
-                    __typename: 'Ref',
-                  },
-                  __typename: 'CreateRefPayload',
-                },
-              },
-            }),
-          },
+          request: { fetch: fetchMock.fetchHandler },
         })
       )
+      fetchMock.post('https://api.github.com/graphql', {
+        data: {
+          createRef: {
+            ref: {
+              name: 'refs/tags/faked-tag',
+              __typename: 'Ref',
+            },
+            __typename: 'CreateRefPayload',
+          },
+        },
+      })
       const debugMock = jest.spyOn(core, 'debug').mockReturnValue()
 
       const currentCommit = {} as Commit
@@ -349,14 +329,13 @@ describe('GitHub API', () => {
     it('should handle GraphqlResponseError', async () => {
       const clientMock = jest.spyOn(client, 'graphqlClient').mockReturnValue(
         graphql.defaults({
-          request: {
-            fetch: fetchMock.sandbox().post('https://api.github.com/graphql', {
-              errors: [{ message: 'GraphQL error' }],
-              data: null,
-            }),
-          },
+          request: { fetch: fetchMock.fetchHandler },
         })
       )
+      fetchMock.post('https://api.github.com/graphql', {
+        errors: [{ message: 'GraphQL error' }],
+        data: null,
+      })
       const errorMock = jest.spyOn(core, 'error').mockReturnValue()
       const debugMock = jest.spyOn(core, 'debug').mockReturnValue()
 
@@ -383,33 +362,10 @@ describe('GitHub API', () => {
     it('should populate tag content', async () => {
       const clientMock = jest.spyOn(client, 'graphqlClient').mockReturnValue(
         graphql.defaults({
-          request: {
-            fetch: fetchMock
-              .sandbox()
-              .post(
-                'https://api.github.com/graphql',
-                (_url, options: RequestOptions) => {
-                  const body = JSON.parse(options.body)
-                  expect(body.query).toEqual(
-                    expect.stringMatching(/mutation(.+CreateRefInput)/)
-                  )
-
-                  expect(body.variables).toHaveProperty(
-                    'tagInput.repositoryId',
-                    'my-repo-id'
-                  )
-                  expect(body.variables).toHaveProperty(
-                    'tagInput.name',
-                    'refs/tags/my-tag'
-                  )
-                  expect(body.variables).toHaveProperty('tagInput.oid', 'MyOid')
-
-                  return { data: {} }
-                }
-              ),
-          },
+          request: { fetch: fetchMock.fetchHandler },
         })
       )
+      fetchMock.post('https://api.github.com/graphql', { data: {} })
 
       const currentCommit = { oid: 'MyOid' } as Commit
       const result = await createTagOnCommit(
@@ -418,6 +374,21 @@ describe('GitHub API', () => {
         'my-repo-id'
       )
       expect(clientMock).toHaveBeenCalled()
+      const calls = fetchMock.callHistory.calls(
+        'https://api.github.com/graphql'
+      )
+      expect(calls.length).toBe(1)
+      const body = JSON.parse(calls[0].options.body!.toString())
+      expect(body.query).toEqual(
+        expect.stringMatching(/mutation(.+CreateRefInput)/)
+      )
+
+      expect(body.variables).toHaveProperty(
+        'tagInput.repositoryId',
+        'my-repo-id'
+      )
+      expect(body.variables).toHaveProperty('tagInput.name', 'refs/tags/my-tag')
+      expect(body.variables).toHaveProperty('tagInput.oid', 'MyOid')
     })
   })
 })
