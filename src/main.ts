@@ -13,6 +13,7 @@ import {
   pushCurrentBranch,
   switchBranch,
 } from './git'
+import { getCwd, getWorkdir } from './utils/cwd'
 import { getInput } from './utils/input'
 import {
   NoFileChanges,
@@ -23,32 +24,61 @@ import {
 
 export async function run(): Promise<void> {
   try {
+    core.info('Getting info from GH Worklfow context')
     const { owner, repo, branch } = getContext()
+
+    core.info('Setting variables according to inputs and context')
+    core.debug('* branch')
     const inputBranch = getInput('branch-name')
-    if (inputBranch && inputBranch !== branch) {
-      await switchBranch(inputBranch)
+    const selectedBranch = inputBranch ? inputBranch : branch
+
+    core.debug('* owner')
+    const inputOwner = getInput('owner')
+    const selectedOwner = inputOwner ? inputOwner : owner
+
+    core.debug('* repo')
+    const inputRepo = getInput('repo')
+    const selectedRepo = inputRepo ? inputRepo : repo
+
+    if (
+      selectedOwner == owner &&
+      selectedRepo == repo &&
+      selectedBranch !== branch
+    ) {
+      core.warning(
+        'Pushing local and current branch to remote before proceeding'
+      )
+      // Git commands
+      await switchBranch(selectedBranch)
       await pushCurrentBranch()
     }
-    const currentBranch = inputBranch ? inputBranch : branch
+
     const repository = await core.group(
-      `fetching repository info for owner: ${owner}, repo: ${repo}, branch: ${currentBranch}`,
+      `fetching repository info for owner: ${selectedOwner}, repo: ${selectedRepo}, branch: ${selectedBranch}`,
       async () => {
         const startTime = Date.now()
-        const repositoryData = await getRepository(owner, repo, currentBranch)
+        const repositoryData = await getRepository(
+          selectedOwner,
+          selectedRepo,
+          selectedBranch
+        )
         const endTime = Date.now()
         core.debug(`time taken: ${(endTime - startTime).toString()} ms`)
         return repositoryData
       }
     )
 
+    core.info('Checking remote branches')
     if (!repository.ref) {
-      if (inputBranch && currentBranch == inputBranch) {
+      if (inputBranch) {
         throw new InputBranchNotFound(inputBranch)
       } else {
-        throw new BranchNotFound(currentBranch)
+        throw new BranchNotFound(branch)
       }
     }
 
+    core.info('Processing to create signed commit')
+    core.debug('Get last (current?) commit')
     const currentCommit = repository.ref.target.history?.nodes?.[0]
     if (!currentCommit) {
       throw new BranchCommitNotFound(repository.ref.name)
@@ -57,11 +87,18 @@ export async function run(): Promise<void> {
     let createdCommit: Commit | undefined
     const filePaths = core.getMultilineInput('files')
     if (filePaths.length <= 0) {
-      core.debug('skip file commit, empty files input')
+      core.notice('skip file commit, empty files input')
     } else {
       core.debug(
-        `proceed with file commit, input: ${JSON.stringify(filePaths)}`
+        `Proceed with file commit, input: ${JSON.stringify(filePaths)}`
       )
+
+      const workdir = getWorkdir()
+      const cwd = getCwd()
+      if (cwd !== workdir) {
+        core.notice('Changing working directory to Workdir: ' + workdir)
+        process.chdir(workdir)
+      }
 
       await addFileChanges(filePaths)
       const fileChanges = await getFileChanges()
@@ -89,7 +126,7 @@ export async function run(): Promise<void> {
               commitMessage,
               {
                 repositoryNameWithOwner: repository.nameWithOwner,
-                branchName: currentBranch,
+                branchName: selectedBranch,
               },
               fileChanges
             )
