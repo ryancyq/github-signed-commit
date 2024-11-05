@@ -8,6 +8,7 @@ All notable changes to this project will be documented in this file. See [conven
 ### Tests
 
 - read package name and version from npm instead of hardcoded string in test - ([f4b0185](https://github.com/ryancyq/github-signed-commit/commit/f4b01854663fe84c3b46d2ec663e2399c5cc9aed)) - Ryan Chang
+- replace deprecated request mocking methods in fetch_mock@12 - ([ec6d8e3](https://github.com/ryancyq/github-signed-commit/commit/ec6d8e3b33f15813244e29eb096e67cef40cf17a)) - Ryan Chang
 
 ---
 ## [1.2.0](https://github.com/ryancyq/github-signed-commit/compare/v1.1.0..v1.2.0) - 2024-10-02
