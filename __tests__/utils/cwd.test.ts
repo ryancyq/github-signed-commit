@@ -11,7 +11,7 @@ import { getCwd, getWorkspace } from '../../src/utils/cwd'
 
 describe('Current Working Directory', () => {
   beforeEach(() => {
-    jest.clearAllMocks()
+    jest.restoreAllMocks()
     jest.spyOn(core, 'debug').mockReturnValue()
   })
 
@@ -26,7 +26,7 @@ describe('Current Working Directory', () => {
 
 describe('Current Workspace', () => {
   beforeEach(() => {
-    jest.clearAllMocks()
+    jest.restoreAllMocks()
     jest.spyOn(core, 'debug').mockReturnValue()
   })
 

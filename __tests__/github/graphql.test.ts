@@ -22,7 +22,7 @@ import {
 
 describe('GitHub API', () => {
   beforeEach(() => {
-    jest.clearAllMocks()
+    jest.restoreAllMocks()
     fetchMock.clearHistory()
     fetchMock.removeRoutes()
   })
