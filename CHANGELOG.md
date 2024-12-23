@@ -3,7 +3,11 @@
 All notable changes to this project will be documented in this file. See [conventional commits](https://www.conventionalcommits.org/) for commit guidelines.
 
 ---
-## [Unreleased](https://github.com/ryancyq/github-signed-commit/tree/HEAD)
+## [1.3.0](https://github.com/ryancyq/github-signed-commit/compare/v1.2.0..v1.3.0) - 2024-10-30
+
+### Features
+
+- Add support for remote GitHub repository + working directory ([#2](https://github.com/ryancyq/github-signed-commit/issues/2)) - ([2c19408](https://github.com/ryancyq/github-signed-commit/commit/2c19408618f096a6064093809288c28e3f4daaa1)) - Xavier Krantz
 
 ### Tests
 
