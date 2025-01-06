@@ -30387,6 +30387,9 @@ function resolveCurrentBranch(ref) {
         // eslint-disable-next-line @typescript-eslint/no-unsafe-return, @typescript-eslint/no-unsafe-member-access
         return (_c = (_b = (_a = github.context.payload.pull_request) === null || _a === void 0 ? void 0 : _a.head) === null || _b === void 0 ? void 0 : _b.ref) !== null && _c !== void 0 ? _c : '';
     }
+    else if (ref.startsWith('refs/tags/')) {
+        return '';
+    }
     throw new Error(`Unsupported ref: ${ref}`);
 }
 function getContext() {
