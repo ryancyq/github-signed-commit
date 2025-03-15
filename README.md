@@ -63,6 +63,7 @@ Note: The `GH_TOKEN` environment variable is **required** for GitHub API request
 | `files` | **YES** | Multi-line string of file paths to be committed, relative to the current workspace.|
 | `workspace` | **NO** | Directory containing files to be committed. **DEFAULT:** GitHub workspace directory (root of the repository). |
 | `commit-message` | **YES** | Commit message for the file changes. |
+| `repository` | **NO** | Repository name including owner (e.g. owner/repo). **DEFAULT:** Workflow triggered repository |
 | `branch-name` | **NO** | Branch to commit, it must already exist in the remote. **DEFAULT:** Workflow triggered branch |
 | `branch-push-force` | **NO** | `--force` flag when running `git push <branch-name>`. |
 | `tag` | **NO** | Push tag for the new/current commit. |

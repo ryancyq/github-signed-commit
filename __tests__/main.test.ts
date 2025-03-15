@@ -14,7 +14,7 @@ import exp from 'constants'
 
 describe('action', () => {
   beforeEach(() => {
-    jest.clearAllMocks()
+    jest.restoreAllMocks()
     jest.spyOn(core, 'debug').mockReturnValue()
     jest.spyOn(core, 'info').mockReturnValue()
     jest.spyOn(core, 'group').mockImplementation(async (name, fn) => {
@@ -125,7 +125,7 @@ describe('action', () => {
 
   describe('input branch same as current branch', () => {
     beforeEach(() => {
-      jest.spyOn(core, 'getInput').mockImplementationOnce((name, option) => {
+      jest.spyOn(core, 'getInput').mockImplementation((name, _option) => {
         if (name == 'branch-name') return 'main'
         return ''
       })
@@ -140,7 +140,9 @@ describe('action', () => {
       await main.run()
 
       expect(switchBranchMock).not.toHaveBeenCalled()
-      expect(setFailedMock).not.toHaveBeenCalled()
+      expect(setFailedMock).toHaveBeenCalledWith(
+        'Neither files nor tag input has been configured'
+      )
     })
 
     it('does not push branch', async () => {
@@ -156,13 +158,15 @@ describe('action', () => {
 
       expect(switchBranchMock).not.toHaveBeenCalled()
       expect(pushBranchMock).not.toHaveBeenCalled()
-      expect(setFailedMock).not.toHaveBeenCalled()
+      expect(setFailedMock).toHaveBeenCalledWith(
+        'Neither files nor tag input has been configured'
+      )
     })
   })
 
   describe('input branch not the same as current branch', () => {
     beforeEach(() => {
-      jest.spyOn(core, 'getInput').mockImplementationOnce((name, option) => {
+      jest.spyOn(core, 'getInput').mockImplementation((name, _option) => {
         if (name == 'branch-name') return 'another-branch'
         return ''
       })
@@ -195,7 +199,45 @@ describe('action', () => {
 
       expect(switchBranchMock).toHaveBeenCalled()
       expect(pushBranchMock).toHaveBeenCalled()
-      expect(setFailedMock).not.toHaveBeenCalled()
+      expect(setFailedMock).toHaveBeenCalledWith(
+        'Neither files nor tag input has been configured'
+      )
+    })
+  })
+
+  describe('input repository is given', () => {
+    describe('valid format', () => {
+      beforeEach(() => {
+        jest.spyOn(core, 'getInput').mockImplementation((name, _option) => {
+          if (name == 'repository') return 'the-user/the-repo'
+          return ''
+        })
+      })
+
+      it('succeed', async () => {
+        const setFailedMock = jest.spyOn(core, 'setFailed').mockReturnValue()
+        await main.run()
+        expect(setFailedMock).toHaveBeenCalledWith(
+          'Neither files nor tag input has been configured'
+        )
+      })
+    })
+
+    describe('invalid format', () => {
+      beforeEach(() => {
+        jest.spyOn(core, 'getInput').mockImplementation((name, _option) => {
+          if (name == 'repository') return 'the-user-the-repo'
+          return ''
+        })
+      })
+
+      it('fails', async () => {
+        const setFailedMock = jest.spyOn(core, 'setFailed').mockReturnValue()
+        await main.run()
+        expect(setFailedMock).toHaveBeenCalledWith(
+          'Input <repository> "the-user-the-repo" is invalid'
+        )
+      })
     })
   })
 
@@ -210,10 +252,11 @@ describe('action', () => {
 
     describe('exists in remote', () => {
       beforeEach(() => {
-        jest.spyOn(core, 'getInput').mockImplementationOnce((name, option) => {
+        jest.spyOn(core, 'getInput').mockImplementation((name, _option) => {
           if (name == 'branch-name') return 'existing-branch'
           return ''
         })
+        jest.spyOn(core, 'getBooleanInput').mockReturnValue(true)
       })
 
       it('succeed', async () => {
@@ -246,7 +289,7 @@ describe('action', () => {
 
     describe('does not exist in remote', () => {
       beforeEach(() => {
-        jest.spyOn(core, 'getInput').mockImplementationOnce((name, option) => {
+        jest.spyOn(core, 'getInput').mockImplementation((name, _option) => {
           if (name == 'branch-name') return 'new-branch'
           return ''
         })
@@ -355,7 +398,7 @@ describe('action', () => {
   })
 
   it('commit files and output commit sha', async () => {
-    jest.spyOn(core, 'getInput').mockImplementationOnce((name, option) => {
+    jest.spyOn(core, 'getInput').mockImplementation((name, _option) => {
       if (name == 'branch-name') return 'custom-branch'
       return ''
     })
@@ -404,7 +447,7 @@ describe('action', () => {
   })
 
   it('push tag only', async () => {
-    jest.spyOn(core, 'getInput').mockImplementation((name, option) => {
+    jest.spyOn(core, 'getInput').mockImplementation((name, _option) => {
       if (name == 'branch-name') return 'tag-branch'
       if (name == 'tag') return 'fake-tag'
       return ''
@@ -450,7 +493,7 @@ describe('action', () => {
   })
 
   it('commit file and push tag', async () => {
-    jest.spyOn(core, 'getInput').mockImplementation((name, option) => {
+    jest.spyOn(core, 'getInput').mockImplementation((name, _option) => {
       if (name == 'branch-name') return 'file-tag-branch'
       if (name == 'tag') return 'fake-file-tag'
       return ''
@@ -507,7 +550,7 @@ describe('action', () => {
   })
 
   it('commit file fails woukd skip push tag', async () => {
-    jest.spyOn(core, 'getInput').mockImplementationOnce((name, option) => {
+    jest.spyOn(core, 'getInput').mockImplementation((name, _option) => {
       if (name == 'branch-name') return 'file-fail-tag-branch'
       if (name == 'tag') return 'unreachable-tag'
       return ''

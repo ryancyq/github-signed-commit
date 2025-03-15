@@ -29910,13 +29910,19 @@ function getBlob(filePath) {
 
 
 Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.BranchCommitNotFound = exports.BranchNotFound = exports.InputBranchNotFound = exports.NoFileChanges = void 0;
+exports.BranchCommitNotFound = exports.BranchNotFound = exports.InputBranchNotFound = exports.InputRepositoryInvalid = exports.NoFileChanges = void 0;
 class NoFileChanges extends Error {
     constructor() {
         super('No files changes');
     }
 }
 exports.NoFileChanges = NoFileChanges;
+class InputRepositoryInvalid extends Error {
+    constructor(repository) {
+        super(`Input <repository> "${repository}" is invalid`);
+    }
+}
+exports.InputRepositoryInvalid = InputRepositoryInvalid;
 class InputBranchNotFound extends Error {
     constructor(branchName) {
         super(`Input <branch-name> "${branchName}" not found`);
@@ -30388,15 +30394,22 @@ function run() {
         var _a, _b, _c, _d, _e, _f;
         try {
             const { owner, repo, branch } = (0, repo_1.getContext)();
+            const inputRepository = (0, input_1.getInput)('repository');
             const inputBranch = (0, input_1.getInput)('branch-name');
             if (inputBranch && inputBranch !== branch) {
                 yield (0, git_1.switchBranch)(inputBranch);
                 yield (0, git_1.pushCurrentBranch)();
             }
+            const repositoryParts = inputRepository ? inputRepository.split('/') : [];
+            if (repositoryParts.length && repositoryParts.length != 2) {
+                throw new errors_1.InputRepositoryInvalid(inputRepository);
+            }
+            const currentOwner = repositoryParts.length ? repositoryParts[0] : owner;
+            const currentRepository = repositoryParts.length ? repositoryParts[1] : repo;
             const currentBranch = inputBranch ? inputBranch : branch;
-            const repository = yield core.group(`fetching repository info for owner: ${owner}, repo: ${repo}, branch: ${currentBranch}`, () => __awaiter(this, void 0, void 0, function* () {
+            const repository = yield core.group(`fetching repository info for owner: ${currentOwner}, repo: ${currentRepository}, branch: ${currentBranch}`, () => __awaiter(this, void 0, void 0, function* () {
                 const startTime = Date.now();
-                const repositoryData = yield (0, graphql_1.getRepository)(owner, repo, currentBranch);
+                const repositoryData = yield (0, graphql_1.getRepository)(currentOwner, currentRepository, currentBranch);
                 const endTime = Date.now();
                 core.debug(`time taken: ${(endTime - startTime).toString()} ms`);
                 return repositoryData;

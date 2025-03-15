@@ -12,7 +12,7 @@ describe('GitHub Client', () => {
   let replacedEnv: jest.Replaced<typeof process.env> | undefined
 
   beforeEach(() => {
-    jest.clearAllMocks()
+    jest.restoreAllMocks()
     replacedEnv = jest.replaceProperty(
       process,
       'env',
