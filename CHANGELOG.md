@@ -5,10 +5,20 @@ All notable changes to this project will be documented in this file. See [conven
 ---
 ## [Unreleased](https://github.com/ryancyq/github-signed-commit/tree/HEAD)
 
+### Documentation
+
+- add support to repository input - ([f3899e6](https://github.com/ryancyq/github-signed-commit/commit/f3899e6baca1f1580ac3516468dd170a47a84d6f)) - Ryan Chang
+
+### Features
+
+- allow customized repository with owner - ([8f42b12](https://github.com/ryancyq/github-signed-commit/commit/8f42b1246b6287f96b2c628ed756d1debc681b3e)) - Ryan Chang
+
 ### Tests
 
 - read package name and version from npm instead of hardcoded string in test - ([f4b0185](https://github.com/ryancyq/github-signed-commit/commit/f4b01854663fe84c3b46d2ec663e2399c5cc9aed)) - Ryan Chang
 - replace deprecated request mocking methods in fetch_mock@12 - ([ec6d8e3](https://github.com/ryancyq/github-signed-commit/commit/ec6d8e3b33f15813244e29eb096e67cef40cf17a)) - Ryan Chang
+- use restore mocks to avoid leaky mocks - ([090c4f6](https://github.com/ryancyq/github-signed-commit/commit/090c4f6db1487443d042967f5cf1afd901000122)) - Ryan Chang
+- add input repository tests - ([795d995](https://github.com/ryancyq/github-signed-commit/commit/795d995fc87d3ea724fae9535664d4abb1a94cac)) - Ryan Chang
 
 ---
 ## [1.2.0](https://github.com/ryancyq/github-signed-commit/compare/v1.1.0..v1.2.0) - 2024-10-02
