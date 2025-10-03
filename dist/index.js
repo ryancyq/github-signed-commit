@@ -30023,6 +30023,7 @@ function execGit(args) {
         const debugOutput = [];
         const warningOutput = [];
         const errorOutput = [];
+        core.debug('execGit() - args: ' + JSON.stringify(args));
         yield (0, exec_1.exec)('git', args, {
             silent: true,
             ignoreReturnCode: true,
@@ -30067,8 +30068,15 @@ function pushCurrentBranch() {
 }
 function addFileChanges(globPatterns) {
     return __awaiter(this, void 0, void 0, function* () {
+        const cwd = (0, cwd_1.getCwd)();
         const workspace = (0, cwd_1.getWorkspace)();
-        const workspacePaths = globPatterns.map((p) => (0, node_path_1.join)(workspace, p));
+        const resolvedWorkspace = (0, node_path_1.resolve)(workspace);
+        core.debug('addFileChanges() - resolvedWorkspace: ' + JSON.stringify(resolvedWorkspace));
+        let workspacePaths = globPatterns;
+        if (resolvedWorkspace.includes(cwd)) {
+            core.notice('addFileChanges() - "workspace" is a subdirectory, updating globPatterns');
+            workspacePaths = globPatterns.map((p) => (0, node_path_1.join)((0, node_path_1.relative)(cwd, resolvedWorkspace), p));
+        }
         yield execGit(['add', '--', ...workspacePaths]);
     });
 }
@@ -30379,6 +30387,9 @@ function resolveCurrentBranch(ref) {
         // eslint-disable-next-line @typescript-eslint/no-unsafe-return, @typescript-eslint/no-unsafe-member-access
         return (_c = (_b = (_a = github.context.payload.pull_request) === null || _a === void 0 ? void 0 : _a.head) === null || _b === void 0 ? void 0 : _b.ref) !== null && _c !== void 0 ? _c : '';
     }
+    else if (ref.startsWith('refs/tags/')) {
+        return '';
+    }
     throw new Error(`Unsupported ref: ${ref}`);
 }
 function getContext() {
@@ -30445,41 +30456,51 @@ const core = __importStar(__nccwpck_require__(7484));
 const graphql_1 = __nccwpck_require__(1422);
 const repo_1 = __nccwpck_require__(1839);
 const git_1 = __nccwpck_require__(1243);
+const cwd_1 = __nccwpck_require__(9827);
 const input_1 = __nccwpck_require__(7797);
 const errors_1 = __nccwpck_require__(3916);
 function run() {
     return __awaiter(this, void 0, void 0, function* () {
         var _a, _b, _c, _d, _e, _f;
         try {
+            core.info('Getting info from GH Worklfow context');
             const { owner, repo, branch } = (0, repo_1.getContext)();
-            const inputRepository = (0, input_1.getInput)('repository');
+            core.info('Setting variables according to inputs and context');
+            core.debug('* branch');
             const inputBranch = (0, input_1.getInput)('branch-name');
-            if (inputBranch && inputBranch !== branch) {
-                yield (0, git_1.switchBranch)(inputBranch);
+            const selectedBranch = inputBranch ? inputBranch : branch;
+            core.debug('* owner');
+            const inputOwner = (0, input_1.getInput)('owner');
+            const selectedOwner = inputOwner ? inputOwner : owner;
+            core.debug('* repo');
+            const inputRepo = (0, input_1.getInput)('repo');
+            const selectedRepo = inputRepo ? inputRepo : repo;
+            if (selectedOwner == owner &&
+                selectedRepo == repo &&
+                selectedBranch !== branch) {
+                core.warning('Pushing local and current branch to remote before proceeding');
+                // Git commands
+                yield (0, git_1.switchBranch)(selectedBranch);
                 yield (0, git_1.pushCurrentBranch)();
             }
-            const repositoryParts = inputRepository ? inputRepository.split('/') : [];
-            if (repositoryParts.length && repositoryParts.length != 2) {
-                throw new errors_1.InputRepositoryInvalid(inputRepository);
-            }
-            const currentOwner = repositoryParts.length ? repositoryParts[0] : owner;
-            const currentRepository = repositoryParts.length ? repositoryParts[1] : repo;
-            const currentBranch = inputBranch ? inputBranch : branch;
-            const repository = yield core.group(`fetching repository info for owner: ${currentOwner}, repo: ${currentRepository}, branch: ${currentBranch}`, () => __awaiter(this, void 0, void 0, function* () {
+            const repository = yield core.group(`fetching repository info for owner: ${selectedOwner}, repo: ${selectedRepo}, branch: ${selectedBranch}`, () => __awaiter(this, void 0, void 0, function* () {
                 const startTime = Date.now();
-                const repositoryData = yield (0, graphql_1.getRepository)(currentOwner, currentRepository, currentBranch);
+                const repositoryData = yield (0, graphql_1.getRepository)(selectedOwner, selectedRepo, selectedBranch);
                 const endTime = Date.now();
                 core.debug(`time taken: ${(endTime - startTime).toString()} ms`);
                 return repositoryData;
             }));
+            core.info('Checking remote branches');
             if (!repository.ref) {
-                if (inputBranch && currentBranch == inputBranch) {
+                if (inputBranch) {
                     throw new errors_1.InputBranchNotFound(inputBranch);
                 }
                 else {
-                    throw new errors_1.BranchNotFound(currentBranch);
+                    throw new errors_1.BranchNotFound(branch);
                 }
             }
+            core.info('Processing to create signed commit');
+            core.debug('Get last (current?) commit');
             const currentCommit = (_b = (_a = repository.ref.target.history) === null || _a === void 0 ? void 0 : _a.nodes) === null || _b === void 0 ? void 0 : _b[0];
             if (!currentCommit) {
                 throw new errors_1.BranchCommitNotFound(repository.ref.name);
@@ -30487,10 +30508,16 @@ function run() {
             let createdCommit;
             const filePaths = core.getMultilineInput('files');
             if (filePaths.length <= 0) {
-                core.debug('skip file commit, empty files input');
+                core.notice('skip file commit, empty files input');
             }
             else {
-                core.debug(`proceed with file commit, input: ${JSON.stringify(filePaths)}`);
+                core.debug(`Proceed with file commit, input: ${JSON.stringify(filePaths)}`);
+                const workdir = (0, cwd_1.getWorkdir)();
+                const cwd = (0, cwd_1.getCwd)();
+                if (cwd !== workdir) {
+                    core.notice('Changing working directory to Workdir: ' + workdir);
+                    process.chdir(workdir);
+                }
                 yield (0, git_1.addFileChanges)(filePaths);
                 const fileChanges = yield (0, git_1.getFileChanges)();
                 const fileCount = ((_d = (_c = fileChanges.additions) === null || _c === void 0 ? void 0 : _c.length) !== null && _d !== void 0 ? _d : 0) +
@@ -30512,7 +30539,7 @@ function run() {
                         const startTime = Date.now();
                         const commitData = yield (0, graphql_1.createCommitOnBranch)(currentCommit, commitMessage, {
                             repositoryNameWithOwner: repository.nameWithOwner,
-                            branchName: currentBranch,
+                            branchName: selectedBranch,
                         }, fileChanges);
                         const endTime = Date.now();
                         core.debug(`time taken: ${(endTime - startTime).toString()} ms`);
@@ -30646,6 +30673,7 @@ var __importStar = (this && this.__importStar) || (function () {
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.getCwd = getCwd;
 exports.getWorkspace = getWorkspace;
+exports.getWorkdir = getWorkdir;
 const core = __importStar(__nccwpck_require__(7484));
 const input_1 = __nccwpck_require__(7797);
 function getCwd() {
@@ -30659,6 +30687,13 @@ function getWorkspace() {
     });
     core.debug(`workspace: ${workspace}`);
     return workspace;
+}
+function getWorkdir() {
+    const workdir = (0, input_1.getInput)('workdir', {
+        default: process.env.GITHUB_WORKSPACE,
+    });
+    core.debug(`workdir: ${workdir}`);
+    return workdir;
 }
 
 
