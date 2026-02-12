@@ -29884,8 +29884,11 @@ class Blob {
         if (!fs.existsSync(this.absolutePath)) {
             throw new Error(`File does not exist, path: ${this.absolutePath}`);
         }
+        // Always read files as raw buffers without encoding
+        // The Base64Encoder works with buffers for both text and binary files
+        // Using any encoding (like 'utf8') corrupts the data
         return fs
-            .createReadStream(this.absolutePath, { encoding: 'utf8' })
+            .createReadStream(this.absolutePath)
             .pipe(new base64_encoder_1.default());
     }
     load() {
@@ -30591,12 +30594,12 @@ class Base64Encoder extends node_stream_1.Transform {
             chunk = chunk.subarray(0, chunk.length - overflowSize);
         }
         const base64String = chunk.toString('base64');
-        this.push(node_buffer_1.Buffer.from(base64String));
+        this.push(base64String);
         callback();
     }
     _flush(callback) {
         if (this.overflow) {
-            this.push(node_buffer_1.Buffer.from(this.overflow.toString('base64')));
+            this.push(this.overflow.toString('base64'));
         }
         callback();
     }
