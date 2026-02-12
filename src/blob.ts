@@ -26,8 +26,11 @@ export class Blob {
       throw new Error(`File does not exist, path: ${this.absolutePath}`)
     }
 
+    // Always read files as raw buffers without encoding
+    // The Base64Encoder works with buffers for both text and binary files
+    // Using any encoding (like 'utf8') corrupts the data
     return fs
-      .createReadStream(this.absolutePath, { encoding: 'utf8' })
+      .createReadStream(this.absolutePath)
       .pipe(new Base64Encoder())
   }
 
