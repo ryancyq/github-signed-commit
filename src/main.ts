@@ -13,69 +13,109 @@ import {
   pushCurrentBranch,
   switchBranch,
 } from './git'
+import { getCwd, getWorkdir } from './utils/cwd'
 import { getInput } from './utils/input'
+import { RepositoryWithCommitHistory } from './github/types'
 import {
   NoFileChanges,
   BranchNotFound,
   BranchCommitNotFound,
-  InputRepositoryInvalid,
   InputBranchNotFound,
 } from './errors'
 
 export async function run(): Promise<void> {
   try {
+    core.info('Getting info from GH Worklfow context')
     const { owner, repo, branch } = getContext()
-    const inputRepository = getInput('repository')
+
+    core.info('Setting variables according to inputs and context')
+    core.debug('* branch')
     const inputBranch = getInput('branch-name')
-    if (inputBranch && inputBranch !== branch) {
-      await switchBranch(inputBranch)
+    const selectedBranch = inputBranch ? inputBranch : branch
+
+    core.debug('* owner')
+    const inputOwner = getInput('owner')
+    const selectedOwner = inputOwner ? inputOwner : owner
+
+    core.debug('* repo')
+    const inputRepo = getInput('repo')
+    const selectedRepo = inputRepo ? inputRepo : repo
+
+    let justPushedBranch = false
+    if (
+      selectedOwner == owner &&
+      selectedRepo == repo &&
+      selectedBranch !== branch
+    ) {
+      core.warning(
+        'Pushing local and current branch to remote before proceeding'
+      )
+      // Git commands
+      await switchBranch(selectedBranch)
       await pushCurrentBranch()
+      justPushedBranch = true
     }
 
-    const repositoryParts = inputRepository ? inputRepository.split('/') : []
-    if (repositoryParts.length && repositoryParts.length != 2) {
-      throw new InputRepositoryInvalid(inputRepository)
+    const maxAttempts = justPushedBranch ? 5 : 1
+    let repository: RepositoryWithCommitHistory | undefined
+    for (let attempt = 1; attempt <= maxAttempts; attempt++) {
+      repository = await core.group(
+        `fetching repository info for owner: ${selectedOwner}, repo: ${selectedRepo}, branch: ${selectedBranch}`,
+        async () => {
+          const startTime = Date.now()
+          const repositoryData = await getRepository(
+            selectedOwner,
+            selectedRepo,
+            selectedBranch
+          )
+          const endTime = Date.now()
+          core.debug(`time taken: ${(endTime - startTime).toString()} ms`)
+          return repositoryData
+        }
+      )
+
+      if (repository.ref || attempt >= maxAttempts) break
+
+      core.info(
+        `Branch not yet available via API, retrying (${attempt.toString()}/${maxAttempts.toString()})...`
+      )
+      await new Promise((resolve) => setTimeout(resolve, 1000))
     }
 
-    const currentOwner = repositoryParts.length ? repositoryParts[0] : owner
-    const currentRepository = repositoryParts.length ? repositoryParts[1] : repo
-    const currentBranch = inputBranch ? inputBranch : branch
-    const repository = await core.group(
-      `fetching repository info for owner: ${currentOwner}, repo: ${currentRepository}, branch: ${currentBranch}`,
-      async () => {
-        const startTime = Date.now()
-        const repositoryData = await getRepository(
-          currentOwner,
-          currentRepository,
-          currentBranch
-        )
-        const endTime = Date.now()
-        core.debug(`time taken: ${(endTime - startTime).toString()} ms`)
-        return repositoryData
-      }
-    )
+    // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+    const repoData = repository!
 
-    if (!repository.ref) {
-      if (inputBranch && currentBranch == inputBranch) {
+    core.info('Checking remote branches')
+    if (!repoData.ref) {
+      if (inputBranch) {
         throw new InputBranchNotFound(inputBranch)
       } else {
-        throw new BranchNotFound(currentBranch)
+        throw new BranchNotFound(branch)
       }
     }
 
-    const currentCommit = repository.ref.target.history?.nodes?.[0]
+    core.info('Processing to create signed commit')
+    core.debug('Get last (current?) commit')
+    const currentCommit = repoData.ref.target.history?.nodes?.[0]
     if (!currentCommit) {
-      throw new BranchCommitNotFound(repository.ref.name)
+      throw new BranchCommitNotFound(repoData.ref.name)
     }
 
     let createdCommit: Commit | undefined
     const filePaths = core.getMultilineInput('files')
     if (filePaths.length <= 0) {
-      core.debug('skip file commit, empty files input')
+      core.notice('skip file commit, empty files input')
     } else {
       core.debug(
-        `proceed with file commit, input: ${JSON.stringify(filePaths)}`
+        `Proceed with file commit, input: ${JSON.stringify(filePaths)}`
       )
+
+      const workdir = getWorkdir()
+      const cwd = getCwd()
+      if (cwd !== workdir) {
+        core.notice('Changing working directory to Workdir: ' + workdir)
+        process.chdir(workdir)
+      }
 
       await addFileChanges(filePaths)
       const fileChanges = await getFileChanges()
@@ -102,8 +142,8 @@ export async function run(): Promise<void> {
               currentCommit,
               commitMessage,
               {
-                repositoryNameWithOwner: repository.nameWithOwner,
-                branchName: currentBranch,
+                repositoryNameWithOwner: repoData.nameWithOwner,
+                branchName: selectedBranch,
               },
               fileChanges
             )
@@ -131,7 +171,7 @@ export async function run(): Promise<void> {
       )
       const tagResponse = await core.group('tagging commit', async () => {
         const startTime = Date.now()
-        const tagData = await createTagOnCommit(tagCommit, tag, repository.id)
+        const tagData = await createTagOnCommit(tagCommit, tag, repoData.id)
         const endTime = Date.now()
         core.debug(`time taken: ${(endTime - startTime).toString()} ms`)
         return tagData

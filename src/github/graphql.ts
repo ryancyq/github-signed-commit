@@ -18,7 +18,7 @@ import { RepositoryWithCommitHistory } from '../github/types'
 function formatLogMessage(...params: Record<string, unknown>[]): string {
   return Object.entries(Object.assign({}, ...params) as Record<string, unknown>)
     .map(([key, value]) => {
-      return `${String(key)}: ${typeof value === 'string' ? value : JSON.stringify(value)}`
+      return `${key}: ${typeof value === 'string' ? value : JSON.stringify(value)}`
     })
     .join(', ')
 }

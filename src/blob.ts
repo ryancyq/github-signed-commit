@@ -26,9 +26,7 @@ export class Blob {
       throw new Error(`File does not exist, path: ${this.absolutePath}`)
     }
 
-    return fs
-      .createReadStream(this.absolutePath, { encoding: 'utf8' })
-      .pipe(new Base64Encoder())
+    return fs.createReadStream(this.absolutePath).pipe(new Base64Encoder())
   }
 
   async load(): Promise<FileAddition> {

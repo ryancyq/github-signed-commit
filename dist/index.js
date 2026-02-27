@@ -1871,6 +1871,7 @@ class Context {
         this.action = process.env.GITHUB_ACTION;
         this.actor = process.env.GITHUB_ACTOR;
         this.job = process.env.GITHUB_JOB;
+        this.runAttempt = parseInt(process.env.GITHUB_RUN_ATTEMPT, 10);
         this.runNumber = parseInt(process.env.GITHUB_RUN_NUMBER, 10);
         this.runId = parseInt(process.env.GITHUB_RUN_ID, 10);
         this.apiUrl = (_a = process.env.GITHUB_API_URL) !== null && _a !== void 0 ? _a : `https://api.github.com`;
@@ -2742,7 +2743,7 @@ class HttpClient {
         }
         const usingSsl = parsedUrl.protocol === 'https:';
         proxyAgent = new undici_1.ProxyAgent(Object.assign({ uri: proxyUrl.href, pipelining: !this._keepAlive ? 0 : 1 }, ((proxyUrl.username || proxyUrl.password) && {
-            token: `${proxyUrl.username}:${proxyUrl.password}`
+            token: `Basic ${Buffer.from(`${proxyUrl.username}:${proxyUrl.password}`).toString('base64')}`
         })));
         this._proxyAgentDispatcher = proxyAgent;
         if (usingSsl && this._ignoreSslError) {
@@ -3536,11 +3537,11 @@ var __copyProps = (to, from, except, desc) => {
 var __toCommonJS = (mod) => __copyProps(__defProp({}, "__esModule", { value: true }), mod);
 
 // pkg/dist-src/index.js
-var dist_src_exports = {};
-__export(dist_src_exports, {
+var index_exports = {};
+__export(index_exports, {
   Octokit: () => Octokit
 });
-module.exports = __toCommonJS(dist_src_exports);
+module.exports = __toCommonJS(index_exports);
 var import_universal_user_agent = __nccwpck_require__(3843);
 var import_before_after_hook = __nccwpck_require__(2732);
 var import_request = __nccwpck_require__(8636);
@@ -3548,13 +3549,28 @@ var import_graphql = __nccwpck_require__(7);
 var import_auth_token = __nccwpck_require__(7864);
 
 // pkg/dist-src/version.js
-var VERSION = "5.2.0";
+var VERSION = "5.2.2";
 
 // pkg/dist-src/index.js
 var noop = () => {
 };
 var consoleWarn = console.warn.bind(console);
 var consoleError = console.error.bind(console);
+function createLogger(logger = {}) {
+  if (typeof logger.debug !== "function") {
+    logger.debug = noop;
+  }
+  if (typeof logger.info !== "function") {
+    logger.info = noop;
+  }
+  if (typeof logger.warn !== "function") {
+    logger.warn = consoleWarn;
+  }
+  if (typeof logger.error !== "function") {
+    logger.error = consoleError;
+  }
+  return logger;
+}
 var userAgentTrail = `octokit-core.js/${VERSION} ${(0, import_universal_user_agent.getUserAgent)()}`;
 var Octokit = class {
   static {
@@ -3628,15 +3644,7 @@ var Octokit = class {
     }
     this.request = import_request.request.defaults(requestDefaults);
     this.graphql = (0, import_graphql.withCustomRequest)(this.request).defaults(requestDefaults);
-    this.log = Object.assign(
-      {
-        debug: noop,
-        info: noop,
-        warn: consoleWarn,
-        error: consoleError
-      },
-      options.log
-    );
+    this.log = createLogger(options.log);
     this.hook = hook;
     if (!options.authStrategy) {
       if (!options.auth) {
@@ -4087,18 +4095,18 @@ var __copyProps = (to, from, except, desc) => {
 var __toCommonJS = (mod) => __copyProps(__defProp({}, "__esModule", { value: true }), mod);
 
 // pkg/dist-src/index.js
-var dist_src_exports = {};
-__export(dist_src_exports, {
+var index_exports = {};
+__export(index_exports, {
   GraphqlResponseError: () => GraphqlResponseError,
   graphql: () => graphql2,
   withCustomRequest: () => withCustomRequest
 });
-module.exports = __toCommonJS(dist_src_exports);
+module.exports = __toCommonJS(index_exports);
 var import_request3 = __nccwpck_require__(8636);
 var import_universal_user_agent = __nccwpck_require__(3843);
 
 // pkg/dist-src/version.js
-var VERSION = "7.1.0";
+var VERSION = "7.1.1";
 
 // pkg/dist-src/with-defaults.js
 var import_request2 = __nccwpck_require__(8636);
@@ -4146,8 +4154,7 @@ function graphql(request2, query, options) {
       );
     }
     for (const key in options) {
-      if (!FORBIDDEN_VARIABLE_OPTIONS.includes(key))
-        continue;
+      if (!FORBIDDEN_VARIABLE_OPTIONS.includes(key)) continue;
       return Promise.reject(
         new Error(
           `[@octokit/graphql] "${key}" cannot be used as variable name`
@@ -12962,7 +12969,7 @@ module.exports = {
 
 
 const { parseSetCookie } = __nccwpck_require__(8915)
-const { stringify, getHeadersList } = __nccwpck_require__(3834)
+const { stringify } = __nccwpck_require__(3834)
 const { webidl } = __nccwpck_require__(4222)
 const { Headers } = __nccwpck_require__(6349)
 
@@ -13038,14 +13045,13 @@ function getSetCookies (headers) {
 
   webidl.brandCheck(headers, Headers, { strict: false })
 
-  const cookies = getHeadersList(headers).cookies
+  const cookies = headers.getSetCookie()
 
   if (!cookies) {
     return []
   }
 
-  // In older versions of undici, cookies is a list of name:value.
-  return cookies.map((pair) => parseSetCookie(Array.isArray(pair) ? pair[1] : pair))
+  return cookies.map((pair) => parseSetCookie(pair))
 }
 
 /**
@@ -13472,13 +13478,14 @@ module.exports = {
 /***/ }),
 
 /***/ 3834:
-/***/ ((module, __unused_webpack_exports, __nccwpck_require__) => {
+/***/ ((module) => {
 
 
 
-const assert = __nccwpck_require__(2613)
-const { kHeadersList } = __nccwpck_require__(6443)
-
+/**
+ * @param {string} value
+ * @returns {boolean}
+ */
 function isCTLExcludingHtab (value) {
   if (value.length === 0) {
     return false
@@ -13739,31 +13746,13 @@ function stringify (cookie) {
   return out.join('; ')
 }
 
-let kHeadersListNode
-
-function getHeadersList (headers) {
-  if (headers[kHeadersList]) {
-    return headers[kHeadersList]
-  }
-
-  if (!kHeadersListNode) {
-    kHeadersListNode = Object.getOwnPropertySymbols(headers).find(
-      (symbol) => symbol.description === 'headers list'
-    )
-
-    assert(kHeadersListNode, 'Headers cannot be parsed')
-  }
-
-  const headersList = headers[kHeadersListNode]
-  assert(headersList)
-
-  return headersList
-}
-
 module.exports = {
   isCTLExcludingHtab,
-  stringify,
-  getHeadersList
+  validateCookieName,
+  validateCookiePath,
+  validateCookieValue,
+  toIMFDate,
+  stringify
 }
 
 
@@ -17754,6 +17743,7 @@ const {
   isValidHeaderName,
   isValidHeaderValue
 } = __nccwpck_require__(5523)
+const util = __nccwpck_require__(9023)
 const { webidl } = __nccwpck_require__(4222)
 const assert = __nccwpck_require__(2613)
 
@@ -18307,6 +18297,9 @@ Object.defineProperties(Headers.prototype, {
   [Symbol.toStringTag]: {
     value: 'Headers',
     configurable: true
+  },
+  [util.inspect.custom]: {
+    enumerable: false
   }
 })
 
@@ -27454,6 +27447,20 @@ class Pool extends PoolBase {
       ? { ...options.interceptors }
       : undefined
     this[kFactory] = factory
+
+    this.on('connectionError', (origin, targets, error) => {
+      // If a connection error occurs, we remove the client from the pool,
+      // and emit a connectionError event. They will not be re-used.
+      // Fixes https://github.com/nodejs/undici/issues/3895
+      for (const target of targets) {
+        // Do not use kRemoveClient here, as it will close the client,
+        // but the client cannot be closed in this state.
+        const idx = this[kClients].indexOf(target)
+        if (idx !== -1) {
+          this[kClients].splice(idx, 1)
+        }
+      }
+    })
   }
 
   [kGetDispatcher] () {
@@ -29884,9 +29891,7 @@ class Blob {
         if (!fs.existsSync(this.absolutePath)) {
             throw new Error(`File does not exist, path: ${this.absolutePath}`);
         }
-        return fs
-            .createReadStream(this.absolutePath, { encoding: 'utf8' })
-            .pipe(new base64_encoder_1.default());
+        return fs.createReadStream(this.absolutePath).pipe(new base64_encoder_1.default());
     }
     load() {
         return __awaiter(this, void 0, void 0, function* () {
@@ -30023,6 +30028,7 @@ function execGit(args) {
         const debugOutput = [];
         const warningOutput = [];
         const errorOutput = [];
+        core.debug('execGit() - args: ' + JSON.stringify(args));
         yield (0, exec_1.exec)('git', args, {
             silent: true,
             ignoreReturnCode: true,
@@ -30067,8 +30073,15 @@ function pushCurrentBranch() {
 }
 function addFileChanges(globPatterns) {
     return __awaiter(this, void 0, void 0, function* () {
+        const cwd = (0, cwd_1.getCwd)();
         const workspace = (0, cwd_1.getWorkspace)();
-        const workspacePaths = globPatterns.map((p) => (0, node_path_1.join)(workspace, p));
+        const resolvedWorkspace = (0, node_path_1.resolve)(workspace);
+        core.debug('addFileChanges() - resolvedWorkspace: ' + JSON.stringify(resolvedWorkspace));
+        let workspacePaths = globPatterns;
+        if (resolvedWorkspace.includes(cwd)) {
+            core.notice('addFileChanges() - "workspace" is a subdirectory, updating globPatterns');
+            workspacePaths = globPatterns.map((p) => (0, node_path_1.join)((0, node_path_1.relative)(cwd, resolvedWorkspace), p));
+        }
         yield execGit(['add', '--', ...workspacePaths]);
     });
 }
@@ -30200,7 +30213,7 @@ const blob_1 = __nccwpck_require__(1408);
 function formatLogMessage(...params) {
     return Object.entries(Object.assign({}, ...params))
         .map(([key, value]) => {
-        return `${String(key)}: ${typeof value === 'string' ? value : JSON.stringify(value)}`;
+        return `${key}: ${typeof value === 'string' ? value : JSON.stringify(value)}`;
     })
         .join(', ');
 }
@@ -30379,6 +30392,9 @@ function resolveCurrentBranch(ref) {
         // eslint-disable-next-line @typescript-eslint/no-unsafe-return, @typescript-eslint/no-unsafe-member-access
         return (_c = (_b = (_a = github.context.payload.pull_request) === null || _a === void 0 ? void 0 : _a.head) === null || _b === void 0 ? void 0 : _b.ref) !== null && _c !== void 0 ? _c : '';
     }
+    else if (ref.startsWith('refs/tags/')) {
+        return '';
+    }
     throw new Error(`Unsupported ref: ${ref}`);
 }
 function getContext() {
@@ -30445,52 +30461,80 @@ const core = __importStar(__nccwpck_require__(7484));
 const graphql_1 = __nccwpck_require__(1422);
 const repo_1 = __nccwpck_require__(1839);
 const git_1 = __nccwpck_require__(1243);
+const cwd_1 = __nccwpck_require__(9827);
 const input_1 = __nccwpck_require__(7797);
 const errors_1 = __nccwpck_require__(3916);
 function run() {
     return __awaiter(this, void 0, void 0, function* () {
         var _a, _b, _c, _d, _e, _f;
         try {
+            core.info('Getting info from GH Worklfow context');
             const { owner, repo, branch } = (0, repo_1.getContext)();
-            const inputRepository = (0, input_1.getInput)('repository');
+            core.info('Setting variables according to inputs and context');
+            core.debug('* branch');
             const inputBranch = (0, input_1.getInput)('branch-name');
-            if (inputBranch && inputBranch !== branch) {
-                yield (0, git_1.switchBranch)(inputBranch);
+            const selectedBranch = inputBranch ? inputBranch : branch;
+            core.debug('* owner');
+            const inputOwner = (0, input_1.getInput)('owner');
+            const selectedOwner = inputOwner ? inputOwner : owner;
+            core.debug('* repo');
+            const inputRepo = (0, input_1.getInput)('repo');
+            const selectedRepo = inputRepo ? inputRepo : repo;
+            let justPushedBranch = false;
+            if (selectedOwner == owner &&
+                selectedRepo == repo &&
+                selectedBranch !== branch) {
+                core.warning('Pushing local and current branch to remote before proceeding');
+                // Git commands
+                yield (0, git_1.switchBranch)(selectedBranch);
                 yield (0, git_1.pushCurrentBranch)();
+                justPushedBranch = true;
             }
-            const repositoryParts = inputRepository ? inputRepository.split('/') : [];
-            if (repositoryParts.length && repositoryParts.length != 2) {
-                throw new errors_1.InputRepositoryInvalid(inputRepository);
+            const maxAttempts = justPushedBranch ? 5 : 1;
+            let repository;
+            for (let attempt = 1; attempt <= maxAttempts; attempt++) {
+                repository = yield core.group(`fetching repository info for owner: ${selectedOwner}, repo: ${selectedRepo}, branch: ${selectedBranch}`, () => __awaiter(this, void 0, void 0, function* () {
+                    const startTime = Date.now();
+                    const repositoryData = yield (0, graphql_1.getRepository)(selectedOwner, selectedRepo, selectedBranch);
+                    const endTime = Date.now();
+                    core.debug(`time taken: ${(endTime - startTime).toString()} ms`);
+                    return repositoryData;
+                }));
+                if (repository.ref || attempt >= maxAttempts)
+                    break;
+                core.info(`Branch not yet available via API, retrying (${attempt.toString()}/${maxAttempts.toString()})...`);
+                yield new Promise((resolve) => setTimeout(resolve, 1000));
             }
-            const currentOwner = repositoryParts.length ? repositoryParts[0] : owner;
-            const currentRepository = repositoryParts.length ? repositoryParts[1] : repo;
-            const currentBranch = inputBranch ? inputBranch : branch;
-            const repository = yield core.group(`fetching repository info for owner: ${currentOwner}, repo: ${currentRepository}, branch: ${currentBranch}`, () => __awaiter(this, void 0, void 0, function* () {
-                const startTime = Date.now();
-                const repositoryData = yield (0, graphql_1.getRepository)(currentOwner, currentRepository, currentBranch);
-                const endTime = Date.now();
-                core.debug(`time taken: ${(endTime - startTime).toString()} ms`);
-                return repositoryData;
-            }));
-            if (!repository.ref) {
-                if (inputBranch && currentBranch == inputBranch) {
+            // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+            const repoData = repository;
+            core.info('Checking remote branches');
+            if (!repoData.ref) {
+                if (inputBranch) {
                     throw new errors_1.InputBranchNotFound(inputBranch);
                 }
                 else {
-                    throw new errors_1.BranchNotFound(currentBranch);
+                    throw new errors_1.BranchNotFound(branch);
                 }
             }
-            const currentCommit = (_b = (_a = repository.ref.target.history) === null || _a === void 0 ? void 0 : _a.nodes) === null || _b === void 0 ? void 0 : _b[0];
+            core.info('Processing to create signed commit');
+            core.debug('Get last (current?) commit');
+            const currentCommit = (_b = (_a = repoData.ref.target.history) === null || _a === void 0 ? void 0 : _a.nodes) === null || _b === void 0 ? void 0 : _b[0];
             if (!currentCommit) {
-                throw new errors_1.BranchCommitNotFound(repository.ref.name);
+                throw new errors_1.BranchCommitNotFound(repoData.ref.name);
             }
             let createdCommit;
             const filePaths = core.getMultilineInput('files');
             if (filePaths.length <= 0) {
-                core.debug('skip file commit, empty files input');
+                core.notice('skip file commit, empty files input');
             }
             else {
-                core.debug(`proceed with file commit, input: ${JSON.stringify(filePaths)}`);
+                core.debug(`Proceed with file commit, input: ${JSON.stringify(filePaths)}`);
+                const workdir = (0, cwd_1.getWorkdir)();
+                const cwd = (0, cwd_1.getCwd)();
+                if (cwd !== workdir) {
+                    core.notice('Changing working directory to Workdir: ' + workdir);
+                    process.chdir(workdir);
+                }
                 yield (0, git_1.addFileChanges)(filePaths);
                 const fileChanges = yield (0, git_1.getFileChanges)();
                 const fileCount = ((_d = (_c = fileChanges.additions) === null || _c === void 0 ? void 0 : _c.length) !== null && _d !== void 0 ? _d : 0) +
@@ -30511,8 +30555,8 @@ function run() {
                     const createResponse = yield core.group('committing files', () => __awaiter(this, void 0, void 0, function* () {
                         const startTime = Date.now();
                         const commitData = yield (0, graphql_1.createCommitOnBranch)(currentCommit, commitMessage, {
-                            repositoryNameWithOwner: repository.nameWithOwner,
-                            branchName: currentBranch,
+                            repositoryNameWithOwner: repoData.nameWithOwner,
+                            branchName: selectedBranch,
                         }, fileChanges);
                         const endTime = Date.now();
                         core.debug(`time taken: ${(endTime - startTime).toString()} ms`);
@@ -30535,7 +30579,7 @@ function run() {
                 core.debug(`proceed with commit tagging, input: ${tag}, commit: ${tagCommit.oid}`);
                 const tagResponse = yield core.group('tagging commit', () => __awaiter(this, void 0, void 0, function* () {
                     const startTime = Date.now();
-                    const tagData = yield (0, graphql_1.createTagOnCommit)(tagCommit, tag, repository.id);
+                    const tagData = yield (0, graphql_1.createTagOnCommit)(tagCommit, tag, repoData.id);
                     const endTime = Date.now();
                     core.debug(`time taken: ${(endTime - startTime).toString()} ms`);
                     return tagData;
@@ -30646,6 +30690,7 @@ var __importStar = (this && this.__importStar) || (function () {
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.getCwd = getCwd;
 exports.getWorkspace = getWorkspace;
+exports.getWorkdir = getWorkdir;
 const core = __importStar(__nccwpck_require__(7484));
 const input_1 = __nccwpck_require__(7797);
 function getCwd() {
@@ -30659,6 +30704,13 @@ function getWorkspace() {
     });
     core.debug(`workspace: ${workspace}`);
     return workspace;
+}
+function getWorkdir() {
+    const workdir = (0, input_1.getInput)('workdir', {
+        default: process.env.GITHUB_WORKSPACE,
+    });
+    core.debug(`workdir: ${workdir}`);
+    return workdir;
 }
 
 

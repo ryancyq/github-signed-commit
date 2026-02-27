@@ -6,6 +6,8 @@ function resolveCurrentBranch(ref: string): string {
   } else if (ref.startsWith('refs/pull/')) {
     // eslint-disable-next-line @typescript-eslint/no-unsafe-return, @typescript-eslint/no-unsafe-member-access
     return github.context.payload.pull_request?.head?.ref ?? ''
+  } else if (ref.startsWith('refs/tags/')) {
+    return ''
   }
 
   throw new Error(`Unsupported ref: ${ref}`)

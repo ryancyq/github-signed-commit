@@ -63,8 +63,9 @@ Note: The `GH_TOKEN` environment variable is **required** for GitHub API request
 | `files` | **YES** | Multi-line string of file paths to be committed, relative to the current workspace.|
 | `workspace` | **NO** | Directory containing files to be committed. **DEFAULT:** GitHub workspace directory (root of the repository). |
 | `commit-message` | **YES** | Commit message for the file changes. |
-| `repository` | **NO** | Repository name including owner (e.g. owner/repo). **DEFAULT:** Workflow triggered repository |
-| `branch-name` | **NO** | Branch to commit, it must already exist in the remote. **DEFAULT:** Workflow triggered branch |
+| `owner` | **NO** | GitHub repository owner (user or organization), defaults to the repo invoking the action. |
+| `repo` | **NO** | GitHub repository name, defaults to the repo invoking the action. |
+| `branch-name` | **NO*** | Branch to commit, it must already exist in the remote. **DEFAULT:** Workflow triggered branch. **REQUIRED:** If triggered through `on tags`.|
 | `branch-push-force` | **NO** | `--force` flag when running `git push <branch-name>`. |
 | `tag` | **NO** | Push tag for the new/current commit. |
 | `tag-only-if-file-changes` | **NO** | Push tag for new commit only when file changes present. **DEFAULT:** true |
@@ -74,6 +75,15 @@ Note: The `GH_TOKEN` environment variable is **required** for GitHub API request
 | :--- | :--- |
 | `commit-sha` | Full SHA of the signed commit. |
 | `tag` | Tag of the signed commit. |
+
+## Release
+
+This project follows [Conventional Commits](https://www.conventionalcommits.org/) and uses a manual release workflow.
+
+1. Ensure `dist/` is up-to-date by running `npm run bundle`
+2. Trigger the **Release** workflow via `workflow_dispatch` with the desired [semver](https://semver.org/) version
+    - The workflow bumps `package.json`, creates a signed commit, and tags `v{version}`
+3. The **Changelog** workflow automatically regenerates `CHANGELOG.md` from conventional commits using [git-cliff](https://git-cliff.org/)
 
 [ci_badge]: https://github.com/ryancyq/github-signed-commit/actions/workflows/ci.yml/badge.svg
 [ci_workflows]: https://github.com/ryancyq/github-signed-commit/actions/workflows/ci.yml
