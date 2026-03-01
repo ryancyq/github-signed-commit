@@ -86,6 +86,23 @@ describe('Blob', () => {
       })
     })
 
+    it('binary file successfully', async () => {
+      const binaryContent = Buffer.from([
+        0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a, 0xff, 0xfe, 0x00, 0x80,
+        0xc0, 0xc1, 0xf5, 0xf6,
+      ])
+      const binaryPath = join(__dirname, 'fixtures', 'blob.bin')
+      fs.writeFileSync(binaryPath, binaryContent)
+
+      try {
+        const blob = getBlob('fixtures/blob.bin')
+        const fileAddition = await blob.load()
+        expect(fileAddition.contents).toEqual(binaryContent.toString('base64'))
+      } finally {
+        fs.unlinkSync(binaryPath)
+      }
+    })
+
     it('stream with error', async () => {
       const blob = getBlob('fixtures/error.txt')
       const mockStream = new PassThrough()

@@ -5,6 +5,10 @@ All notable changes to this project will be documented in this file. See [conven
 ---
 ## [Unreleased](https://github.com/ryancyq/github-signed-commit/tree/HEAD)
 
+### Bug Fixes
+
+- handle binary content properly ([#9](https://github.com/ryancyq/github-signed-commit/issues/9)) - ([b793b7c](https://github.com/ryancyq/github-signed-commit/commit/b793b7cec39f3659d9a29f030223994686cbb01f)) - Xavier Krantz
+
 ### Documentation
 
 - add support to repository input - ([f3899e6](https://github.com/ryancyq/github-signed-commit/commit/f3899e6baca1f1580ac3516468dd170a47a84d6f)) - Ryan Chang
@@ -12,6 +16,8 @@ All notable changes to this project will be documented in this file. See [conven
 ### Features
 
 - allow customized repository with owner - ([8f42b12](https://github.com/ryancyq/github-signed-commit/commit/8f42b1246b6287f96b2c628ed756d1debc681b3e)) - Ryan Chang
+- Add support for remote GitHub repository + working directory ([#2](https://github.com/ryancyq/github-signed-commit/issues/2)) - ([9f01b63](https://github.com/ryancyq/github-signed-commit/commit/9f01b63120591cae14729ff96261d66a7fd7e4eb)) - Xavier Krantz
+- Add support for Tags push events ([#3](https://github.com/ryancyq/github-signed-commit/issues/3)) - ([5d85f5f](https://github.com/ryancyq/github-signed-commit/commit/5d85f5f027d01342eff841614fe2a17e7e06925c)) - Xavier Krantz
 
 ### Tests
 

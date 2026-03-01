@@ -1,7 +1,7 @@
 {
   "type": "module",
   "name": "@ryancyq/github-signed-commit",
-  "version": "1.2.0",
+  "version": "1.4.1",
   "description": "Create a signed commit with GitHub Actions",
   "main": "dist/index.js",
   "repository": {
