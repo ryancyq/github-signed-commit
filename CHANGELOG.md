@@ -20,6 +20,10 @@ All notable changes to this project will be documented in this file. See [conven
 - use restore mocks to avoid leaky mocks - ([090c4f6](https://github.com/ryancyq/github-signed-commit/commit/090c4f6db1487443d042967f5cf1afd901000122)) - Ryan Chang
 - add input repository tests - ([795d995](https://github.com/ryancyq/github-signed-commit/commit/795d995fc87d3ea724fae9535664d4abb1a94cac)) - Ryan Chang
 
+### Lib
+
+- bump to node 24 - ([85e7678](https://github.com/ryancyq/github-signed-commit/commit/85e767814e8c7de147eb2415d3527d5a9553fdcc)) - Ryan Chang
+
 ---
 ## [1.2.0](https://github.com/ryancyq/github-signed-commit/compare/v1.1.0..v1.2.0) - 2024-10-02
 
