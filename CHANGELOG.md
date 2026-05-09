@@ -3,7 +3,7 @@
 All notable changes to this project will be documented in this file. See [conventional commits](https://www.conventionalcommits.org/) for commit guidelines.
 
 ---
-## [Unreleased](https://github.com/ryancyq/github-signed-commit/tree/HEAD)
+## [1.3.0](https://github.com/ryancyq/github-signed-commit/compare/v1.2.0..v1.3.0) - 2026-05-09
 
 ### Documentation
 
