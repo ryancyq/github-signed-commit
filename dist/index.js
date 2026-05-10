@@ -30200,7 +30200,7 @@ const blob_1 = __nccwpck_require__(1408);
 function formatLogMessage(...params) {
     return Object.entries(Object.assign({}, ...params))
         .map(([key, value]) => {
-        return `${String(key)}: ${typeof value === 'string' ? value : JSON.stringify(value)}`;
+        return `${key}: ${typeof value === 'string' ? value : JSON.stringify(value)}`;
     })
         .join(', ');
 }
