@@ -17,7 +17,7 @@
   "scripts": {
     "start": "node dist/index.js",
     "bundle": "npm run format:write && npm run build",
-    "build": "esbuild src/index.ts --bundle --platform=node --target=node24 --format=esm --outfile=dist/index.js",
+    "build": "esbuild src/index.ts --bundle --platform=node --target=node24 --format=esm --outfile=dist/index.js --banner:js=\"import { createRequire } from 'module'; const require = createRequire(import.meta.url);\"",
     "lint": "npx eslint 'src/**/*.ts'",
     "format:write": "npx prettier --write .",
     "format:check": "npx prettier --check .",
