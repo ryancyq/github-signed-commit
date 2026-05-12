@@ -51,3 +51,8 @@ jobs:
             CHANGELOG.md
           commit-message: "release: Bump version for ${{ env.NPM_VERSION }}"
           tag: v${{ env.NPM_VERSION }}
+
+      - name: Create GitHub Release
+        run: gh release create v${{ env.NPM_VERSION }} --title "v${{ env.NPM_VERSION }}" --generate-notes
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
