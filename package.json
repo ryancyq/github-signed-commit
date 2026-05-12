@@ -21,8 +21,7 @@
     "lint": "npx eslint 'src/**/*.ts'",
     "format:write": "npx prettier --write .",
     "format:check": "npx prettier --check .",
-    "test": "npx jest",
-    "ci-test": "npx jest --runInBand"
+    "test": "vitest run"
   },
   "homepage": "https://github.com/ryancyq/github-signed-commit#readme",
   "dependencies": {
@@ -37,13 +36,13 @@
     "@typescript-eslint/eslint-plugin": "^8.59.2",
     "@typescript-eslint/parser": "^8.59.0",
     "@vercel/ncc": "^0.38.2",
+    "@vitest/coverage-v8": "^4.1.6",
     "eslint": "^9.22.0",
     "eslint-config-prettier": "^10.1.8",
     "fetch-mock": "^12.6.0",
-    "jest": "^30.4.2",
-    "ts-jest": "^29.4.9",
     "typescript": "^5.8.2",
-    "typescript-eslint": "^8.59.2"
+    "typescript-eslint": "^8.59.2",
+    "vitest": "^4.1.6"
   },
   "engines": {
     "node": ">=24.0.0"
@@ -56,22 +55,5 @@
     "tabWidth": 2,
     "semi": false,
     "singleQuote": true
-  },
-  "jest": {
-    "preset": "ts-jest",
-    "testEnvironment": "node",
-    "testTimeout": 5000,
-    "moduleFileExtensions": [
-      "ts",
-      "js"
-    ],
-    "transform": {
-      "^.+\\.ts$": "ts-jest"
-    },
-    "coverageDirectory": "coverage",
-    "collectCoverageFrom": [
-      "src/**/*.ts"
-    ],
-    "verbose": true
   }
 }

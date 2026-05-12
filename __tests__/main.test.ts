@@ -1,6 +1,6 @@
 import * as core from '@actions/core'
 import * as github from '@actions/github'
-import { describe, jest, beforeEach, it, expect } from '@jest/globals'
+import { describe, vi, beforeEach, it, expect } from 'vitest'
 import * as main from '../src/main'
 import * as git from '../src/git'
 import * as repo from '../src/github/repo'
@@ -10,30 +10,29 @@ import {
   CreateCommitOnBranchPayload,
   CreateRefPayload,
 } from '@octokit/graphql-schema'
-import exp from 'constants'
 
 describe('action', () => {
   beforeEach(() => {
-    jest.restoreAllMocks()
-    jest.spyOn(core, 'debug').mockReturnValue()
-    jest.spyOn(core, 'info').mockReturnValue()
-    jest.spyOn(core, 'group').mockImplementation(async (name, fn) => {
+    vi.restoreAllMocks()
+    vi.spyOn(core, 'debug').mockReturnValue()
+    vi.spyOn(core, 'info').mockReturnValue()
+    vi.spyOn(core, 'group').mockImplementation(async (name, fn) => {
       return await fn()
     })
-    jest.spyOn(repo, 'getContext').mockReturnValue({
+    vi.spyOn(repo, 'getContext').mockReturnValue({
       repo: 'my-repo',
       owner: 'my-user',
       branch: 'main',
     })
-    jest.spyOn(graphql, 'getRepository').mockResolvedValue({
+    vi.spyOn(graphql, 'getRepository').mockResolvedValue({
       ref: { target: { history: { nodes: [{ oid: 'one commit' }] } } },
     } as RepositoryWithCommitHistory)
   })
 
   it('fails when neither files nor tag input is provided', async () => {
-    jest.spyOn(core, 'getMultilineInput').mockReturnValue([])
-    jest.spyOn(core, 'getInput').mockReturnValue('')
-    const setFailedMock = jest.spyOn(core, 'setFailed').mockReturnValue()
+    vi.spyOn(core, 'getMultilineInput').mockReturnValue([])
+    vi.spyOn(core, 'getInput').mockReturnValue('')
+    const setFailedMock = vi.spyOn(core, 'setFailed').mockReturnValue()
 
     await main.run()
 
@@ -44,7 +43,7 @@ describe('action', () => {
 
   describe('no file changes', () => {
     beforeEach(() => {
-      jest.spyOn(core, 'getInput').mockImplementation((name, _option) => {
+      vi.spyOn(core, 'getInput').mockImplementation((name, _option) => {
         if (name == 'tag') return 'no-file-tag'
         return ''
       })
@@ -52,26 +51,24 @@ describe('action', () => {
 
     describe('when tag only if files changes', () => {
       beforeEach(() => {
-        jest
-          .spyOn(core, 'getBooleanInput')
-          .mockImplementation((name, _option) => {
+        vi.spyOn(core, 'getBooleanInput').mockImplementation(
+          (name, _option) => {
             if (name == 'tag-only-if-file-changes') return true
             return false
-          })
-        jest.spyOn(core, 'getMultilineInput').mockReturnValue(['/test.txt'])
+          }
+        )
+        vi.spyOn(core, 'getMultilineInput').mockReturnValue(['/test.txt'])
       })
 
       it('skip tag commit', async () => {
-        const addFilesMock = jest
-          .spyOn(git, 'addFileChanges')
-          .mockResolvedValue()
-        const getFilesMock = jest
+        const addFilesMock = vi.spyOn(git, 'addFileChanges').mockResolvedValue()
+        const getFilesMock = vi
           .spyOn(git, 'getFileChanges')
           .mockResolvedValue({})
-        const createCommitMock = jest.spyOn(graphql, 'createCommitOnBranch')
-        const createTagMock = jest.spyOn(graphql, 'createTagOnCommit')
-        const noticeMock = jest.spyOn(core, 'notice').mockReturnValue()
-        const setFailedMock = jest.spyOn(core, 'setFailed').mockReturnValue()
+        const createCommitMock = vi.spyOn(graphql, 'createCommitOnBranch')
+        const createTagMock = vi.spyOn(graphql, 'createTagOnCommit')
+        const noticeMock = vi.spyOn(core, 'notice').mockReturnValue()
+        const setFailedMock = vi.spyOn(core, 'setFailed').mockReturnValue()
 
         await main.run()
 
@@ -86,30 +83,28 @@ describe('action', () => {
 
     describe('when tag without files changes', () => {
       beforeEach(() => {
-        jest
-          .spyOn(core, 'getBooleanInput')
-          .mockImplementationOnce((name, _option) => {
+        vi.spyOn(core, 'getBooleanInput').mockImplementationOnce(
+          (name, _option) => {
             if (name == 'tag-only-if-file-changes') return false
             return true
-          })
-        jest.spyOn(core, 'getMultilineInput').mockReturnValue(['/test.txt'])
+          }
+        )
+        vi.spyOn(core, 'getMultilineInput').mockReturnValue(['/test.txt'])
       })
 
       it('proceed with tag commit', async () => {
-        const addFilesMock = jest
-          .spyOn(git, 'addFileChanges')
-          .mockResolvedValue()
-        const getFilesMock = jest
+        const addFilesMock = vi.spyOn(git, 'addFileChanges').mockResolvedValue()
+        const getFilesMock = vi
           .spyOn(git, 'getFileChanges')
           .mockResolvedValue({})
-        const createCommitMock = jest.spyOn(graphql, 'createCommitOnBranch')
-        const createTagMock = jest
+        const createCommitMock = vi.spyOn(graphql, 'createCommitOnBranch')
+        const createTagMock = vi
           .spyOn(graphql, 'createTagOnCommit')
           .mockResolvedValue({
             ref: { name: 'fake-file-tag' },
           } as CreateRefPayload)
-        const noticeMock = jest.spyOn(core, 'notice').mockReturnValue()
-        const setFailedMock = jest.spyOn(core, 'setFailed').mockReturnValue()
+        const noticeMock = vi.spyOn(core, 'notice').mockReturnValue()
+        const setFailedMock = vi.spyOn(core, 'setFailed').mockReturnValue()
 
         await main.run()
 
@@ -125,17 +120,17 @@ describe('action', () => {
 
   describe('input branch same as current branch', () => {
     beforeEach(() => {
-      jest.spyOn(core, 'getInput').mockImplementation((name, _option) => {
+      vi.spyOn(core, 'getInput').mockImplementation((name, _option) => {
         if (name == 'branch-name') return 'main'
         return ''
       })
     })
 
     it('does not switch branch', async () => {
-      const switchBranchMock = jest
+      const switchBranchMock = vi
         .spyOn(git, 'switchBranch')
         .mockRejectedValue(new Error('unreachable'))
-      const setFailedMock = jest.spyOn(core, 'setFailed').mockReturnValue()
+      const setFailedMock = vi.spyOn(core, 'setFailed').mockReturnValue()
 
       await main.run()
 
@@ -146,13 +141,11 @@ describe('action', () => {
     })
 
     it('does not push branch', async () => {
-      const switchBranchMock = jest
-        .spyOn(git, 'switchBranch')
-        .mockResolvedValue()
-      const pushBranchMock = jest
+      const switchBranchMock = vi.spyOn(git, 'switchBranch').mockResolvedValue()
+      const pushBranchMock = vi
         .spyOn(git, 'pushCurrentBranch')
         .mockResolvedValue()
-      const setFailedMock = jest.spyOn(core, 'setFailed').mockReturnValue()
+      const setFailedMock = vi.spyOn(core, 'setFailed').mockReturnValue()
 
       await main.run()
 
@@ -166,17 +159,17 @@ describe('action', () => {
 
   describe('input branch not the same as current branch', () => {
     beforeEach(() => {
-      jest.spyOn(core, 'getInput').mockImplementation((name, _option) => {
+      vi.spyOn(core, 'getInput').mockImplementation((name, _option) => {
         if (name == 'branch-name') return 'another-branch'
         return ''
       })
     })
 
     it('switches branch', async () => {
-      const switchBranchMock = jest
+      const switchBranchMock = vi
         .spyOn(git, 'switchBranch')
         .mockRejectedValue(new Error('target not the same as current'))
-      const setFailedMock = jest.spyOn(core, 'setFailed').mockReturnValue()
+      const setFailedMock = vi.spyOn(core, 'setFailed').mockReturnValue()
 
       await main.run()
 
@@ -187,13 +180,11 @@ describe('action', () => {
     })
 
     it('push branch', async () => {
-      const switchBranchMock = jest
-        .spyOn(git, 'switchBranch')
-        .mockResolvedValue()
-      const pushBranchMock = jest
+      const switchBranchMock = vi.spyOn(git, 'switchBranch').mockResolvedValue()
+      const pushBranchMock = vi
         .spyOn(git, 'pushCurrentBranch')
         .mockResolvedValue()
-      const setFailedMock = jest.spyOn(core, 'setFailed').mockReturnValue()
+      const setFailedMock = vi.spyOn(core, 'setFailed').mockReturnValue()
 
       await main.run()
 
@@ -208,14 +199,14 @@ describe('action', () => {
   describe('input repository is given', () => {
     describe('valid format', () => {
       beforeEach(() => {
-        jest.spyOn(core, 'getInput').mockImplementation((name, _option) => {
+        vi.spyOn(core, 'getInput').mockImplementation((name, _option) => {
           if (name == 'repository') return 'the-user/the-repo'
           return ''
         })
       })
 
       it('succeed', async () => {
-        const setFailedMock = jest.spyOn(core, 'setFailed').mockReturnValue()
+        const setFailedMock = vi.spyOn(core, 'setFailed').mockReturnValue()
         await main.run()
         expect(setFailedMock).toHaveBeenCalledWith(
           'Neither files nor tag input has been configured'
@@ -225,14 +216,14 @@ describe('action', () => {
 
     describe('invalid format', () => {
       beforeEach(() => {
-        jest.spyOn(core, 'getInput').mockImplementation((name, _option) => {
+        vi.spyOn(core, 'getInput').mockImplementation((name, _option) => {
           if (name == 'repository') return 'the-user-the-repo'
           return ''
         })
       })
 
       it('fails', async () => {
-        const setFailedMock = jest.spyOn(core, 'setFailed').mockReturnValue()
+        const setFailedMock = vi.spyOn(core, 'setFailed').mockReturnValue()
         await main.run()
         expect(setFailedMock).toHaveBeenCalledWith(
           'Input <repository> "the-user-the-repo" is invalid'
@@ -243,24 +234,24 @@ describe('action', () => {
 
   describe('input branch is given', () => {
     beforeEach(() => {
-      jest.spyOn(core, 'getMultilineInput').mockReturnValue(['/test.txt'])
-      jest.spyOn(git, 'switchBranch').mockResolvedValue()
-      jest.spyOn(git, 'pushCurrentBranch').mockResolvedValue()
-      jest.spyOn(git, 'addFileChanges').mockResolvedValue()
-      jest.spyOn(git, 'getFileChanges').mockResolvedValue({})
+      vi.spyOn(core, 'getMultilineInput').mockReturnValue(['/test.txt'])
+      vi.spyOn(git, 'switchBranch').mockResolvedValue()
+      vi.spyOn(git, 'pushCurrentBranch').mockResolvedValue()
+      vi.spyOn(git, 'addFileChanges').mockResolvedValue()
+      vi.spyOn(git, 'getFileChanges').mockResolvedValue({})
     })
 
     describe('exists in remote', () => {
       beforeEach(() => {
-        jest.spyOn(core, 'getInput').mockImplementation((name, _option) => {
+        vi.spyOn(core, 'getInput').mockImplementation((name, _option) => {
           if (name == 'branch-name') return 'existing-branch'
           return ''
         })
-        jest.spyOn(core, 'getBooleanInput').mockReturnValue(true)
+        vi.spyOn(core, 'getBooleanInput').mockReturnValue(true)
       })
 
       it('succeed', async () => {
-        const getRepositoryMock = jest
+        const getRepositoryMock = vi
           .spyOn(graphql, 'getRepository')
           .mockResolvedValue({
             ref: {
@@ -278,7 +269,7 @@ describe('action', () => {
               },
             },
           } as RepositoryWithCommitHistory)
-        const setFailedMock = jest.spyOn(core, 'setFailed').mockReturnValue()
+        const setFailedMock = vi.spyOn(core, 'setFailed').mockReturnValue()
 
         await main.run()
 
@@ -289,17 +280,17 @@ describe('action', () => {
 
     describe('does not exist in remote', () => {
       beforeEach(() => {
-        jest.spyOn(core, 'getInput').mockImplementation((name, _option) => {
+        vi.spyOn(core, 'getInput').mockImplementation((name, _option) => {
           if (name == 'branch-name') return 'new-branch'
           return ''
         })
       })
 
       it('fails', async () => {
-        const getRepositoryMock = jest
+        const getRepositoryMock = vi
           .spyOn(graphql, 'getRepository')
           .mockResolvedValue({} as RepositoryWithCommitHistory)
-        const setFailedMock = jest.spyOn(core, 'setFailed').mockReturnValue()
+        const setFailedMock = vi.spyOn(core, 'setFailed').mockReturnValue()
 
         await main.run()
 
@@ -313,22 +304,22 @@ describe('action', () => {
 
   describe('workflow branch', () => {
     beforeEach(() => {
-      jest.spyOn(repo, 'getContext').mockReturnValue({
+      vi.spyOn(repo, 'getContext').mockReturnValue({
         repo: 'workflow-repo',
         owner: 'workflow-user',
         branch: 'workflow-branch',
       })
-      jest.spyOn(core, 'getMultilineInput').mockReturnValue(['/test.txt'])
-      jest.spyOn(core, 'getBooleanInput').mockReturnValue(true)
-      jest.spyOn(git, 'switchBranch').mockResolvedValue()
-      jest.spyOn(git, 'pushCurrentBranch').mockResolvedValue()
-      jest.spyOn(git, 'addFileChanges').mockResolvedValue()
-      jest.spyOn(git, 'getFileChanges').mockResolvedValue({})
+      vi.spyOn(core, 'getMultilineInput').mockReturnValue(['/test.txt'])
+      vi.spyOn(core, 'getBooleanInput').mockReturnValue(true)
+      vi.spyOn(git, 'switchBranch').mockResolvedValue()
+      vi.spyOn(git, 'pushCurrentBranch').mockResolvedValue()
+      vi.spyOn(git, 'addFileChanges').mockResolvedValue()
+      vi.spyOn(git, 'getFileChanges').mockResolvedValue({})
     })
 
     describe('exists in remote', () => {
       it('succeed', async () => {
-        const getRepositoryMock = jest
+        const getRepositoryMock = vi
           .spyOn(graphql, 'getRepository')
           .mockResolvedValue({
             ref: {
@@ -346,7 +337,7 @@ describe('action', () => {
               },
             },
           } as RepositoryWithCommitHistory)
-        const setFailedMock = jest.spyOn(core, 'setFailed').mockReturnValue()
+        const setFailedMock = vi.spyOn(core, 'setFailed').mockReturnValue()
 
         await main.run()
 
@@ -357,10 +348,10 @@ describe('action', () => {
 
     describe('does not exist in remote', () => {
       it('fails', async () => {
-        const getRepositoryMock = jest
+        const getRepositoryMock = vi
           .spyOn(graphql, 'getRepository')
           .mockResolvedValue({} as RepositoryWithCommitHistory)
-        const setFailedMock = jest.spyOn(core, 'setFailed').mockReturnValue()
+        const setFailedMock = vi.spyOn(core, 'setFailed').mockReturnValue()
 
         await main.run()
 
@@ -373,7 +364,7 @@ describe('action', () => {
 
     describe('does not have commit history', () => {
       it('fails', async () => {
-        const getRepositoryMock = jest
+        const getRepositoryMock = vi
           .spyOn(graphql, 'getRepository')
           .mockResolvedValue({
             ref: {
@@ -385,7 +376,7 @@ describe('action', () => {
               },
             },
           } as RepositoryWithCommitHistory)
-        const setFailedMock = jest.spyOn(core, 'setFailed').mockReturnValue()
+        const setFailedMock = vi.spyOn(core, 'setFailed').mockReturnValue()
 
         await main.run()
 
@@ -398,18 +389,18 @@ describe('action', () => {
   })
 
   it('commit files and output commit sha', async () => {
-    jest.spyOn(core, 'getInput').mockImplementation((name, _option) => {
+    vi.spyOn(core, 'getInput').mockImplementation((name, _option) => {
       if (name == 'branch-name') return 'custom-branch'
       return ''
     })
-    jest.spyOn(core, 'getMultilineInput').mockReturnValue(['/test.txt'])
-    jest.spyOn(git, 'addFileChanges').mockResolvedValue()
-    jest.spyOn(git, 'getFileChanges').mockResolvedValue({
+    vi.spyOn(core, 'getMultilineInput').mockReturnValue(['/test.txt'])
+    vi.spyOn(git, 'addFileChanges').mockResolvedValue()
+    vi.spyOn(git, 'getFileChanges').mockResolvedValue({
       additions: [{ path: '/test.txt', contents: '' }],
     })
 
-    const switchBranchMock = jest.spyOn(git, 'switchBranch').mockResolvedValue()
-    const getRepositoryMock = jest
+    const switchBranchMock = vi.spyOn(git, 'switchBranch').mockResolvedValue()
+    const getRepositoryMock = vi
       .spyOn(graphql, 'getRepository')
       .mockResolvedValue({
         ref: {
@@ -427,15 +418,15 @@ describe('action', () => {
           },
         },
       } as RepositoryWithCommitHistory)
-    const pushBranchMock = jest
+    const pushBranchMock = vi
       .spyOn(git, 'pushCurrentBranch')
       .mockResolvedValue()
-    const createCommitMock = jest
+    const createCommitMock = vi
       .spyOn(graphql, 'createCommitOnBranch')
       .mockResolvedValue({
         commit: { oid: 'my-commit-sha' },
       } as CreateCommitOnBranchPayload)
-    const setOutputMock = jest.spyOn(core, 'setOutput').mockReturnValue()
+    const setOutputMock = vi.spyOn(core, 'setOutput').mockReturnValue()
 
     await main.run()
 
@@ -447,15 +438,15 @@ describe('action', () => {
   })
 
   it('push tag only', async () => {
-    jest.spyOn(core, 'getInput').mockImplementation((name, _option) => {
+    vi.spyOn(core, 'getInput').mockImplementation((name, _option) => {
       if (name == 'branch-name') return 'tag-branch'
       if (name == 'tag') return 'fake-tag'
       return ''
     })
-    jest.spyOn(core, 'getMultilineInput').mockReturnValue([])
+    vi.spyOn(core, 'getMultilineInput').mockReturnValue([])
 
-    const switchBranchMock = jest.spyOn(git, 'switchBranch').mockResolvedValue()
-    const getRepositoryMock = jest
+    const switchBranchMock = vi.spyOn(git, 'switchBranch').mockResolvedValue()
+    const getRepositoryMock = vi
       .spyOn(graphql, 'getRepository')
       .mockResolvedValue({
         ref: {
@@ -473,15 +464,15 @@ describe('action', () => {
           },
         },
       } as RepositoryWithCommitHistory)
-    const pushBranchMock = jest
+    const pushBranchMock = vi
       .spyOn(git, 'pushCurrentBranch')
       .mockResolvedValue()
-    const createTagMock = jest
+    const createTagMock = vi
       .spyOn(graphql, 'createTagOnCommit')
       .mockResolvedValue({
         ref: { name: 'fake-tag' },
       } as CreateRefPayload)
-    const setFailedMock = jest.spyOn(core, 'setFailed').mockReturnValue()
+    const setFailedMock = vi.spyOn(core, 'setFailed').mockReturnValue()
 
     await main.run()
 
@@ -493,19 +484,19 @@ describe('action', () => {
   })
 
   it('commit file and push tag', async () => {
-    jest.spyOn(core, 'getInput').mockImplementation((name, _option) => {
+    vi.spyOn(core, 'getInput').mockImplementation((name, _option) => {
       if (name == 'branch-name') return 'file-tag-branch'
       if (name == 'tag') return 'fake-file-tag'
       return ''
     })
-    jest.spyOn(core, 'getMultilineInput').mockReturnValue(['/test.txt'])
-    jest.spyOn(git, 'addFileChanges').mockResolvedValue()
-    jest.spyOn(git, 'getFileChanges').mockResolvedValue({
+    vi.spyOn(core, 'getMultilineInput').mockReturnValue(['/test.txt'])
+    vi.spyOn(git, 'addFileChanges').mockResolvedValue()
+    vi.spyOn(git, 'getFileChanges').mockResolvedValue({
       additions: [{ path: '/test.txt', contents: '' }],
     })
 
-    const switchBranchMock = jest.spyOn(git, 'switchBranch').mockResolvedValue()
-    const getRepositoryMock = jest
+    const switchBranchMock = vi.spyOn(git, 'switchBranch').mockResolvedValue()
+    const getRepositoryMock = vi
       .spyOn(graphql, 'getRepository')
       .mockResolvedValue({
         ref: {
@@ -523,20 +514,20 @@ describe('action', () => {
           },
         },
       } as RepositoryWithCommitHistory)
-    const pushBranchMock = jest
+    const pushBranchMock = vi
       .spyOn(git, 'pushCurrentBranch')
       .mockResolvedValue()
-    const createCommitMock = jest
+    const createCommitMock = vi
       .spyOn(graphql, 'createCommitOnBranch')
       .mockResolvedValue({
         commit: { oid: 'fake-commit-sha' },
       } as CreateCommitOnBranchPayload)
-    const createTagMock = jest
+    const createTagMock = vi
       .spyOn(graphql, 'createTagOnCommit')
       .mockResolvedValue({
         ref: { name: 'fake-file-tag' },
       } as CreateRefPayload)
-    const setOutputMock = jest.spyOn(core, 'setOutput').mockReturnValue()
+    const setOutputMock = vi.spyOn(core, 'setOutput').mockReturnValue()
 
     await main.run()
 
@@ -550,19 +541,19 @@ describe('action', () => {
   })
 
   it('commit file fails woukd skip push tag', async () => {
-    jest.spyOn(core, 'getInput').mockImplementation((name, _option) => {
+    vi.spyOn(core, 'getInput').mockImplementation((name, _option) => {
       if (name == 'branch-name') return 'file-fail-tag-branch'
       if (name == 'tag') return 'unreachable-tag'
       return ''
     })
-    jest.spyOn(core, 'getMultilineInput').mockReturnValue(['/test.txt'])
-    jest.spyOn(git, 'addFileChanges').mockResolvedValue()
-    jest.spyOn(git, 'getFileChanges').mockResolvedValue({
+    vi.spyOn(core, 'getMultilineInput').mockReturnValue(['/test.txt'])
+    vi.spyOn(git, 'addFileChanges').mockResolvedValue()
+    vi.spyOn(git, 'getFileChanges').mockResolvedValue({
       additions: [{ path: '/test.txt', contents: '' }],
     })
 
-    const switchBranchMock = jest.spyOn(git, 'switchBranch').mockResolvedValue()
-    const getRepositoryMock = jest
+    const switchBranchMock = vi.spyOn(git, 'switchBranch').mockResolvedValue()
+    const getRepositoryMock = vi
       .spyOn(graphql, 'getRepository')
       .mockResolvedValue({
         ref: {
@@ -580,15 +571,15 @@ describe('action', () => {
           },
         },
       } as RepositoryWithCommitHistory)
-    const pushBranchMock = jest
+    const pushBranchMock = vi
       .spyOn(git, 'pushCurrentBranch')
       .mockResolvedValue()
-    const createCommitMock = jest
+    const createCommitMock = vi
       .spyOn(graphql, 'createCommitOnBranch')
       .mockRejectedValue(new Error('Fail to commit files'))
-    const createTagMock = jest.spyOn(graphql, 'createTagOnCommit')
-    const setOutputMock = jest.spyOn(core, 'setOutput').mockReturnValue()
-    const setFailedMock = jest.spyOn(core, 'setFailed').mockReturnValue()
+    const createTagMock = vi.spyOn(graphql, 'createTagOnCommit')
+    const setOutputMock = vi.spyOn(core, 'setOutput').mockReturnValue()
+    const setFailedMock = vi.spyOn(core, 'setFailed').mockReturnValue()
 
     await main.run()
 
