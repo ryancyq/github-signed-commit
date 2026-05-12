@@ -3,6 +3,17 @@
 All notable changes to this project will be documented in this file. See [conventional commits](https://www.conventionalcommits.org/) for commit guidelines.
 
 ---
+## [1.3.2](https://github.com/ryancyq/github-signed-commit/compare/v1.3.1..v1.3.2) - 2026-05-12
+
+### Bug Fixes
+
+- binary file corruption ([#230](https://github.com/ryancyq/github-signed-commit/issues/230)) - ([1b72824](https://github.com/ryancyq/github-signed-commit/commit/1b72824b39e3bc464391d33f5fee563f66d62097)) - Ryan Chang
+
+### Dependencies
+
+- migrate from ncc to esbuild ([#229](https://github.com/ryancyq/github-signed-commit/issues/229)) - ([00de5a7](https://github.com/ryancyq/github-signed-commit/commit/00de5a767068d1174b56c7a9ddb071f46857ec6f)) - Ryan Chang
+
+---
 ## [1.3.1](https://github.com/ryancyq/github-signed-commit/compare/v1.3.0..v1.3.1) - 2026-05-12
 
 ### Dependencies
