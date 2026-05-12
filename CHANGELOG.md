@@ -3,14 +3,18 @@
 All notable changes to this project will be documented in this file. See [conventional commits](https://www.conventionalcommits.org/) for commit guidelines.
 
 ---
-## [Unreleased](https://github.com/ryancyq/github-signed-commit/tree/HEAD)
+## [1.3.1](https://github.com/ryancyq/github-signed-commit/compare/v1.3.0..v1.3.1) - 2026-05-12
 
-### Lib
+### Dependencies
 
 - migrate from jest to vitest for ts support ([#227](https://github.com/ryancyq/github-signed-commit/issues/227)) - ([8d0f924](https://github.com/ryancyq/github-signed-commit/commit/8d0f9240be3cfbd82c8e33166a16a3debbb70926)) - Ryan Chang
 
 ---
 ## [1.3.0](https://github.com/ryancyq/github-signed-commit/compare/v1.2.0..v1.3.0) - 2026-05-09
+
+### Dependencies
+
+- bump to node 24 - ([85e7678](https://github.com/ryancyq/github-signed-commit/commit/85e767814e8c7de147eb2415d3527d5a9553fdcc)) - Ryan Chang
 
 ### Documentation
 
@@ -26,10 +30,6 @@ All notable changes to this project will be documented in this file. See [conven
 - replace deprecated request mocking methods in fetch_mock@12 - ([ec6d8e3](https://github.com/ryancyq/github-signed-commit/commit/ec6d8e3b33f15813244e29eb096e67cef40cf17a)) - Ryan Chang
 - use restore mocks to avoid leaky mocks - ([090c4f6](https://github.com/ryancyq/github-signed-commit/commit/090c4f6db1487443d042967f5cf1afd901000122)) - Ryan Chang
 - add input repository tests - ([795d995](https://github.com/ryancyq/github-signed-commit/commit/795d995fc87d3ea724fae9535664d4abb1a94cac)) - Ryan Chang
-
-### Lib
-
-- bump to node 24 - ([85e7678](https://github.com/ryancyq/github-signed-commit/commit/85e767814e8c7de147eb2415d3527d5a9553fdcc)) - Ryan Chang
 
 ---
 ## [1.2.0](https://github.com/ryancyq/github-signed-commit/compare/v1.1.0..v1.2.0) - 2024-10-02
@@ -67,6 +67,143 @@ All notable changes to this project will be documented in this file. See [conven
 - tag grapqhl syntax - ([f75b136](https://github.com/ryancyq/github-signed-commit/commit/f75b136935ab68f1510403add803325a91801289)) - Ryan Chang
 - file not exist error message - ([97c8cb5](https://github.com/ryancyq/github-signed-commit/commit/97c8cb501ef33d7a06dd5869c869dfeb7d38bc66)) - Ryan Chang
 
+### Dependencies
+
+- Bump fetch-mock from 11.1.1 to 11.1.3
+
+Bumps [fetch-mock](https://github.com/wheresrhys/fetch-mock/tree/HEAD/packages/fetch-mock) from 11.1.1 to 11.1.3.
+- [Release notes](https://github.com/wheresrhys/fetch-mock/releases)
+- [Changelog](https://github.com/wheresrhys/fetch-mock/blob/main/packages/fetch-mock/CHANGELOG.md)
+- [Commits](https://github.com/wheresrhys/fetch-mock/commits/fetch-mock-v11.1.3/packages/fetch-mock)
+
+---
+updated-dependencies:
+- dependency-name: fetch-mock
+  dependency-type: direct:development
+  update-type: version-update:semver-patch
+...
+
+Signed-off-by: dependabot[bot] <support@github.com> - ([70aacb0](https://github.com/ryancyq/github-signed-commit/commit/70aacb0d650e9e4b172160acfd7276008bd0a819)) - dependabot[bot]
+- Bump typescript-eslint from 8.1.0 to 8.5.0
+
+Bumps [typescript-eslint](https://github.com/typescript-eslint/typescript-eslint/tree/HEAD/packages/typescript-eslint) from 8.1.0 to 8.5.0.
+- [Release notes](https://github.com/typescript-eslint/typescript-eslint/releases)
+- [Changelog](https://github.com/typescript-eslint/typescript-eslint/blob/main/packages/typescript-eslint/CHANGELOG.md)
+- [Commits](https://github.com/typescript-eslint/typescript-eslint/commits/v8.5.0/packages/typescript-eslint)
+
+---
+updated-dependencies:
+- dependency-name: typescript-eslint
+  dependency-type: direct:development
+  update-type: version-update:semver-minor
+...
+
+Signed-off-by: dependabot[bot] <support@github.com> - ([b6d2e06](https://github.com/ryancyq/github-signed-commit/commit/b6d2e06b1d054d543aec59b2d70ed29e8f0d89f4)) - dependabot[bot]
+- Bump typescript from 5.5.4 to 5.6.2
+
+Bumps [typescript](https://github.com/microsoft/TypeScript) from 5.5.4 to 5.6.2.
+- [Release notes](https://github.com/microsoft/TypeScript/releases)
+- [Changelog](https://github.com/microsoft/TypeScript/blob/main/azure-pipelines.release.yml)
+- [Commits](https://github.com/microsoft/TypeScript/compare/v5.5.4...v5.6.2)
+
+---
+updated-dependencies:
+- dependency-name: typescript
+  dependency-type: direct:development
+  update-type: version-update:semver-minor
+...
+
+Signed-off-by: dependabot[bot] <support@github.com> - ([1f1b15c](https://github.com/ryancyq/github-signed-commit/commit/1f1b15c951687ba78b0929f0a88dfd70e60448cb)) - dependabot[bot]
+- Bump eslint from 9.9.0 to 9.10.0
+
+Bumps [eslint](https://github.com/eslint/eslint) from 9.9.0 to 9.10.0.
+- [Release notes](https://github.com/eslint/eslint/releases)
+- [Changelog](https://github.com/eslint/eslint/blob/main/CHANGELOG.md)
+- [Commits](https://github.com/eslint/eslint/compare/v9.9.0...v9.10.0)
+
+---
+updated-dependencies:
+- dependency-name: eslint
+  dependency-type: direct:development
+  update-type: version-update:semver-minor
+...
+
+Signed-off-by: dependabot[bot] <support@github.com> - ([83fd8f1](https://github.com/ryancyq/github-signed-commit/commit/83fd8f119f23693faa498acaa3a4e8ab53b3f1ba)) - dependabot[bot]
+- Bump @types/node from 22.4.2 to 22.5.5
+
+Bumps [@types/node](https://github.com/DefinitelyTyped/DefinitelyTyped/tree/HEAD/types/node) from 22.4.2 to 22.5.5.
+- [Release notes](https://github.com/DefinitelyTyped/DefinitelyTyped/releases)
+- [Commits](https://github.com/DefinitelyTyped/DefinitelyTyped/commits/HEAD/types/node)
+
+---
+updated-dependencies:
+- dependency-name: "@types/node"
+  dependency-type: direct:production
+  update-type: version-update:semver-minor
+...
+
+Signed-off-by: dependabot[bot] <support@github.com> - ([55fe470](https://github.com/ryancyq/github-signed-commit/commit/55fe470f5862684d695dc1f89f5c879b35b8c202)) - dependabot[bot]
+- Bump ts-jest from 29.2.4 to 29.2.5
+
+Bumps [ts-jest](https://github.com/kulshekhar/ts-jest) from 29.2.4 to 29.2.5.
+- [Release notes](https://github.com/kulshekhar/ts-jest/releases)
+- [Changelog](https://github.com/kulshekhar/ts-jest/blob/main/CHANGELOG.md)
+- [Commits](https://github.com/kulshekhar/ts-jest/compare/v29.2.4...v29.2.5)
+
+---
+updated-dependencies:
+- dependency-name: ts-jest
+  dependency-type: direct:development
+  update-type: version-update:semver-patch
+...
+
+Signed-off-by: dependabot[bot] <support@github.com> - ([65bcecc](https://github.com/ryancyq/github-signed-commit/commit/65bceccaff7a505f376c3dc5236f06acfec41336)) - dependabot[bot]
+- Bump fetch-mock from 11.1.3 to 11.1.4
+
+Bumps [fetch-mock](https://github.com/wheresrhys/fetch-mock/tree/HEAD/packages/fetch-mock) from 11.1.3 to 11.1.4.
+- [Release notes](https://github.com/wheresrhys/fetch-mock/releases)
+- [Changelog](https://github.com/wheresrhys/fetch-mock/blob/main/packages/fetch-mock/CHANGELOG.md)
+- [Commits](https://github.com/wheresrhys/fetch-mock/commits/fetch-mock-v11.1.4/packages/fetch-mock)
+
+---
+updated-dependencies:
+- dependency-name: fetch-mock
+  dependency-type: direct:development
+  update-type: version-update:semver-patch
+...
+
+Signed-off-by: dependabot[bot] <support@github.com> - ([b21f499](https://github.com/ryancyq/github-signed-commit/commit/b21f49951215d4646fc5a2f40999610328e9faf6)) - dependabot[bot]
+- Bump eslint from 9.10.0 to 9.11.1
+
+Bumps [eslint](https://github.com/eslint/eslint) from 9.10.0 to 9.11.1.
+- [Release notes](https://github.com/eslint/eslint/releases)
+- [Changelog](https://github.com/eslint/eslint/blob/main/CHANGELOG.md)
+- [Commits](https://github.com/eslint/eslint/compare/v9.10.0...v9.11.1)
+
+---
+updated-dependencies:
+- dependency-name: eslint
+  dependency-type: direct:development
+  update-type: version-update:semver-minor
+...
+
+Signed-off-by: dependabot[bot] <support@github.com> - ([a8242fd](https://github.com/ryancyq/github-signed-commit/commit/a8242fdfebbbbc4391a666b2f2e214a2907a6062)) - dependabot[bot]
+- Bump typescript-eslint from 8.5.0 to 8.7.0
+
+Bumps [typescript-eslint](https://github.com/typescript-eslint/typescript-eslint/tree/HEAD/packages/typescript-eslint) from 8.5.0 to 8.7.0.
+- [Release notes](https://github.com/typescript-eslint/typescript-eslint/releases)
+- [Changelog](https://github.com/typescript-eslint/typescript-eslint/blob/main/packages/typescript-eslint/CHANGELOG.md)
+- [Commits](https://github.com/typescript-eslint/typescript-eslint/commits/v8.7.0/packages/typescript-eslint)
+
+---
+updated-dependencies:
+- dependency-name: typescript-eslint
+  dependency-type: direct:development
+  update-type: version-update:semver-minor
+...
+
+Signed-off-by: dependabot[bot] <support@github.com> - ([ad5bb7f](https://github.com/ryancyq/github-signed-commit/commit/ad5bb7f326f05ce5f745b6def373e638d6af8dbe)) - dependabot[bot]
+
 ### Documentation
 
 - add glob file pattern examples in README.md - ([0b1716e](https://github.com/ryancyq/github-signed-commit/commit/0b1716ed349fb8abb161739c9d39169d62189e22)) - Ryan Chang
@@ -99,17 +236,7 @@ All notable changes to this project will be documented in this file. See [conven
 - add git cli stdout and stderr tests - ([30e9d2a](https://github.com/ryancyq/github-signed-commit/commit/30e9d2a110b4a1db98993c17c2024790353914b0)) - Ryan Chang
 - add file/stream errors test for blob - ([5251c8e](https://github.com/ryancyq/github-signed-commit/commit/5251c8e933455262dbe7dcaea72fafe603c1eec2)) - Ryan Chang
 
-### Burn
-
-- remove commit type check - ([b4430a0](https://github.com/ryancyq/github-signed-commit/commit/b4430a04623f4769544a881d4d2268b3bb27e17d)) - Ryan Chang
-
 ---
-## [1.0.3](https://github.com/ryancyq/github-signed-commit/compare/v1.0.2..v1.0.3) - 2024-08-29
-
----
-## [1.0.2](https://github.com/ryancyq/github-signed-commit/compare/v1.0.1..v1.0.2) - 2024-08-28
-
----
-## [1.0.1](https://github.com/ryancyq/github-signed-commit/compare/v1.0.0..v1.0.1) - 2024-08-28
+## [1.0.0] - 2024-08-24
 
 <!-- generated by git-cliff -->
