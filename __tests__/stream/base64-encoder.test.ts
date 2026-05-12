@@ -1,6 +1,6 @@
 import { Buffer } from 'node:buffer'
 import { Readable } from 'node:stream'
-import { describe, jest, beforeEach, it, expect } from '@jest/globals'
+import { describe, it, expect } from 'vitest'
 import Base64Encoder from '../../src/stream/base64-encoder'
 
 describe('Base64 Encoder', () => {

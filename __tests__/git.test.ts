@@ -1,6 +1,6 @@
 import * as core from '@actions/core'
 import * as exec from '@actions/exec'
-import { describe, jest, beforeEach, afterAll, it, expect } from '@jest/globals'
+import { describe, vi, beforeEach, it, expect } from 'vitest'
 import * as cwd from '../src/utils/cwd'
 import {
   addFileChanges,
@@ -11,12 +11,12 @@ import {
 
 describe('Git CLI', () => {
   beforeEach(() => {
-    jest.restoreAllMocks()
+    vi.restoreAllMocks()
   })
 
   describe('git checkout', () => {
     it('should create new branch', async () => {
-      const execMock = jest.spyOn(exec, 'exec').mockResolvedValue(0)
+      const execMock = vi.spyOn(exec, 'exec').mockResolvedValue(0)
 
       await switchBranch('new-branch')
       expect(execMock).toHaveBeenCalledWith(
@@ -29,7 +29,7 @@ describe('Git CLI', () => {
     })
 
     it('should log debug', async () => {
-      const execMock = jest
+      const execMock = vi
         .spyOn(exec, 'exec')
         .mockImplementationOnce(async (cmd, args, options) => {
           const io = options?.listeners?.stdline
@@ -40,7 +40,7 @@ describe('Git CLI', () => {
           return 0
         })
 
-      const debugMock = jest.spyOn(core, 'debug').mockReturnValue()
+      const debugMock = vi.spyOn(core, 'debug').mockReturnValue()
 
       await switchBranch('new-branch')
       expect(execMock).toHaveBeenCalled()
@@ -48,7 +48,7 @@ describe('Git CLI', () => {
     })
 
     it('should log warning', async () => {
-      const execMock = jest
+      const execMock = vi
         .spyOn(exec, 'exec')
         .mockImplementationOnce(async (cmd, args, options) => {
           const io = options?.listeners?.errline
@@ -59,7 +59,7 @@ describe('Git CLI', () => {
           return 0
         })
 
-      const warningMock = jest.spyOn(core, 'warning').mockReturnValue()
+      const warningMock = vi.spyOn(core, 'warning').mockReturnValue()
 
       await switchBranch('new-branch')
       expect(execMock).toHaveBeenCalled()
@@ -69,7 +69,7 @@ describe('Git CLI', () => {
     })
 
     it('should log error', async () => {
-      const execMock = jest
+      const execMock = vi
         .spyOn(exec, 'exec')
         .mockImplementationOnce(async (cmd, args, options) => {
           const io = options?.listeners?.errline
@@ -80,7 +80,7 @@ describe('Git CLI', () => {
           return 0
         })
 
-      const errorMock = jest.spyOn(core, 'error').mockReturnValue()
+      const errorMock = vi.spyOn(core, 'error').mockReturnValue()
 
       await switchBranch('new-branch')
       expect(execMock).toHaveBeenCalled()
@@ -90,11 +90,11 @@ describe('Git CLI', () => {
 
   describe('git push', () => {
     beforeEach(() => {
-      jest.spyOn(core, 'getBooleanInput').mockReturnValue(false)
+      vi.spyOn(core, 'getBooleanInput').mockReturnValue(false)
     })
 
     it('should push new branch', async () => {
-      const execMock = jest.spyOn(exec, 'exec').mockResolvedValue(0)
+      const execMock = vi.spyOn(exec, 'exec').mockResolvedValue(0)
 
       await pushCurrentBranch()
       expect(execMock).toHaveBeenCalledWith(
@@ -107,8 +107,8 @@ describe('Git CLI', () => {
     })
 
     it('should force push new branch', async () => {
-      const execMock = jest.spyOn(exec, 'exec').mockResolvedValue(0)
-      const getInput = jest.spyOn(core, 'getBooleanInput').mockReturnValue(true)
+      const execMock = vi.spyOn(exec, 'exec').mockResolvedValue(0)
+      const getInput = vi.spyOn(core, 'getBooleanInput').mockReturnValue(true)
 
       await pushCurrentBranch()
       expect(execMock).toHaveBeenCalled()
@@ -123,7 +123,7 @@ describe('Git CLI', () => {
     })
 
     it('should log debug', async () => {
-      const execMock = jest
+      const execMock = vi
         .spyOn(exec, 'exec')
         .mockImplementationOnce(async (cmd, args, options) => {
           const io = options?.listeners?.stdline
@@ -134,7 +134,7 @@ describe('Git CLI', () => {
           return 0
         })
 
-      const debugMock = jest.spyOn(core, 'debug').mockReturnValue()
+      const debugMock = vi.spyOn(core, 'debug').mockReturnValue()
 
       await pushCurrentBranch()
       expect(execMock).toHaveBeenCalled()
@@ -142,7 +142,7 @@ describe('Git CLI', () => {
     })
 
     it('should log warning', async () => {
-      const execMock = jest
+      const execMock = vi
         .spyOn(exec, 'exec')
         .mockImplementationOnce(async (cmd, args, options) => {
           const io = options?.listeners?.errline
@@ -153,7 +153,7 @@ describe('Git CLI', () => {
           return 0
         })
 
-      const warningMock = jest.spyOn(core, 'warning').mockReturnValue()
+      const warningMock = vi.spyOn(core, 'warning').mockReturnValue()
 
       await pushCurrentBranch()
       expect(execMock).toHaveBeenCalled()
@@ -161,7 +161,7 @@ describe('Git CLI', () => {
     })
 
     it('should log error', async () => {
-      const execMock = jest
+      const execMock = vi
         .spyOn(exec, 'exec')
         .mockImplementationOnce(async (cmd, args, options) => {
           const io = options?.listeners?.errline
@@ -172,7 +172,7 @@ describe('Git CLI', () => {
           return 0
         })
 
-      const errorMock = jest.spyOn(core, 'error').mockReturnValue()
+      const errorMock = vi.spyOn(core, 'error').mockReturnValue()
 
       await pushCurrentBranch()
       expect(execMock).toHaveBeenCalled()
@@ -182,11 +182,11 @@ describe('Git CLI', () => {
 
   describe('git add', () => {
     beforeEach(() => {
-      jest.spyOn(cwd, 'getWorkspace').mockReturnValue('/test-workspace')
+      vi.spyOn(cwd, 'getWorkspace').mockReturnValue('/test-workspace')
     })
 
     it('should ensure file paths are within curent working directory', async () => {
-      const execMock = jest.spyOn(exec, 'exec').mockResolvedValue(0)
+      const execMock = vi.spyOn(exec, 'exec').mockResolvedValue(0)
 
       await addFileChanges(['*.ts', '~/.bashrc'])
       expect(execMock).toHaveBeenCalledWith(
@@ -199,7 +199,7 @@ describe('Git CLI', () => {
     })
 
     it('should log debug', async () => {
-      const execMock = jest
+      const execMock = vi
         .spyOn(exec, 'exec')
         .mockImplementationOnce(async (cmd, args, options) => {
           const io = options?.listeners?.stdline
@@ -210,7 +210,7 @@ describe('Git CLI', () => {
           return 0
         })
 
-      const debugMock = jest.spyOn(core, 'debug').mockReturnValue()
+      const debugMock = vi.spyOn(core, 'debug').mockReturnValue()
 
       await addFileChanges(['*.ts'])
       expect(execMock).toHaveBeenCalled()
@@ -218,7 +218,7 @@ describe('Git CLI', () => {
     })
 
     it('should log warning', async () => {
-      const execMock = jest
+      const execMock = vi
         .spyOn(exec, 'exec')
         .mockImplementationOnce(async (cmd, args, options) => {
           const io = options?.listeners?.errline
@@ -229,7 +229,7 @@ describe('Git CLI', () => {
           return 0
         })
 
-      const warningMock = jest.spyOn(core, 'warning').mockReturnValue()
+      const warningMock = vi.spyOn(core, 'warning').mockReturnValue()
 
       await addFileChanges(['*.ts'])
       expect(execMock).toHaveBeenCalled()
@@ -237,7 +237,7 @@ describe('Git CLI', () => {
     })
 
     it('should log error', async () => {
-      const execMock = jest
+      const execMock = vi
         .spyOn(exec, 'exec')
         .mockImplementationOnce(async (cmd, args, options) => {
           const io = options?.listeners?.errline
@@ -248,7 +248,7 @@ describe('Git CLI', () => {
           return 0
         })
 
-      const errorMock = jest.spyOn(core, 'error').mockReturnValue()
+      const errorMock = vi.spyOn(core, 'error').mockReturnValue()
 
       await addFileChanges(['*.ts'])
       expect(execMock).toHaveBeenCalled()
@@ -271,7 +271,7 @@ describe('Git CLI', () => {
     ]
 
     it('should parse ouput into file changes', async () => {
-      const execMock = jest
+      const execMock = vi
         .spyOn(exec, 'exec')
         .mockImplementationOnce(async (cmd, args, options) => {
           const io = options?.listeners?.stdline
@@ -321,7 +321,7 @@ describe('Git CLI', () => {
     })
 
     it('should log warning', async () => {
-      const execMock = jest
+      const execMock = vi
         .spyOn(exec, 'exec')
         .mockImplementationOnce(async (cmd, args, options) => {
           const io = options?.listeners?.errline
@@ -332,7 +332,7 @@ describe('Git CLI', () => {
           return 0
         })
 
-      const warningMock = jest.spyOn(core, 'warning').mockReturnValue()
+      const warningMock = vi.spyOn(core, 'warning').mockReturnValue()
 
       await getFileChanges()
       expect(execMock).toHaveBeenCalled()
@@ -340,7 +340,7 @@ describe('Git CLI', () => {
     })
 
     it('should log error', async () => {
-      const execMock = jest
+      const execMock = vi
         .spyOn(exec, 'exec')
         .mockImplementationOnce(async (cmd, args, options) => {
           const io = options?.listeners?.errline
@@ -351,7 +351,7 @@ describe('Git CLI', () => {
           return 0
         })
 
-      const errorMock = jest.spyOn(core, 'error').mockReturnValue()
+      const errorMock = vi.spyOn(core, 'error').mockReturnValue()
 
       await getFileChanges()
       expect(execMock).toHaveBeenCalled()

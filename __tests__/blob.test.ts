@@ -3,14 +3,14 @@ import fs from 'node:fs'
 import { join } from 'node:path'
 import { Buffer } from 'node:buffer'
 import { Readable, PassThrough } from 'node:stream'
-import { describe, jest, beforeEach, it, expect } from '@jest/globals'
+import { describe, vi, beforeEach, it, expect } from 'vitest'
 import { Blob, getBlob } from '../src/blob'
 import * as cwd from '../src/utils/cwd'
 
 describe('Blob', () => {
   beforeEach(() => {
-    jest.spyOn(core, 'debug').mockReturnValue()
-    jest.spyOn(cwd, 'getCwd').mockReturnValue(__dirname)
+    vi.spyOn(core, 'debug').mockReturnValue()
+    vi.spyOn(cwd, 'getCwd').mockReturnValue(__dirname)
   })
 
   it('path', () => {
@@ -50,9 +50,9 @@ describe('Blob', () => {
 
     it('file exists', async () => {
       const blob = new Blob('/my_stream.txt')
-      jest
-        .spyOn(blob, 'streamable', 'get')
-        .mockReturnValue(Readable.from('Hello World'))
+      vi.spyOn(blob, 'streamable', 'get').mockReturnValue(
+        Readable.from('Hello World')
+      )
 
       const chunks: Buffer[] = []
       for await (const chunk of blob.streamable) {
@@ -75,7 +75,7 @@ describe('Blob', () => {
     it('file with string', async () => {
       const blob = getBlob('fixtures/error.txt')
       const mockStream = new PassThrough()
-      jest.spyOn(blob, 'streamable', 'get').mockReturnValue(mockStream)
+      vi.spyOn(blob, 'streamable', 'get').mockReturnValue(mockStream)
 
       const loadPromise = blob.load()
       mockStream.emit('data', 'string data')
@@ -89,7 +89,7 @@ describe('Blob', () => {
     it('stream with error', async () => {
       const blob = getBlob('fixtures/error.txt')
       const mockStream = new PassThrough()
-      jest.spyOn(blob, 'streamable', 'get').mockReturnValue(mockStream)
+      vi.spyOn(blob, 'streamable', 'get').mockReturnValue(mockStream)
 
       blob.load()
       expect(() => mockStream.emit('error', new Error('stream error'))).toThrow(

@@ -1,7 +1,7 @@
 import * as core from '@actions/core'
 import fetchMock from 'fetch-mock'
 import { Readable } from 'node:stream'
-import { describe, jest, beforeEach, it, expect } from '@jest/globals'
+import { describe, vi, beforeEach, it, expect } from 'vitest'
 import { RequestOptions } from '@octokit/types'
 import { graphql, GraphqlResponseError } from '@octokit/graphql'
 import {
@@ -22,14 +22,14 @@ import {
 
 describe('GitHub API', () => {
   beforeEach(() => {
-    jest.restoreAllMocks()
+    vi.restoreAllMocks()
     fetchMock.clearHistory()
     fetchMock.removeRoutes()
   })
 
   describe('getRepository', () => {
     it('should fetch repository details', async () => {
-      const clientMock = jest
+      const clientMock = vi
         .spyOn(client, 'graphqlClient')
         .mockReturnValue(
           graphql.defaults({ request: { fetch: fetchMock.fetchHandler } })
@@ -75,7 +75,7 @@ describe('GitHub API', () => {
           },
         },
       })
-      const debugMock = jest.spyOn(core, 'debug').mockReturnValue()
+      const debugMock = vi.spyOn(core, 'debug').mockReturnValue()
 
       const repo = await getRepository('owner', 'repo', 'custom-branch')
       expect(clientMock).toHaveBeenCalled()
@@ -124,7 +124,7 @@ describe('GitHub API', () => {
     })
 
     it('should handle GraphqlResponseError', async () => {
-      const clientMock = jest
+      const clientMock = vi
         .spyOn(client, 'graphqlClient')
         .mockReturnValue(
           graphql.defaults({ request: { fetch: fetchMock.fetchHandler } })
@@ -133,8 +133,8 @@ describe('GitHub API', () => {
         errors: [{ message: 'GraphQL error' }],
         data: null,
       })
-      const errorMock = jest.spyOn(core, 'error').mockReturnValue()
-      const debugMock = jest.spyOn(core, 'debug').mockReturnValue()
+      const errorMock = vi.spyOn(core, 'error').mockReturnValue()
+      const debugMock = vi.spyOn(core, 'debug').mockReturnValue()
 
       await expect(getRepository('owner', 'repo', 'branch')).rejects.toThrow(
         'GraphQL error'
@@ -153,7 +153,7 @@ describe('GitHub API', () => {
 
   describe('createCommitOnBranch', () => {
     it('should create a commit on the given branch', async () => {
-      const clientMock = jest
+      const clientMock = vi
         .spyOn(client, 'graphqlClient')
         .mockReturnValue(
           graphql.defaults({ request: { fetch: fetchMock.fetchHandler } })
@@ -171,7 +171,7 @@ describe('GitHub API', () => {
           },
         },
       })
-      const debugMock = jest.spyOn(core, 'debug').mockReturnValue()
+      const debugMock = vi.spyOn(core, 'debug').mockReturnValue()
 
       const branch = {} as CommittableBranch
       const currentCommit = {} as Commit
@@ -194,7 +194,7 @@ describe('GitHub API', () => {
     })
 
     it('should handle GraphqlResponseError', async () => {
-      const clientMock = jest.spyOn(client, 'graphqlClient').mockReturnValue(
+      const clientMock = vi.spyOn(client, 'graphqlClient').mockReturnValue(
         graphql.defaults({
           request: { fetch: fetchMock.fetchHandler },
         })
@@ -203,8 +203,8 @@ describe('GitHub API', () => {
         errors: [{ message: 'GraphQL error' }],
         data: null,
       })
-      const errorMock = jest.spyOn(core, 'error').mockReturnValue()
-      const debugMock = jest.spyOn(core, 'debug').mockReturnValue()
+      const errorMock = vi.spyOn(core, 'error').mockReturnValue()
+      const debugMock = vi.spyOn(core, 'debug').mockReturnValue()
 
       const branch = {} as CommittableBranch
       const currentCommit = {} as Commit
@@ -238,12 +238,10 @@ describe('GitHub API', () => {
         additions: [fileAddition],
       }
       const blobMock = new blob.Blob(fileAddition.path)
-      jest.spyOn(blobMock, 'load').mockResolvedValue(fileAddition)
-      jest
-        .spyOn(blob, 'getBlob')
-        .mockImplementation((file: any): any => blobMock)
+      vi.spyOn(blobMock, 'load').mockResolvedValue(fileAddition)
+      vi.spyOn(blob, 'getBlob').mockImplementation((file: any): any => blobMock)
 
-      const clientMock = jest.spyOn(client, 'graphqlClient').mockReturnValue(
+      const clientMock = vi.spyOn(client, 'graphqlClient').mockReturnValue(
         graphql.defaults({
           request: { fetch: fetchMock.fetchHandler },
         })
@@ -295,7 +293,7 @@ describe('GitHub API', () => {
 
   describe('createTagOnCommit', () => {
     it('should create a tag on the given commit', async () => {
-      const clientMock = jest.spyOn(client, 'graphqlClient').mockReturnValue(
+      const clientMock = vi.spyOn(client, 'graphqlClient').mockReturnValue(
         graphql.defaults({
           request: { fetch: fetchMock.fetchHandler },
         })
@@ -311,7 +309,7 @@ describe('GitHub API', () => {
           },
         },
       })
-      const debugMock = jest.spyOn(core, 'debug').mockReturnValue()
+      const debugMock = vi.spyOn(core, 'debug').mockReturnValue()
 
       const currentCommit = {} as Commit
       await expect(
@@ -327,7 +325,7 @@ describe('GitHub API', () => {
     })
 
     it('should handle GraphqlResponseError', async () => {
-      const clientMock = jest.spyOn(client, 'graphqlClient').mockReturnValue(
+      const clientMock = vi.spyOn(client, 'graphqlClient').mockReturnValue(
         graphql.defaults({
           request: { fetch: fetchMock.fetchHandler },
         })
@@ -336,8 +334,8 @@ describe('GitHub API', () => {
         errors: [{ message: 'GraphQL error' }],
         data: null,
       })
-      const errorMock = jest.spyOn(core, 'error').mockReturnValue()
-      const debugMock = jest.spyOn(core, 'debug').mockReturnValue()
+      const errorMock = vi.spyOn(core, 'error').mockReturnValue()
+      const debugMock = vi.spyOn(core, 'debug').mockReturnValue()
 
       const currentCommit = {} as Commit
       await expect(
@@ -360,7 +358,7 @@ describe('GitHub API', () => {
     })
 
     it('should populate tag content', async () => {
-      const clientMock = jest.spyOn(client, 'graphqlClient').mockReturnValue(
+      const clientMock = vi.spyOn(client, 'graphqlClient').mockReturnValue(
         graphql.defaults({
           request: { fetch: fetchMock.fetchHandler },
         })

@@ -1,27 +1,14 @@
-import {
-  describe,
-  jest,
-  afterEach,
-  beforeEach,
-  it,
-  expect,
-} from '@jest/globals'
+import { describe, vi, afterEach, beforeEach, it, expect } from 'vitest'
 import { graphqlClient } from '../../src/github/client'
 
 describe('GitHub Client', () => {
-  let replacedEnv: jest.Replaced<typeof process.env> | undefined
-
   beforeEach(() => {
-    jest.restoreAllMocks()
-    replacedEnv = jest.replaceProperty(
-      process,
-      'env',
-      Object.assign(process.env, { GH_TOKEN: 'fake-token' })
-    )
+    vi.restoreAllMocks()
+    vi.stubEnv('GH_TOKEN', 'fake-token')
   })
 
   afterEach(() => {
-    replacedEnv?.restore()
+    vi.unstubAllEnvs()
   })
 
   it('should set authorization header from GH_TOKEN', async () => {
