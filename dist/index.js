@@ -23957,12 +23957,12 @@ var Base64Encoder = class extends Transform {
       chunk = chunk.subarray(0, chunk.length - overflowSize);
     }
     const base64String = chunk.toString("base64");
-    this.push(Buffer2.from(base64String));
+    this.push(base64String);
     callback();
   }
   _flush(callback) {
     if (this.overflow) {
-      this.push(Buffer2.from(this.overflow.toString("base64")));
+      this.push(this.overflow.toString("base64"));
     }
     callback();
   }
@@ -23979,7 +23979,7 @@ var Blob2 = class {
     if (!fs.existsSync(this.absolutePath)) {
       throw new Error(`File does not exist, path: ${this.absolutePath}`);
     }
-    return fs.createReadStream(this.absolutePath, { encoding: "utf8" }).pipe(new Base64Encoder());
+    return fs.createReadStream(this.absolutePath).pipe(new Base64Encoder());
   }
   async load() {
     const chunks = [];

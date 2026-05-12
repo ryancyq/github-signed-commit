@@ -25,13 +25,13 @@ export default class Base64Encoder extends Transform {
     }
 
     const base64String = chunk.toString('base64')
-    this.push(Buffer.from(base64String))
+    this.push(base64String)
     callback()
   }
 
   _flush(callback: TransformCallback): void {
     if (this.overflow) {
-      this.push(Buffer.from(this.overflow.toString('base64')))
+      this.push(this.overflow.toString('base64'))
     }
     callback()
   }
