@@ -72,6 +72,16 @@ describe('Blob', () => {
       )
     })
 
+    it('binary file without corruption', async () => {
+      const blob = getBlob('fixtures/blob.bin')
+      const fileAddition = await blob.load()
+      expect(fileAddition.contents).toEqual(
+        fs
+          .readFileSync(join(__dirname, 'fixtures/blob.bin.base64.txt'))
+          .toString()
+      )
+    })
+
     it('file with string', async () => {
       const blob = getBlob('fixtures/error.txt')
       const mockStream = new PassThrough()
