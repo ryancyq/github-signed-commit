@@ -3,6 +3,13 @@
 All notable changes to this project will be documented in this file. See [conventional commits](https://www.conventionalcommits.org/) for commit guidelines.
 
 ---
+## [Unreleased](https://github.com/ryancyq/github-signed-commit/tree/HEAD)
+
+### Lib
+
+- migrate from jest to vitest for ts support ([#227](https://github.com/ryancyq/github-signed-commit/issues/227)) - ([8d0f924](https://github.com/ryancyq/github-signed-commit/commit/8d0f9240be3cfbd82c8e33166a16a3debbb70926)) - Ryan Chang
+
+---
 ## [1.3.0](https://github.com/ryancyq/github-signed-commit/compare/v1.2.0..v1.3.0) - 2026-05-09
 
 ### Documentation
