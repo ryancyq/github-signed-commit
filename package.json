@@ -21,8 +21,7 @@
     "lint": "npx eslint 'src/**/*.ts'",
     "format:write": "npx prettier --write .",
     "format:check": "npx prettier --check .",
-    "test": "vitest run",
-    "ci-test": "vitest run --singleFork"
+    "test": "vitest run"
   },
   "homepage": "https://github.com/ryancyq/github-signed-commit#readme",
   "dependencies": {

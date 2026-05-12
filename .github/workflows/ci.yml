@@ -30,7 +30,7 @@ jobs:
       - run: npm ci
       - run: npm run format:check
       - run: npm run lint
-      - run: npm run ci-test
+      - run: npm test
 
   test-action-basic:
     name: GitHub Actions Test (Basic)
