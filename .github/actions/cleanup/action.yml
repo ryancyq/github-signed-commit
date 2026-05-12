@@ -1,0 +1,35 @@
+name: 'Clean up test action environment'
+description: 'Deletes test branch and optionally test tag from remote'
+inputs:
+  branch:
+    description: 'Branch name to delete'
+    required: true
+  tag:
+    description: 'Tag name to delete'
+    required: false
+    default: ''
+runs:
+  using: composite
+  steps:
+    - name: Delete remote branch
+      shell: bash
+      run: |
+        test_branch=$(git ls-remote --heads origin refs/heads/${{ inputs.branch }})
+        if [[ -n $test_branch ]]; then
+          echo "test branch ${{ inputs.branch }} existed"
+          git push -d origin refs/heads/${{ inputs.branch }}
+        else
+          echo "test branch ${{ inputs.branch }} does not exist"
+        fi
+
+    - name: Delete remote tag
+      if: ${{ inputs.tag != '' }}
+      shell: bash
+      run: |
+        test_tag=$(git ls-remote --tags origin refs/tags/${{ inputs.tag }})
+        if [[ -n $test_tag ]]; then
+          echo "test tag ${{ inputs.tag }} existed"
+          git push -d origin refs/tags/${{ inputs.tag }}
+        else
+          echo "test tag ${{ inputs.tag }} does not exist"
+        fi
