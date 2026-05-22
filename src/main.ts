@@ -112,7 +112,7 @@ export async function run(): Promise<void> {
 
       const workdir = getWorkdir()
       const cwd = getCwd()
-      if (cwd !== workdir) {
+      if (workdir && cwd !== workdir) {
         core.notice('Changing working directory to Workdir: ' + workdir)
         process.chdir(workdir)
       }

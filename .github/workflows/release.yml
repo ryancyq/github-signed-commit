@@ -22,18 +22,37 @@ jobs:
       contents: write
     steps:
       - uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
 
       - uses: actions/setup-node@v6
         with:
-          node-version: 20
+          node-version: 24
 
       - run: npm version --no-git-tag-version ${{ env.NPM_VERSION }}
 
-      - name: Commit package.json
+      - uses: orhun/git-cliff-action@v4
+        with:
+          config: cliff.toml
+          args: --tag v${{ env.NPM_VERSION }}
+        env:
+          OUTPUT: CHANGELOG.md
+          GITHUB_REPO: ${{ github.repository }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Commit package.json and CHANGELOG.md
         uses: ryancyq/github-signed-commit@v1
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
-          files: package*.json
+          files: |
+            package.json
+            package-lock.json
+            CHANGELOG.md
           commit-message: "release: Bump version for ${{ env.NPM_VERSION }}"
           tag: v${{ env.NPM_VERSION }}
+
+      - name: Create GitHub Release
+        run: gh release create v${{ env.NPM_VERSION }} --title "v${{ env.NPM_VERSION }}" --generate-notes
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}

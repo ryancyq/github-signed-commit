@@ -13,34 +13,24 @@ permissions:
 
 concurrency:
   group: test-action
-  cancel-in-progress: ${{ github.ref != 'main' }}
+  cancel-in-progress: ${{ github.ref == 'refs/heads/main' }}
 
 jobs:
-  test-jest:
-    name: Jest Tests
+  test-vitest:
+    name: Vitest Tests
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout
-        uses: actions/checkout@v6
-
-      - name: Setup Node.js
-        uses: actions/setup-node@v6
+      - uses: actions/checkout@v6
+      - uses: actions/setup-node@v6
         with:
           node-version-file: .node-version
           cache: npm
 
-      - name: Install Dependencies
-        run: npm ci
-
-      - name: Check Format
-        run: npm run format:check
-
-      - name: Lint
-        run: npm run lint
-
-      - name: Test
-        run: npm run ci-test
+      - run: npm ci
+      - run: npm run format:check
+      - run: npm run lint
+      - run: npm test
 
   test-action-basic:
     name: GitHub Actions Test (Basic)
@@ -51,8 +41,7 @@ jobs:
       BRANCH: test-action-basic
 
     steps:
-      - name: Checkout
-        uses: actions/checkout@v6
+      - uses: actions/checkout@v6
 
       - name: Test Action
         id: test-action
@@ -68,16 +57,10 @@ jobs:
         run: echo "${{ steps.test-action.outputs.commit-sha }}"
 
       - name: Clean up test action environment
-        shell: bash
         if: always()
-        run: |
-          test_branch=$(git ls-remote --heads origin refs/heads/$BRANCH)
-          if [[ -n $test_branch ]]; then
-            echo "test branch $BRANCH existed"
-            git push -d origin refs/heads/$BRANCH
-          else
-            echo "test branch $BRANCH does not exist"
-          fi
+        uses: ./.github/actions/cleanup
+        with:
+          branch: ${{ env.BRANCH }}
 
   test-action-branch:
     name: GitHub Actions Test (Custom Branch)
@@ -89,8 +72,7 @@ jobs:
       BRANCH: test-action-branch
 
     steps:
-      - name: Checkout
-        uses: actions/checkout@v6
+      - uses: actions/checkout@v6
 
       - name: generate dummy content
         shell: bash
@@ -113,16 +95,10 @@ jobs:
         run: echo "${{ steps.test-action.outputs.commit-sha }}"
 
       - name: Clean up test action environment
-        shell: bash
         if: always()
-        run: |
-          test_branch=$(git ls-remote --heads origin refs/heads/$BRANCH)
-          if [[ -n $test_branch ]]; then
-            echo "test branch $BRANCH existed"
-            git push -d origin refs/heads/$BRANCH
-          else
-            echo "test branch $BRANCH does not exist"
-          fi
+        uses: ./.github/actions/cleanup
+        with:
+          branch: ${{ env.BRANCH }}
 
   test-action-workspace:
     name: GitHub Actions Test (Workspace)
@@ -134,8 +110,7 @@ jobs:
       BRANCH: test-action-workspace
 
     steps:
-      - name: Checkout
-        uses: actions/checkout@v6
+      - uses: actions/checkout@v6
 
       - name: generate dummy content
         shell: bash
@@ -159,16 +134,10 @@ jobs:
         run: echo "${{ steps.test-action.outputs.commit-sha }}"
 
       - name: Clean up test action environment
-        shell: bash
         if: always()
-        run: |
-          test_branch=$(git ls-remote --heads origin refs/heads/$BRANCH)
-          if [[ -n $test_branch ]]; then
-            echo "test branch $BRANCH existed"
-            git push -d origin refs/heads/$BRANCH
-          else
-            echo "test branch $BRANCH does not exist"
-          fi
+        uses: ./.github/actions/cleanup
+        with:
+          branch: ${{ env.BRANCH }}
 
   test-action-glob:
     name: GitHub Actions Test (Glob)
@@ -180,8 +149,7 @@ jobs:
       BRANCH: test-action-glob
 
     steps:
-      - name: Checkout
-        uses: actions/checkout@v6
+      - uses: actions/checkout@v6
 
       - name: generate dummy content
         shell: bash
@@ -204,16 +172,10 @@ jobs:
         run: echo "${{ steps.test-action.outputs.commit-sha }}"
 
       - name: Clean up test action environment
-        shell: bash
         if: always()
-        run: |
-          test_branch=$(git ls-remote --heads origin refs/heads/$BRANCH)
-          if [[ -n $test_branch ]]; then
-            echo "test branch $BRANCH existed"
-            git push -d origin refs/heads/$BRANCH
-          else
-            echo "test branch $BRANCH does not exist"
-          fi
+        uses: ./.github/actions/cleanup
+        with:
+          branch: ${{ env.BRANCH }}
 
   test-action-tag:
     name: GitHub Actions Test (Tag)
@@ -226,8 +188,7 @@ jobs:
       BRANCH: test-action-tag
 
     steps:
-      - name: Checkout
-        uses: actions/checkout@v6
+      - uses: actions/checkout@v6
 
       - name: Test Action
         id: test-action
@@ -244,23 +205,11 @@ jobs:
           echo "[tag] ${{ steps.test-action.outputs.tag }}"
 
       - name: Clean up test action environment
-        shell: bash
         if: always()
-        run: |
-          test_branch=$(git ls-remote --heads origin refs/heads/$BRANCH)
-          if [[ -n $test_branch ]]; then
-            echo "test branch $BRANCH existed"
-            git push -d origin refs/heads/$BRANCH
-          else
-            echo "test branch $BRANCH does not exist"
-          fi
-          test_tag=$(git ls-remote --tags origin refs/tags/$TAG)
-          if [[ -n $test_tag ]]; then
-            echo "test tag $TAG existed"
-            git push -d origin refs/tags/$TAG
-          else
-            echo "test tag $TAG does not exist"
-          fi
+        uses: ./.github/actions/cleanup
+        with:
+          branch: ${{ env.BRANCH }}
+          tag: ${{ env.TAG }}
 
   test-action-file-tag:
     name: GitHub Actions Test (File & Tag)
@@ -273,9 +222,7 @@ jobs:
       TAG: 4.5.6
 
     steps:
-      - name: Checkout
-        id: checkout
-        uses: actions/checkout@v6
+      - uses: actions/checkout@v6
 
       - name: generate dummy content
         shell: bash
@@ -301,23 +248,11 @@ jobs:
           echo "[tag] ${{ steps.test-action.outputs.tag }}"
 
       - name: Clean up test action environment
-        shell: bash
         if: always()
-        run: |
-          test_branch=$(git ls-remote --heads origin refs/heads/$BRANCH)
-          if [[ -n $test_branch ]]; then
-            echo "test branch $BRANCH existed"
-            git push -d origin refs/heads/$BRANCH
-          else
-            echo "test branch $BRANCH does not exist"
-          fi
-          test_tag=$(git ls-remote --tags origin refs/tags/$TAG)
-          if [[ -n $test_tag ]]; then
-            echo "test tag $TAG existed"
-            git push -d origin refs/tags/$TAG
-          else
-            echo "test tag $TAG does not exist"
-          fi
+        uses: ./.github/actions/cleanup
+        with:
+          branch: ${{ env.BRANCH }}
+          tag: ${{ env.TAG }}
 
   test-action-no-file-changes-tag:
     name: GitHub Actions Test (No File Changes & Tag)
@@ -330,8 +265,7 @@ jobs:
       TAG: 7.8.9
 
     steps:
-      - name: Checkout
-        uses: actions/checkout@v6
+      - uses: actions/checkout@v6
 
       - name: Test Action
         id: test-action
@@ -350,20 +284,8 @@ jobs:
           echo "[tag] ${{ steps.test-action.outputs.tag }}"
 
       - name: Clean up test action environment
-        shell: bash
         if: always()
-        run: |
-          test_branch=$(git ls-remote --heads origin refs/heads/$BRANCH)
-          if [[ -n $test_branch ]]; then
-            echo "test branch $BRANCH existed"
-            git push -d origin refs/heads/$BRANCH
-          else
-            echo "test branch $BRANCH does not exist"
-          fi
-          test_tag=$(git ls-remote --tags origin refs/tags/$TAG)
-          if [[ -n $test_tag ]]; then
-            echo "test tag $TAG existed"
-            git push -d origin refs/tags/$TAG
-          else
-            echo "test tag $TAG does not exist"
-          fi
+        uses: ./.github/actions/cleanup
+        with:
+          branch: ${{ env.BRANCH }}
+          tag: ${{ env.TAG }}
