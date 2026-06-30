@@ -37,7 +37,7 @@
     "@typescript-eslint/parser": "^8.62.1",
     "@vitest/coverage-v8": "^4.1.6",
     "esbuild": "^0.28.1",
-    "eslint": "^9.22.0",
+    "eslint": "^10.6.0",
     "eslint-config-prettier": "^10.1.8",
     "fetch-mock": "^12.6.0",
     "typescript": "^6.0.3",
