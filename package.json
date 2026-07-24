@@ -39,7 +39,7 @@
     "eslint": "^10.7.0",
     "eslint-config-prettier": "^10.1.8",
     "fetch-mock": "^12.6.0",
-    "typescript": "~6.0.3",
+    "typescript": "~7.0.2",
     "typescript-eslint": "^8.64.0",
     "vitest": "^4.1.6"
   },
