@@ -3,6 +3,14 @@
 All notable changes to this project will be documented in this file. See [conventional commits](https://www.conventionalcommits.org/) for commit guidelines.
 
 ---
+## [1.5.0](https://github.com/DataDome/gha-github-signed-commit/compare/v1.4.1..v1.5.0) - 2026-08-19
+
+### Dependencies
+
+- sync with upstream ryancyq/github-signed-commit ([#10](https://github.com/DataDome/gha-github-signed-commit/pull/10)) - ([4f300fc](https://github.com/DataDome/gha-github-signed-commit/commit/4f300fc10a2c5d92d91579a9fba37134780a7886))
+- bump action runtime from node20 to node24 - ([4f300fc](https://github.com/DataDome/gha-github-signed-commit/commit/4f300fc10a2c5d92d91579a9fba37134780a7886))
+
+---
 ## [1.3.2](https://github.com/ryancyq/github-signed-commit/compare/v1.3.1..v1.3.2) - 2026-05-12
 
 ### Bug Fixes
